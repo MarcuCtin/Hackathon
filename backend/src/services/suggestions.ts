@@ -1,5 +1,5 @@
-import { Log, type LogDoc } from '../models/Log.js';
-import { NutritionLog, type NutritionLogDoc } from '../models/NutritionLog.js';
+import { Log } from '../models/Log.js';
+import { NutritionLog } from '../models/NutritionLog.js';
 
 export async function generateAdaptiveSuggestions(userId: string): Promise<string[]> {
   // Simple heuristic baseline; later enriched with LLM context

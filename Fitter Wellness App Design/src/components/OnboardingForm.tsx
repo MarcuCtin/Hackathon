@@ -180,6 +180,99 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
   const currentQuestion = currentStep >= 0 ? questions[currentStep] : null;
   const progress = currentStep < 0 ? 0 : ((currentStep + 1) / totalSteps) * 100;
 
+  // Handler functions - defined before JSX
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !password) return;
+
+    setIsRegistering(true);
+    try {
+      await api.register(email, password, name);
+      toast.success("Welcome to Fitter! Let's personalize your experience.");
+      setCurrentStep(0); // Move to first wellness question
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed. Please try again.");
+    } finally {
+      setIsRegistering(false);
+    }
+  };
+
+  const handleSelectOption = (value: string) => {
+    setSelectedOption(value);
+  };
+
+  const handleNext = async () => {
+    if (selectedOption && currentQuestion) {
+      setAnswers([
+        ...answers,
+        { questionId: currentQuestion.id, value: selectedOption },
+      ]);
+      setSelectedOption(null);
+      
+      // If this is the last question, save profile with goals
+      if (currentStep === totalSteps - 1) {
+        try {
+          const goals = answers
+            .map(a => a.value)
+            .filter(v => v && v !== 'calm' && v !== 'stressed' && v !== 'focused')
+            .slice(0, 5);
+          
+          await api.updateProfile({ goals });
+          toast.success("Profile saved!");
+        } catch (error) {
+          console.error("Profile update error:", error);
+          // Continue anyway - profile can be updated later
+        }
+      }
+      
+      setCurrentStep(currentStep + 1);
+      setEmotionalState("neutral");
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      const previousAnswer = answers[currentStep - 1];
+      setSelectedOption(previousAnswer?.value || null);
+      setAnswers(answers.slice(0, -1));
+      setEmotionalState("neutral");
+    }
+  };
+
+  const handleSkip = () => {
+    if (onSkip) {
+      onSkip();
+    } else if (onComplete) {
+      onComplete();
+    }
+  };
+
+  // Get background gradient based on emotional state
+  const getBackgroundGradient = () => {
+    switch (emotionalState) {
+      case "calm":
+        return "from-blue-50 via-sky-50 to-cyan-50";
+      case "stressed":
+        return "from-rose-50 via-red-50 to-orange-50";
+      case "focused":
+        return "from-emerald-50 via-green-50 to-teal-50";
+      default:
+        return "from-white via-sky-50 to-emerald-50";
+    }
+  };
+
+  // Update emotional state based on selected option
+  useEffect(() => {
+    if (selectedOption && currentQuestion) {
+      const selected = currentQuestion.options.find((opt) => opt.value === selectedOption);
+      if (selected?.emotion) {
+        setEmotionalState(selected.emotion);
+      }
+    }
+  }, [selectedOption, currentQuestion]);
+
   // Show auth form first
   if (currentStep < 0) {
     return (
@@ -282,98 +375,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
       </div>
     );
   }
-
-  // Update emotional state based on selected option
-  useEffect(() => {
-    if (selectedOption && currentQuestion) {
-      const selected = currentQuestion.options.find((opt) => opt.value === selectedOption);
-      if (selected?.emotion) {
-        setEmotionalState(selected.emotion);
-      }
-    }
-  }, [selectedOption, currentQuestion]);
-
-  const handleSelectOption = (value: string) => {
-    setSelectedOption(value);
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !password) return;
-
-    setIsRegistering(true);
-    try {
-      await api.register(email, password, name);
-      toast.success("Welcome to Fitter! Let's personalize your experience.");
-      setCurrentStep(0); // Move to first wellness question
-    } catch (error) {
-      console.error("Registration error:", error);
-      toast.error("Registration failed. Please try again.");
-    } finally {
-      setIsRegistering(false);
-    }
-  };
-
-  const handleNext = async () => {
-    if (selectedOption && currentQuestion) {
-      setAnswers([
-        ...answers,
-        { questionId: currentQuestion.id, value: selectedOption },
-      ]);
-      setSelectedOption(null);
-      
-      // If this is the last question, save profile with goals
-      if (currentStep === totalSteps - 1) {
-        try {
-          const goals = answers
-            .map(a => a.value)
-            .filter(v => v && v !== 'calm' && v !== 'stressed' && v !== 'focused')
-            .slice(0, 5);
-          
-          await api.updateProfile({ goals });
-          toast.success("Profile saved!");
-        } catch (error) {
-          console.error("Profile update error:", error);
-          // Continue anyway - profile can be updated later
-        }
-      }
-      
-      setCurrentStep(currentStep + 1);
-      setEmotionalState("neutral");
-    }
-  };
-
-  const handleBack = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-      const previousAnswer = answers[currentStep - 1];
-      setSelectedOption(previousAnswer?.value || null);
-      setAnswers(answers.slice(0, -1));
-      setEmotionalState("neutral");
-    }
-  };
-
-  const handleSkip = () => {
-    if (onSkip) {
-      onSkip();
-    } else if (onComplete) {
-      onComplete();
-    }
-  };
-
-  // Get background gradient based on emotional state
-  const getBackgroundGradient = () => {
-    switch (emotionalState) {
-      case "calm":
-        return "from-blue-50 via-sky-50 to-cyan-50";
-      case "stressed":
-        return "from-rose-50 via-red-50 to-orange-50";
-      case "focused":
-        return "from-emerald-50 via-green-50 to-teal-50";
-      default:
-        return "from-white via-sky-50 to-emerald-50";
-    }
-  };
 
   if (!currentQuestion) {
     return (

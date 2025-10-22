@@ -1,11 +1,10 @@
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 import { loadEnv } from '../config/env.js';
 
 const env = loadEnv();
 
-export function signJwt(payload: object, expiresIn = '7d'): string {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-explicit-any
-  return jwt.sign(payload, env.JWT_SECRET, { expiresIn } as any);
+export function signJwt(payload: object, expiresIn: SignOptions['expiresIn'] = '7d'): string {
+  return jwt.sign(payload, env.JWT_SECRET, { expiresIn });
 }
 
 export function verifyJwt<T>(token: string): T | null {

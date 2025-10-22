@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { Log } from '../models/Log.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
@@ -17,8 +18,11 @@ const listQuery = z.object({
     .optional(),
 });
 
-router.get('/', requireAuth, validate({ query: listQuery }), async (req, res, next) => {
-  try {
+router.get(
+  '/',
+  requireAuth,
+  validate({ query: listQuery }),
+  asyncHandler(async (req, res) => {
     const { from, to, type, limit } = req.query as z.infer<typeof listQuery>;
     const q: Record<string, unknown> = { userId: req.userId };
     if (from || to)
@@ -28,11 +32,9 @@ router.get('/', requireAuth, validate({ query: listQuery }), async (req, res, ne
       .sort({ date: -1 })
       .limit(limit ?? 100)
       .lean();
-    res.json({ success: true, data: items });
-  } catch (err) {
-    next(err);
-  }
-});
+    void res.json({ success: true, data: items });
+  }),
+);
 
 const createBody = z.object({
   type: z.enum(['workout', 'sleep', 'mood', 'hydration', 'steps', 'custom']),
@@ -42,8 +44,11 @@ const createBody = z.object({
   date: z.string().datetime(),
 });
 
-router.post('/', requireAuth, validate({ body: createBody }), async (req, res, next) => {
-  try {
+router.post(
+  '/',
+  requireAuth,
+  validate({ body: createBody }),
+  asyncHandler(async (req, res) => {
     const { type, value, unit, note, date } = req.body as z.infer<typeof createBody>;
     const created = await Log.create({
       userId: req.userId,
@@ -53,10 +58,8 @@ router.post('/', requireAuth, validate({ body: createBody }), async (req, res, n
       note,
       date: new Date(date),
     });
-    res.status(201).json({ success: true, data: created });
-  } catch (err) {
-    next(err);
-  }
-});
+    void res.status(201).json({ success: true, data: created });
+  }),
+);
 
 export default router;

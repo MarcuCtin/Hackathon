@@ -1,4 +1,4 @@
-import type { Request } from 'express';
+// extend Express namespace for typed userId on req
 
 declare global {
   namespace Express {

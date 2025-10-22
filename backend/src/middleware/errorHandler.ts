@@ -7,6 +7,7 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Not found' } });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   let status = 500;
   let code = 'INTERNAL_ERROR';
@@ -25,7 +26,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     code = err.code;
     message = err.message;
     details = err.details;
-  } else if (err?.name === 'MongoServerError') {
+  } else if (isMongoServerError(err)) {
     status = 409;
     code = 'MONGO_ERROR';
     message = 'Database error';
@@ -40,3 +41,9 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
 
   res.status(status).json({ success: false, error: { code, message, details } });
 };
+
+function isMongoServerError(err: unknown): err is { name: string; message: string } {
+  if (typeof err !== 'object' || err === null) return false;
+  const e = err as { name?: unknown; message?: unknown };
+  return e.name === 'MongoServerError' && typeof e.message === 'string';
+}

@@ -9,7 +9,18 @@ const envSchema = z.object({
     .pipe(z.number().int().positive()),
   MONGO_URI: z.string().min(1),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
-  GEMINI_API_KEY: z.string().min(1),
+  GOOGLE_API_KEY: z.string().min(1),
+  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_TEMPERATURE: z
+    .string()
+    .default('0.7')
+    .transform((v) => Number(v))
+    .pipe(z.number().min(0).max(1)),
+  GEMINI_MAX_TOKENS: z
+    .string()
+    .default('500')
+    .transform((v) => Number(v))
+    .pipe(z.number().int().positive()),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   RATE_LIMIT_WINDOW_MS: z
     .string()

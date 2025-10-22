@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { NutritionLog } from '../models/NutritionLog.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
@@ -20,8 +21,11 @@ const logBody = z.object({
   ),
 });
 
-router.post('/log', requireAuth, validate({ body: logBody }), async (req, res, next) => {
-  try {
+router.post(
+  '/log',
+  requireAuth,
+  validate({ body: logBody }),
+  asyncHandler(async (req, res) => {
     const { date, mealType, items } = req.body as z.infer<typeof logBody>;
     const total = items.reduce(
       (acc, it) => ({
@@ -39,18 +43,19 @@ router.post('/log', requireAuth, validate({ body: logBody }), async (req, res, n
       items,
       total,
     });
-    res.status(201).json({ success: true, data: created });
-  } catch (err) {
-    next(err);
-  }
-});
+    void res.status(201).json({ success: true, data: created });
+  }),
+);
 
 const listQuery = z.object({
   day: z.string().datetime().optional(),
 });
 
-router.get('/list', requireAuth, validate({ query: listQuery }), async (req, res, next) => {
-  try {
+router.get(
+  '/list',
+  requireAuth,
+  validate({ query: listQuery }),
+  asyncHandler(async (req, res) => {
     const { day } = req.query as z.infer<typeof listQuery>;
     const q: Record<string, unknown> = { userId: req.userId };
     if (day) {
@@ -60,10 +65,8 @@ router.get('/list', requireAuth, validate({ query: listQuery }), async (req, res
       q.date = { $gte: start, $lt: end };
     }
     const items = await NutritionLog.find(q).sort({ date: -1 }).lean();
-    res.json({ success: true, data: items });
-  } catch (err) {
-    next(err);
-  }
-});
+    void res.json({ success: true, data: items });
+  }),
+);
 
 export default router;

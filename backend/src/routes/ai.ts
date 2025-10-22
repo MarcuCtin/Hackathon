@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
-import { chatWithAi } from '../services/gemini.js';
+import { chatWithAi } from '../services/ai.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
 const router = Router();
 
@@ -15,8 +16,11 @@ const chatBody = z.object({
   ),
 });
 
-router.post('/chat', requireAuth, validate({ body: chatBody }), async (req, res, next) => {
-  try {
+router.post(
+  '/chat',
+  requireAuth,
+  validate({ body: chatBody }),
+  asyncHandler(async (req, res) => {
     const { messages } = req.body as z.infer<typeof chatBody>;
     const system = {
       role: 'system' as const,
@@ -24,10 +28,8 @@ router.post('/chat', requireAuth, validate({ body: chatBody }), async (req, res,
         'You are Fitter, an AI Lifestyle Coach powered by Google Gemini. Provide actionable, safe, and empathetic guidance aligned with user goals. Keep answers concise and practical.',
     };
     const reply = await chatWithAi([system, ...messages]);
-    res.json({ success: true, data: { reply, provider: 'gemini' } });
-  } catch (err) {
-    next(err);
-  }
-});
+    void res.json({ success: true, data: { reply, provider: 'gemini' } });
+  }),
+);
 
 export default router;
