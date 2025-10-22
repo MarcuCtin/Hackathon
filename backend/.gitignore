@@ -1,0 +1,12 @@
+/node_modules
+/dist
+
+/src-tauri
+/src-tauri-build
+/src-tauri-build-debug
+/src-tauri-build-release
+/src-tauri-build-debug-windows-x64
+/src-tauri-build-release-windows-x64
+/src-tauri-build-debug-windows-x86
+/src-tauri-build-release-windows-x86
+.env
