@@ -9,7 +9,7 @@ const envSchema = z.object({
     .pipe(z.number().int().positive()),
   MONGO_URI: z.string().min(1),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
-  OPENAI_API_KEY: z.string().min(1),
+  GEMINI_API_KEY: z.string().min(1),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   RATE_LIMIT_WINDOW_MS: z
     .string()
@@ -30,7 +30,6 @@ export type Env = z.infer<typeof envSchema> & {
 };
 
 export function loadEnv(): Env {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
   const parsed = envSchema.safeParse(process.env);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ');

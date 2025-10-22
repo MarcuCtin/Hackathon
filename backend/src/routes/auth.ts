@@ -24,7 +24,7 @@ router.post('/register', validate({ body: registerSchema }), async (req, res, ne
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ email, passwordHash, name });
     const token = signJwt({ sub: String(user._id) });
-    res.status(201).json({ success: true, data: { token } });
+    return res.status(201).json({ success: true, data: { token } });
   } catch (err) {
     next(err);
   }
@@ -40,9 +40,9 @@ router.post('/login', validate({ body: loginSchema }), async (req, res, next) =>
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw new AuthError('Invalid credentials');
     const token = signJwt({ sub: String(user._id) });
-    res.json({ success: true, data: { token } });
+    return res.json({ success: true, data: { token } });
   } catch (err) {
-    next(err);
+    return next(err);
   }
 });
 
@@ -50,9 +50,9 @@ router.get('/me', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findById(req.userId).lean();
     if (!user) throw new AuthError('User not found');
-    res.json({ success: true, data: { id: user._id, email: user.email, name: user.name } });
+    return res.json({ success: true, data: { id: user._id, email: user.email, name: user.name } });
   } catch (err) {
-    next(err);
+    return next(err);
   }
 });
 

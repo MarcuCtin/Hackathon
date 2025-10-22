@@ -113,3 +113,4 @@ Rutele sunt configurate în `App.tsx`:
 ---
 
 **Design Philosophy**: Apple iOS bottom navigation + Glassmorphism modern
+

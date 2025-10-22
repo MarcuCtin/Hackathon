@@ -1,12 +1,12 @@
 # 🏃‍♂️ Fitter - AI Lifestyle Manager
 
-> **A production-ready wellness app with real AI intelligence powered by OpenAI GPT-4o-mini**
+> **A production-ready wellness app with real AI intelligence powered by Google Gemini 1.5 Flash**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-43853D?style=flat&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
-[![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=flat&logo=openai&logoColor=white)](https://openai.com/)
+[![Google Gemini](https://img.shields.io/badge/Google%20Gemini-4285F4?style=flat&logo=google&logoColor=white)](https://ai.google.dev/)
 
 ---
 
@@ -14,7 +14,7 @@
 
 Fitter is a modern, AI-powered wellness platform that helps users achieve their health and lifestyle goals through:
 
-- 🤖 **Real AI Chat Assistant** - Talk to an AI wellness coach powered by GPT-4o-mini
+- 🤖 **Real AI Chat Assistant** - Talk to an AI wellness coach powered by Google Gemini 1.5 Flash
 - 📊 **Personalized Daily Suggestions** - Pattern recognition engine analyzes your habits
 - 👤 **Smart Profile Management** - Track weight, height, goals, and progress
 - 🍎 **Nutrition Logging** - Log meals with automatic nutrition tracking
@@ -27,15 +27,15 @@ Fitter is a modern, AI-powered wellness platform that helps users achieve their 
 
 ### ✅ **Fully Integrated & Production-Ready**
 
-| Feature                      | Status       | Description                                     |
-| ---------------------------- | ------------ | ----------------------------------------------- |
-| 🔐 **User Authentication**   | ✅ Live      | JWT-based auth with bcrypt password hashing     |
-| 🤖 **AI Chat Assistant**     | ✅ Live      | Real-time conversations with OpenAI GPT-4o-mini |
-| 💡 **Daily Recommendations** | ✅ Live      | AI analyzes sleep, workout, nutrition patterns  |
-| 👤 **Profile Management**    | ✅ Live      | Load/save user data with MongoDB persistence    |
-| 🍽️ **Meal Logging**          | 🟡 API Ready | Backend endpoint ready, UI integration 10 mins  |
-| 📜 **Activity History**      | 🟡 API Ready | Backend endpoint ready, UI integration 5 mins   |
-| 📊 **Progress Insights**     | 🟡 API Ready | Backend endpoint ready, UI integration 5 mins   |
+| Feature                      | Status       | Description                                          |
+| ---------------------------- | ------------ | ---------------------------------------------------- |
+| 🔐 **User Authentication**   | ✅ Live      | JWT-based auth with bcrypt password hashing          |
+| 🤖 **AI Chat Assistant**     | ✅ Live      | Real-time conversations with Google Gemini 1.5 Flash |
+| 💡 **Daily Recommendations** | ✅ Live      | AI analyzes sleep, workout, nutrition patterns       |
+| 👤 **Profile Management**    | ✅ Live      | Load/save user data with MongoDB persistence         |
+| 🍽️ **Meal Logging**          | 🟡 API Ready | Backend endpoint ready, UI integration 10 mins       |
+| 📜 **Activity History**      | 🟡 API Ready | Backend endpoint ready, UI integration 5 mins        |
+| 📊 **Progress Insights**     | 🟡 API Ready | Backend endpoint ready, UI integration 5 mins        |
 
 **Legend**: ✅ Fully integrated | 🟡 Backend ready, quick UI wire needed
 
@@ -47,7 +47,7 @@ Fitter is a modern, AI-powered wellness platform that helps users achieve their 
 
 - Node.js 18+
 - MongoDB (local or Atlas)
-- OpenAI API key ([Get one here](https://platform.openai.com/api-keys))
+- Google Gemini API key ([Get one free here](https://makersuite.google.com/app/apikey))
 
 ### 1. Start Backend
 
@@ -62,7 +62,7 @@ PORT=4000
 MONGO_URI=mongodb://localhost:27017/fitter
 JWT_SECRET=your-super-secret-jwt-key-change-in-production
 JWT_EXPIRES_IN=7d
-OPENAI_API_KEY=sk-your-openai-api-key-here
+GOOGLE_API_KEY=your-google-gemini-api-key-here
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=100
 EOF

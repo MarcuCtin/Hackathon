@@ -6,10 +6,6 @@ const env = loadEnv();
 // Initialize Gemini with API key
 const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
 
-/**
- * Chat with Google Gemini AI
- * Using Gemini 1.5 Flash - faster and cheaper than GPT-4o-mini
- */
 export async function chatWithAi(
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>,
 ): Promise<string> {
@@ -40,7 +36,7 @@ export async function chatWithAi(
 
   // Generate response
   const result = await model.generateContent(prompt);
-  const response = await result.response;
+  const response = result.response;
   const text = response.text();
 
   return text || 'Sorry, I could not generate a response.';

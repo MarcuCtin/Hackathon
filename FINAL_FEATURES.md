@@ -350,3 +350,4 @@ Aplicația Fitter AI este acum o **wellness app completă** cu:
 ---
 
 **Made with ❤️ using Fitter AI**
+

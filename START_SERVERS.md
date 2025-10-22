@@ -4,7 +4,7 @@
 
 - ✅ Node.js 18+ installed
 - ✅ MongoDB running (local or Atlas)
-- ✅ OpenAI API key
+- ✅ Google Gemini API key (FREE!)
 
 ---
 
@@ -23,7 +23,7 @@ PORT=4000
 MONGO_URI=mongodb://localhost:27017/fitter
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=7d
-OPENAI_API_KEY=sk-your-openai-api-key-here
+GOOGLE_API_KEY=your-google-gemini-api-key-here
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=100
 EOF
@@ -112,12 +112,14 @@ lsof -ti:4000 | xargs kill -9
 lsof -ti:3000 | xargs kill -9
 ```
 
-### OpenAI API Key Invalid
+### Gemini API Key Invalid
 
-1. Go to https://platform.openai.com/api-keys
-2. Create new secret key
-3. Update `OPENAI_API_KEY` in `backend/.env`
+1. Go to https://makersuite.google.com/app/apikey
+2. Click "Create API Key" (FREE!)
+3. Update `GOOGLE_API_KEY` in `backend/.env`
 4. Restart backend: `npm run dev`
+
+Note: Gemini offers FREE tier (15 req/min, 1,500 req/day)
 
 ### Vite Proxy Not Working
 
