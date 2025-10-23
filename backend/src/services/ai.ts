@@ -77,18 +77,12 @@ async function generateOnce(params: {
 export async function chatWithAi(
   messages: Array<{ role: Role; content: string }>,
 ): Promise<string> {
-  const SUPPORTED_MODELS = new Set([
-    'gemini-1.5-flash',
-    'gemini-1.5-pro',
-    'gemini-1.5-flash-latest',
-    'gemini-1.5-pro-latest',
-  ]);
+  const SUPPORTED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro']);
 
-  const normalizeModel = (m: string): string =>
-    SUPPORTED_MODELS.has(m) ? m : 'gemini-1.5-flash';
+  const normalizeModel = (m: string): string => (SUPPORTED_MODELS.has(m) ? m : 'gemini-2.5-flash');
 
   const primary = normalizeModel(env.GEMINI_MODEL);
-  const models = [primary, 'gemini-1.5-pro', 'gemini-1.5-flash'];
+  const models = [primary, 'gemini-2.5-pro', 'gemini-2.5-flash'];
 
   let lastErr: unknown;
   for (const [i, m] of models.entries()) {

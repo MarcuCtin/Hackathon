@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -10,6 +10,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import { FitterLogo } from "./FitterLogo";
 import { DailyRecommendations } from "./DailyRecommendations";
 import { ProgressInsights } from "./ProgressInsights";
+import { api, type DashboardData } from "../lib/api";
+import { useActivityData } from "../context/ActivityContext";
 import {
   Sun,
   Moon,
@@ -68,6 +70,11 @@ interface DashboardProps {
 
 export function Dashboard({ onProfileClick }: DashboardProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [chatInput, setChatInput] = useState("");
+  
+  // Mock tasks for daily routine (can be replaced with real data later)
   const [tasks, setTasks] = useState<Task[]>([
     { id: 1, title: "Morning meditation", completed: true, time: "7:00 AM" },
     { id: 2, title: "Drink water (500ml)", completed: true, time: "7:30 AM" },
@@ -76,16 +83,99 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     { id: 5, title: "Gym workout", completed: false, time: "6:00 PM" },
     { id: 6, title: "Evening walk", completed: false, time: "7:30 PM" },
   ]);
+  
+  const {
+    logs,
+    nutritionLogs,
+    hydrationToday,
+    workoutCaloriesToday,
+    sleepHoursToday,
+    mealCountToday,
+  } = useActivityData();
 
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      text: "Good morning, Marcu! 👋 You're doing great today. You've completed 3 of 6 tasks already!",
-      sender: "ai",
-      timestamp: new Date(),
-    },
-  ]);
-  const [chatInput, setChatInput] = useState("");
+  // Fetch dashboard data from database
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        const { data } = await api.getDashboardData();
+        setDashboardData(data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDashboardData();
+  }, []);
+
+  // Use database data or fallback to context data
+  const dailyStats = dashboardData?.daily || {
+    hydration: hydrationToday,
+    workoutCalories: workoutCaloriesToday,
+    sleepHours: sleepHoursToday || 0,
+    mealCount: mealCountToday,
+    totalCalories: 0,
+    totalProtein: 0,
+  };
+
+  const recentChatMessages = dashboardData?.recent.chatMessages || [];
+  const recentLogs = dashboardData?.recent.logs || [];
+  const recentNutrition = dashboardData?.recent.nutrition || [];
+
+  const activityEntries = useMemo(() => {
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+
+    const logEntries = (logs || [])
+      .filter((log) => new Date(log.date).getTime() >= start.getTime())
+      .map((log) => {
+        const baseLabel: Record<string, string> = {
+          hydration: "Hydration",
+          sleep: "Sleep",
+          workout: "Workout",
+        };
+
+        const details = (() => {
+          if (log.type === "hydration") {
+            return `${log.value}${log.unit ? ` ${log.unit}` : ""}`;
+          }
+          if (log.type === "sleep") {
+            return `${log.value} hours${log.note ? ` · ${log.note}` : ""}`;
+          }
+          if (log.type === "workout") {
+            return `${log.value} kcal${log.note ? ` · ${log.note}` : ""}`;
+          }
+          return `${log.value}${log.unit ? ` ${log.unit}` : ""}`;
+        })();
+
+        return {
+          id: log._id,
+          type: log.type,
+          label: `${baseLabel[log.type] || "Log"} saved`,
+          details,
+          timestamp: log.date,
+        };
+      });
+
+    const mealEntries = (nutritionLogs || [])
+      .filter((meal) => new Date(meal.date).getTime() >= start.getTime())
+      .map((meal) => {
+        const totalCalories = meal.total?.calories ?? 0;
+        const primaryItem = meal.items?.[0]?.name || "Meal";
+
+        return {
+          id: meal._id,
+          type: "meal",
+          label: `Meal logged • ${meal.mealType}`,
+          details: `${primaryItem}${totalCalories ? ` · ${totalCalories} kcal` : ""}`,
+          timestamp: meal.date,
+        };
+      });
+
+    return [...logEntries, ...mealEntries]
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+      .slice(0, 6);
+  }, [logs, nutritionLogs]);
 
   // Energy data for the week
   const energyData = [
@@ -135,27 +225,13 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-
-    const newUserMessage: ChatMessage = {
-      id: chatMessages.length + 1,
-      text: chatInput,
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setChatMessages([...chatMessages, newUserMessage]);
+    
+    // TODO: Implement real chat functionality with AI
+    // For now, just clear the input
     setChatInput("");
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: ChatMessage = {
-        id: chatMessages.length + 2,
-        text: "I'm here to help! Based on your current progress, I suggest focusing on your evening workout. Would you like some motivation tips?",
-        sender: "ai",
-        timestamp: new Date(),
-      };
-      setChatMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
+    
+    // Show a placeholder message
+    console.log("Chat message:", chatInput);
   };
 
   const completedTasks = tasks.filter((t) => t.completed).length;
@@ -172,6 +248,18 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-emerald-100 text-slate-700 border-0">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Premium
+              </Badge>
+              <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border-0">
+                🔥 {dailyStats.workoutCalories} kcal
+              </Badge>
+              <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-blue-100 text-blue-700 border-0">
+                💧 {dailyStats.hydration}
+              </Badge>
+              <Badge className="rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border-0">
+                🛌 {dailyStats.sleepHours || "-"} h
+              </Badge>
+              <Badge className="rounded-full bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 border-0">
+                🥗 {dailyStats.mealCount}
               </Badge>
               <button onClick={onProfileClick} className="focus:outline-none">
                 <UserAvatar size={40} userName="Alex Thompson" />
@@ -263,6 +351,92 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       )}
                     </motion.div>
                   ))}
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
+                      <Activity className="w-6 h-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3>AI Synced Actions</h3>
+                      <p className="text-slate-500">Latest from assistant</p>
+                    </div>
+                  </div>
+                  <Badge className="rounded-full bg-slate-100 text-slate-700 border-0">
+                    {recentLogs.length > 0 ? `${recentLogs.length} recent` : "No entries yet"}
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  {loading ? (
+                    <div className="flex items-center justify-center h-32">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
+                    </div>
+                  ) : recentLogs.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">
+                      <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No recent activities</p>
+                      <p className="text-sm">Start logging activities to see them here!</p>
+                    </div>
+                  ) : (
+                    recentLogs.map((log) => {
+                      const iconMap = {
+                        hydration: Droplet,
+                        sleep: Moon,
+                        workout: Dumbbell,
+                        meal: Utensils,
+                      } as const;
+                      const bgMap: Record<string, string> = {
+                        hydration: "from-sky-100 to-blue-100",
+                        sleep: "from-indigo-100 to-purple-100",
+                        workout: "from-amber-100 to-orange-100",
+                        meal: "from-rose-100 to-pink-100",
+                      };
+                      const Icon = iconMap[log.type as keyof typeof iconMap] || Sparkles;
+                      const background = bgMap[log.type] || "from-slate-100 to-slate-200";
+
+                      return (
+                        <div
+                          key={log._id}
+                          className="flex items-center justify-between gap-3 rounded-2xl bg-white/70 p-4"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={`w-11 h-11 flex items-center justify-center rounded-2xl bg-gradient-to-br ${background}`}
+                            >
+                              <Icon className="w-5 h-5 text-slate-700" />
+                            </div>
+                            <div>
+                              <p className="text-slate-700 font-medium">
+                                {log.type === 'hydration' ? 'Water logged' :
+                                 log.type === 'sleep' ? 'Sleep logged' :
+                                 log.type === 'workout' ? 'Workout logged' :
+                                 log.type === 'meal' ? 'Meal logged' : 'Activity logged'}
+                              </p>
+                              <p className="text-slate-500 text-sm">
+                                {log.value} {log.unit || ''} {log.note ? `· ${log.note}` : ''}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-xs text-slate-400">
+                            {new Date(log.date).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </Card>
             </motion.div>
@@ -497,24 +671,36 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
 
                 <ScrollArea className="h-[300px] mb-4 pr-4">
                   <div className="space-y-4">
-                    {chatMessages.map((message) => (
-                      <motion.div
-                        key={message.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[80%] p-4 rounded-2xl ${
-                            message.sender === "user"
-                              ? "bg-gradient-to-br from-sky-400 to-emerald-400 text-white"
-                              : "bg-white/80 text-slate-700"
-                          }`}
+                    {loading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
+                      </div>
+                    ) : recentChatMessages.length > 0 ? (
+                      recentChatMessages.map((message) => (
+                        <motion.div
+                          key={message._id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                         >
-                          {message.text}
-                        </div>
-                      </motion.div>
-                    ))}
+                          <div
+                            className={`max-w-[80%] p-4 rounded-2xl ${
+                              message.role === "user"
+                                ? "bg-gradient-to-br from-sky-400 to-emerald-400 text-white"
+                                : "bg-white/80 text-slate-700"
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                        </motion.div>
+                      ))
+                    ) : (
+                      <div className="text-center text-slate-500 py-8">
+                        <Brain className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                        <p>No chat messages yet</p>
+                        <p className="text-sm">Start a conversation with your AI coach!</p>
+                      </div>
+                    )}
                   </div>
                 </ScrollArea>
 

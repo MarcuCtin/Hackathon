@@ -13,6 +13,8 @@ import nutritionRoutes from './routes/nutrition.js';
 import suggestionsRoutes from './routes/suggestions.js';
 import insightsRoutes from './routes/insights.js';
 import aiRoutes from './routes/ai.js';
+import chatRoutes from './routes/chat.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const env = loadEnv();
 
@@ -43,6 +45,8 @@ export function createApp() {
   app.use('/api/suggestions', suggestionsRoutes);
   app.use('/api/insights', insightsRoutes);
   app.use('/api/ai', aiRoutes);
+  app.use('/api/chat', chatRoutes);
+  app.use('/api/dashboard', dashboardRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

@@ -275,3 +275,5 @@ Then open your browser to the URL shown (typically `http://localhost:5173`)
 
 **Design Philosophy**: Apple Health's clarity + Notion's modularity + Glassmorphism's depth
 
+
+

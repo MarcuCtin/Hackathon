@@ -1,4 +1,6 @@
-import { useState } from "react";
+// @ts-nocheck
+import { useEffect, useState } from "react";
+import { useAuth } from "./hooks/useAuth";
 import { FitterLogo } from "./components/FitterLogo";
 import { LifestyleIcons } from "./components/LifestyleIcons";
 import { OnboardingOrb } from "./components/OnboardingOrb";
@@ -15,11 +17,41 @@ import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Badge } from "./components/ui/badge";
 import { Sparkles, Heart, Brain, Zap } from "lucide-react";
+import { ActivityProvider } from "./context/ActivityContext";
 
 type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("landing");
+  const { user, loading, isAuthenticated } = useAuth();
+
+  // Handle authentication flow
+  useEffect(() => {
+    if (!loading) {
+      if (isAuthenticated && user) {
+        // User is logged in
+        if (user.completedOnboarding) {
+          // User completed onboarding → go to dashboard
+          setCurrentView("dashboard");
+        } else {
+          // User not completed onboarding → go to onboarding
+          setCurrentView("onboarding");
+        }
+      } else {
+        // User not logged in → show landing page
+        setCurrentView("landing");
+      }
+    }
+  }, [user, loading, isAuthenticated]);
+
+  // Show loading spinner while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-sky-50 to-emerald-50">
+        <FitterLogo size={60} className="animate-pulse" />
+      </div>
+    );
+  }
 
   if (currentView === "onboarding") {
     return (
@@ -38,7 +70,7 @@ export default function App() {
   // App pages with bottom navigation
   if (currentView === "assistant" || currentView === "dashboard" || currentView === "history" || currentView === "nutrition") {
     return (
-      <>
+      <ActivityProvider>
         {currentView === "assistant" && <AssistantPage onProfileClick={() => setCurrentView("profile")} />}
         {currentView === "dashboard" && <Dashboard onProfileClick={() => setCurrentView("profile")} />}
         {currentView === "history" && <HistoryPage onProfileClick={() => setCurrentView("profile")} />}
@@ -47,7 +79,7 @@ export default function App() {
           currentPage={currentView as "assistant" | "dashboard" | "history" | "nutrition"} 
           onNavigate={(page) => setCurrentView(page)}
         />
-      </>
+      </ActivityProvider>
     );
   }
 

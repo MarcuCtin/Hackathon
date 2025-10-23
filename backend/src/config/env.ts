@@ -10,7 +10,7 @@ const envSchema = z.object({
   MONGO_URI: z.string().min(1),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 chars'),
   GOOGLE_API_KEY: z.string().min(1),
-  GEMINI_MODEL: z.string().default('gemini-1.5-flash'),
+  GEMINI_MODEL: z.string().default('gemini-2.5-flash'),
   GEMINI_TEMPERATURE: z
     .string()
     .default('0.7')

@@ -9,10 +9,12 @@ export interface User {
   heightCm?: number;
   weightKg?: number;
   goals?: string[];
+  completedOnboarding?: boolean;
+  identityComplete?: boolean;
+  onboardingAnswers?: string[];
   createdAt: string;
   updatedAt: string;
 }
-
 export interface Log {
   _id: string;
   userId: string;
@@ -47,6 +49,38 @@ export interface NutritionLog {
   updatedAt: string;
 }
 
+export interface ChatMessage {
+  _id: string;
+  userId: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+  sessionId?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DashboardData {
+  daily: {
+    hydration: number;
+    workoutCalories: number;
+    sleepHours: number;
+    mealCount: number;
+    totalCalories: number;
+    totalProtein: number;
+  };
+  recent: {
+    logs: Log[];
+    nutrition: NutritionLog[];
+    chatMessages: ChatMessage[];
+  };
+  stats: {
+    totalLogs: number;
+    totalNutrition: number;
+    totalChatMessages: number;
+  };
+}
+
 export interface DailySummary {
   _id: string;
   userId: string;
@@ -71,7 +105,6 @@ class ApiClient {
   private token: string | null = null;
 
   constructor() {
-    // Load token from localStorage on init
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("token");
     }
@@ -163,6 +196,20 @@ class ApiClient {
     });
   }
 
+  // Onboarding complete
+  async completeOnboarding(payload: {
+    onboardingAnswers: string[];
+    identityComplete?: boolean;
+  }) {
+    return this.request<{ success: boolean; data: User }>(
+      "/profile/onboarding/complete",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
   // Logs
   async getLogs(params?: {
     from?: string;
@@ -170,8 +217,9 @@ class ApiClient {
     type?: string;
     limit?: number;
   }) {
-    const query = new URLSearchParams(params as any).toString();
-    return this.request<{ success: boolean; data: Log[] }>(`/logs?${query}`);
+    const query = params ? new URLSearchParams(params as any).toString() : "";
+    const suffix = query ? `?${query}` : "";
+    return this.request<{ success: boolean; data: Log[] }>(`/logs${suffix}`);
   }
 
   async createLog(log: {
@@ -219,13 +267,25 @@ class ApiClient {
   async chat(
     messages: Array<{ role: "system" | "user" | "assistant"; content: string }>
   ) {
-    return this.request<{ success: boolean; data: { reply: string } }>(
-      "/ai/chat",
-      {
-        method: "POST",
-        body: JSON.stringify({ messages }),
-      }
-    );
+    return this.request<{
+      success: boolean;
+      data: {
+        reply: string;
+        actions?: Array<{
+          type: string;
+          amount?: number;
+          hours?: number;
+          unit?: string;
+          notes?: string;
+          calories?: number;
+          minutes?: number;
+          category?: string;
+        }>;
+      };
+    }>("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ messages }),
+    });
   }
 
   async getSuggestions() {
@@ -243,6 +303,46 @@ class ApiClient {
     return this.request<{ success: boolean }>(`/insights/refresh${query}`, {
       method: "POST",
     });
+  }
+
+  // Chat
+  async saveChatMessage(message: {
+    role: "user" | "assistant";
+    content: string;
+    sessionId?: string;
+  }) {
+    return this.request<{ success: boolean; data: ChatMessage }>("/chat/save", {
+      method: "POST",
+      body: JSON.stringify(message),
+    });
+  }
+
+  async getChatMessages(sessionId?: string, limit?: number) {
+    const params = new URLSearchParams();
+    if (sessionId) params.append("sessionId", sessionId);
+    if (limit) params.append("limit", limit.toString());
+    const query = params.toString() ? `?${params.toString()}` : "";
+    return this.request<{ success: boolean; data: ChatMessage[] }>(
+      `/chat/messages${query}`
+    );
+  }
+
+  async getChatSessions() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        lastMessage: string;
+        messageCount: number;
+      }>;
+    }>("/chat/sessions");
+  }
+
+  // Dashboard
+  async getDashboardData() {
+    return this.request<{ success: boolean; data: DashboardData }>(
+      "/dashboard/data"
+    );
   }
 }
 

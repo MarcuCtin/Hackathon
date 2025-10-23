@@ -42,6 +42,8 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
 
   // Dynamic question flow based on previous answers
   const getQuestions = (): Question[] => {
@@ -181,6 +183,29 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
   const progress = currentStep < 0 ? 0 : ((currentStep + 1) / totalSteps) * 100;
 
   // Handler functions - defined before JSX
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setIsLoggingIn(true);
+    try {
+      await api.login(email, password);
+      const { data: user } = await api.getMe();
+      if (user?.completedOnboarding) {
+        toast.success("Welcome back! Redirecting to dashboard.");
+        onComplete?.(); // Go to dashboard if onboarding is complete
+      } else {
+        toast.success("Welcome back! Let's complete your wellness journey.");
+        setCurrentStep(0); // Start onboarding if not complete
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed. Please check your credentials.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password) return;
@@ -210,7 +235,7 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
       ]);
       setSelectedOption(null);
       
-      // If this is the last question, save profile with goals
+      // If this is the last question, save profile and mark onboarding complete
       if (currentStep === totalSteps - 1) {
         try {
           const goals = answers
@@ -219,10 +244,15 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
             .slice(0, 5);
           
           await api.updateProfile({ goals });
+          // Save onboarding answers to backend (simple: send values list)
+          const onboardingAnswers = answers.map(a => a.value);
+          await api.completeOnboarding({ onboardingAnswers, identityComplete: true });
           toast.success("Profile saved!");
+          onComplete?.(); // Call onComplete after saving
         } catch (error) {
           console.error("Profile update error:", error);
           // Continue anyway - profile can be updated later
+          onComplete?.();
         }
       }
       
@@ -285,11 +315,77 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           <div className="text-center mb-8">
             <FitterLogo size={48} className="mx-auto mb-4" />
             <h2 className="mb-2">Welcome to Fitter 👋</h2>
-            <p className="text-slate-600">Create your account to start your wellness journey</p>
+            <p className="text-slate-600">
+              {authMode === "login" ? "Login to your account" : "Create your account to start your wellness journey"}
+            </p>
           </div>
 
           <Card className="p-8 rounded-3xl border-white/20 bg-white/80 backdrop-blur-xl shadow-2xl">
-            <form onSubmit={handleRegister} className="space-y-4">
+            {authMode === "login" ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="email" className="mb-2 block text-slate-700">
+                    <Mail className="w-4 h-4 inline mr-2" />
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="alex@example.com"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isLoggingIn}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="mb-2 block text-slate-700">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isLoggingIn}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoggingIn || !email || !password}
+                  className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 disabled:opacity-50"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Logging In...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Login
+                    </>
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setAuthMode("register")}
+                  className="w-full rounded-2xl"
+                  disabled={isLoggingIn}
+                >
+                  Don't have an account? Register
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
               <div>
                 <Label htmlFor="name" className="mb-2 block text-slate-700">
                   <UserIcon className="w-4 h-4 inline mr-2" />
@@ -363,13 +459,14 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
               <Button
                 type="button"
                 variant="ghost"
-                onClick={handleSkip}
+                onClick={() => setAuthMode("login")}
                 className="w-full rounded-2xl"
                 disabled={isRegistering}
               >
-                Skip for now
+                Already have an account? Login
               </Button>
             </form>
+            )}
           </Card>
         </motion.div>
       </div>

@@ -53,7 +53,16 @@ router.get(
   asyncHandler(async (req, res) => {
     const user = await User.findById(req.userId).lean();
     if (!user) throw new AuthError('User not found');
-    void res.json({ success: true, data: { id: user._id, email: user.email, name: user.name } });
+    void res.json({
+      success: true,
+      data: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        completedOnboarding: !!user.completedOnboarding,
+        identityComplete: !!user.identityComplete,
+      },
+    });
   }),
 );
 

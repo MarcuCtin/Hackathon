@@ -22,6 +22,9 @@ const profileSchema = z.object({
   heightCm: z.number().min(50).max(300).optional(),
   weightKg: z.number().min(20).max(400).optional(),
   goals: z.array(z.string()).max(10).optional(),
+  onboardingAnswers: z.array(z.string()).max(50).optional(),
+  completedOnboarding: z.boolean().optional(),
+  identityComplete: z.boolean().optional(),
 });
 
 router.put(
@@ -31,6 +34,27 @@ router.put(
   asyncHandler(async (req, res) => {
     const update = req.body as z.infer<typeof profileSchema>;
     const user = await User.findByIdAndUpdate(req.userId, update, { new: true }).lean();
+    void res.json({ success: true, data: user });
+  }),
+);
+
+// Mark onboarding as completed and save answers
+const onboardingSchema = z.object({
+  onboardingAnswers: z.array(z.string()).min(1).max(50),
+  identityComplete: z.boolean().optional(),
+});
+
+router.post(
+  '/onboarding/complete',
+  requireAuth,
+  validate({ body: onboardingSchema }),
+  asyncHandler(async (req, res) => {
+    const { onboardingAnswers, identityComplete } = req.body as z.infer<typeof onboardingSchema>;
+    const user = await User.findByIdAndUpdate(
+      req.userId,
+      { onboardingAnswers, completedOnboarding: true, identityComplete: identityComplete ?? false },
+      { new: true },
+    ).lean();
     void res.json({ success: true, data: user });
   }),
 );

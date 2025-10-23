@@ -8,6 +8,9 @@ export interface UserDoc extends Document {
   heightCm?: number;
   weightKg?: number;
   goals?: string[];
+  onboardingAnswers?: string[];
+  completedOnboarding?: boolean;
+  identityComplete?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -21,6 +24,9 @@ const UserSchema = new Schema<UserDoc>(
     heightCm: { type: Number },
     weightKg: { type: Number },
     goals: [{ type: String }],
+    onboardingAnswers: [{ type: String }],
+    completedOnboarding: { type: Boolean, default: false },
+    identityComplete: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
