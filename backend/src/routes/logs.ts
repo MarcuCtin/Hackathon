@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { Log } from '../models/Log.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { Types } from 'mongoose';
 
 const router = Router();
 
@@ -24,7 +25,7 @@ router.get(
   validate({ query: listQuery }),
   asyncHandler(async (req, res) => {
     const { from, to, type, limit } = req.query as z.infer<typeof listQuery>;
-    const q: Record<string, unknown> = { userId: req.userId };
+    const q: Record<string, unknown> = { userId: new Types.ObjectId(req.userId) };
     if (from || to)
       q.date = { ...(from ? { $gte: new Date(from) } : {}), ...(to ? { $lte: new Date(to) } : {}) };
     if (type) q.type = type;
@@ -51,7 +52,7 @@ router.post(
   asyncHandler(async (req, res) => {
     const { type, value, unit, note, date } = req.body as z.infer<typeof createBody>;
     const created = await Log.create({
-      userId: req.userId,
+      userId: new Types.ObjectId(req.userId),
       type,
       value,
       unit,

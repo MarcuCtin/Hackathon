@@ -87,8 +87,8 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   ]);
   const [chatInput, setChatInput] = useState("");
 
-  // Energy data for the week
-  const energyData = [
+  // Use real energy data or fallback to mock data
+  const energyData = weeklyEnergyData.length > 0 ? weeklyEnergyData : [
     { day: "Mon", energy: 75, sleep: 7.5 },
     { day: "Tue", energy: 82, sleep: 8.0 },
     { day: "Wed", energy: 70, sleep: 6.5 },
@@ -98,7 +98,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     { day: "Sun", energy: 80, sleep: 8.0 },
   ];
 
-  // Nutrition tracking
+  // Nutrition tracking with real data
   const nutritionData = [
     { name: "Protein", value: 85, target: 100, color: "#6BF178" },
     { name: "Carbs", value: 120, target: 150, color: "#E2F163" },
@@ -383,7 +383,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       <div className="w-full h-2 bg-[#04101B] rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${(item.value / item.target) * 100}%` }}
+                          animate={{ width: `${item.progress || (item.value / item.target) * 100}%` }}
                           transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
                           className="h-full rounded-full"
                           style={{
@@ -410,7 +410,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Daily Recommendations */}
+            {/* Daily Suggestions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

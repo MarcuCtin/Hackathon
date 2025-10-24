@@ -10,6 +10,7 @@ import { OfMindPage } from "./components/OfMindPage";
 import { NutritionPage } from "./components/NutritionPage";
 import { HistoryPage } from "./components/HistoryPage";
 import { ProfilePage } from "./components/ProfilePage";
+import { DayInfoPage } from "./components/DayInfoPage";
 import { BottomNav } from "./components/BottomNav";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
@@ -17,7 +18,7 @@ import { Badge } from "./components/ui/badge";
 import { Sparkles, Heart, Brain, Zap } from "lucide-react";
 import { ActivityProvider } from "./context/ActivityContext";
 
-type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile";
+type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("landing");
@@ -36,13 +37,18 @@ export default function App() {
     return <ProfilePage onBack={() => setCurrentView("dashboard")} />;
   }
 
+  // Day info page (no bottom nav)
+  if (currentView === "dayinfo") {
+    return <DayInfoPage date={currentParams.date} onBack={() => setCurrentView("history")} />;
+  }
+
   // App pages with bottom navigation
   if (currentView === "assistant" || currentView === "dashboard" || currentView === "history" || currentView === "nutrition") {
     return (
       <ActivityProvider>
         {currentView === "assistant" && <AssistantPage onProfileClick={() => setCurrentView("profile")} />}
         {currentView === "dashboard" && <Dashboard onProfileClick={() => setCurrentView("profile")} />}
-        {currentView === "history" && <HistoryPage onProfileClick={() => setCurrentView("profile")} />}
+        {currentView === "history" && <HistoryPage onProfileClick={() => setCurrentView("profile")} onNavigate={(view, params) => { setCurrentView(view as AppView); setCurrentParams(params); }} />}
         {currentView === "nutrition" && <NutritionPage onProfileClick={() => setCurrentView("profile")} />}
         <BottomNav 
           currentPage={currentView as "assistant" | "dashboard" | "history" | "nutrition"} 

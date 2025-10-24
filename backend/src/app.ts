@@ -15,6 +15,13 @@ import insightsRoutes from './routes/insights.js';
 import aiRoutes from './routes/ai.js';
 import chatRoutes from './routes/chat.js';
 import dashboardRoutes from './routes/dashboard.js';
+import workoutRoutes from './routes/workouts.js';
+import dailyTasksRoutes from './routes/dailyTasks.js';
+import achievementsRoutes from './routes/achievements.js';
+import supplementsRoutes from './routes/supplements.js';
+import nutritionTipsRoutes from './routes/nutritionTips.js';
+import historyRoutes from './routes/history.js';
+import nutritionPageRoutes from './routes/nutritionPage.js';
 
 const env = loadEnv();
 
@@ -47,6 +54,13 @@ export function createApp() {
   app.use('/api/ai', aiRoutes);
   app.use('/api/chat', chatRoutes);
   app.use('/api/dashboard', dashboardRoutes);
+  app.use('/api/workouts', workoutRoutes);
+  app.use('/api/daily-tasks', dailyTasksRoutes);
+  app.use('/api/achievements', achievementsRoutes);
+  app.use('/api/supplements', supplementsRoutes);
+  app.use('/api/nutrition-tips', nutritionTipsRoutes);
+  app.use('/api/history', historyRoutes);
+  app.use('/api/nutrition-page', nutritionPageRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

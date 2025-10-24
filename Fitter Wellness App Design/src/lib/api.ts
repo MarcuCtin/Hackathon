@@ -9,6 +9,7 @@ export interface User {
   heightCm?: number;
   weightKg?: number;
   goals?: string[];
+  activityLevel?: "beginner" | "intermediate" | "advanced";
   completedOnboarding?: boolean;
   identityComplete?: boolean;
   onboardingAnswers?: string[];
@@ -49,6 +50,31 @@ export interface NutritionLog {
   updatedAt: string;
 }
 
+export interface Suggestion {
+  _id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category:
+    | "nutrition"
+    | "exercise"
+    | "sleep"
+    | "hydration"
+    | "wellness"
+    | "recovery";
+  priority: "high" | "medium" | "low";
+  status: "active" | "completed" | "dismissed";
+  emoji: string;
+  actionText?: string;
+  dismissText?: string;
+  generatedAt: string;
+  expiresAt?: string;
+  completedAt?: string;
+  dismissedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChatMessage {
   _id: string;
   userId: string;
@@ -68,16 +94,38 @@ export interface DashboardData {
     mealCount: number;
     totalCalories: number;
     totalProtein: number;
+    energyLevel: number;
   };
   recent: {
     logs: Log[];
     nutrition: NutritionLog[];
     chatMessages: ChatMessage[];
+    suggestions: Suggestion[];
   };
   stats: {
     totalLogs: number;
     totalNutrition: number;
     totalChatMessages: number;
+    activeSuggestions: number;
+  };
+  analytics: {
+    weeklyEnergy: Array<{
+      day: string;
+      energy: number;
+      sleep: number;
+    }>;
+    nutritionTargets: {
+      protein: number;
+      carbs: number;
+      fats: number;
+      water: number;
+    };
+    nutritionProgress: {
+      protein: number;
+      carbs: number;
+      fats: number;
+      water: number;
+    };
   };
 }
 
@@ -343,6 +391,175 @@ class ApiClient {
     return this.request<{ success: boolean; data: DashboardData }>(
       "/dashboard/data"
     );
+  }
+
+  // Suggestions
+  async getSuggestions() {
+    return this.request<{ success: boolean; data: Suggestion[] }>(
+      "/suggestions"
+    );
+  }
+
+  async completeSuggestion(id: string) {
+    return this.request<{ success: boolean; data: Suggestion }>(
+      `/suggestions/${id}/complete`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  async dismissSuggestion(id: string) {
+    return this.request<{ success: boolean; data: Suggestion }>(
+      `/suggestions/${id}/dismiss`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  async generateSuggestions() {
+    return this.request<{ success: boolean; data: Suggestion[] }>(
+      "/suggestions/generate",
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  // Daily wellness data
+  async getDailyWellness(date: string) {
+    return this.request<{
+      success: boolean;
+      data: {
+        date: string;
+        wellness: {
+          score: number;
+          energyLevel: number;
+          hydration: number;
+          sleepHours: number;
+        };
+        movement: {
+          workoutCalories: number;
+          steps: number;
+          activeMinutes: number;
+        };
+        nutrition: {
+          totalCalories: number;
+          totalProtein: number;
+          totalCarbs: number;
+          totalFat: number;
+          mealCount: number;
+          mealsByType: {
+            breakfast: any[];
+            lunch: any[];
+            dinner: any[];
+            snack: any[];
+          };
+        };
+        activities: Array<{
+          id: string;
+          type: string;
+          value: number;
+          unit?: string;
+          note?: string;
+          timestamp: string;
+        }>;
+        chatMessages: Array<{
+          id: string;
+          role: string;
+          content: string;
+          timestamp: string;
+        }>;
+      };
+    }>(`/dashboard/daily/${date}`);
+  }
+
+  // Workout Plans
+  async generateWorkoutPlan() {
+    return this.request<{
+      success: boolean;
+      data: {
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/workouts/generate", {
+      method: "POST",
+    });
+  }
+
+  async getWorkoutPlans() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>("/workouts/plans");
+  }
+
+  async getWorkoutPlan(id: string) {
+    return this.request<{
+      success: boolean;
+      data: {
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/workouts/plans/${id}`);
   }
 }
 

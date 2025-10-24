@@ -1,0 +1,514 @@
+{
+  "info": {
+    "name": "Fitter Complete API - All Widgets",
+    "description": "Complete API with all widget endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard - Complete Widget Data",
+      "item": [
+        {
+          "name": "Get All Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/data",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "data"]
+            },
+            "description": "Returns all dashboard widgets: daily progress, daily routine, AI synced actions, achievements, etc."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Daily Tasks",
+      "item": [
+        {
+          "name": "Create Daily Task",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Morning meditation\",\n  \"scheduledTime\": \"07:00\",\n  \"date\": \"2024-01-15T00:00:00.000Z\",\n  \"category\": \"wellness\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/daily-tasks",
+              "host": ["{{base_url}}"],
+              "path": ["api", "daily-tasks"]
+            }
+          }
+        },
+        {
+          "name": "Get Daily Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/daily-tasks?day=2024-01-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "daily-tasks"],
+              "query": [
+                {
+                  "key": "day",
+                  "value": "2024-01-15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complete Task",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"completed\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/daily-tasks/:id/complete",
+              "host": ["{{base_url}}"],
+              "path": ["api", "daily-tasks", ":id", "complete"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "task_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Achievements",
+      "item": [
+        {
+          "name": "Create Achievement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Hit protein goal\",\n  \"description\": \"Reached 120g protein target\",\n  \"category\": \"nutrition\",\n  \"date\": \"2024-01-15T00:00:00.000Z\",\n  \"icon\": \"🏆\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/achievements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "achievements"]
+            }
+          }
+        },
+        {
+          "name": "Get Achievements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/achievements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "achievements"]
+            }
+          }
+        },
+        {
+          "name": "Get Weekly Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/achievements/weekly-summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "achievements", "weekly-summary"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Supplements",
+      "item": [
+        {
+          "name": "Create Supplement",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Magnesium\",\n  \"benefit\": \"for recovery\",\n  \"description\": \"Supports muscle recovery and better sleep quality\",\n  \"category\": \"recovery\",\n  \"icon\": \"🌙\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/supplements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements"]
+            }
+          }
+        },
+        {
+          "name": "Get Supplements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/supplements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements"]
+            }
+          }
+        },
+        {
+          "name": "Add to Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/supplements/:id/add-to-plan",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements", ":id", "add-to-plan"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "supplement_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nutrition Tips",
+      "item": [
+        {
+          "name": "Create Nutrition Tip",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"You still need more protein today. Try adding lean meats, fish, or a protein shake to your next meal.\",\n  \"category\": \"protein\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-tips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-tips"]
+            }
+          }
+        },
+        {
+          "name": "Get Tips",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-tips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-tips"]
+            }
+          }
+        },
+        {
+          "name": "Mark Tip as Seen",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-tips/:id/mark-seen",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-tips", ":id", "mark-seen"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "tip_id_here"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "History Page",
+      "item": [
+        {
+          "name": "Get Weekly Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/weekly-overview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "weekly-overview"]
+            }
+          }
+        },
+        {
+          "name": "Get Assistant Timeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/assistant-timeline",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "assistant-timeline"]
+            }
+          }
+        },
+        {
+          "name": "Get Daily History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/daily",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "daily"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nutrition Page",
+      "item": [
+        {
+          "name": "Get Today's Nutrition",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/today",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "today"]
+            }
+          }
+        },
+        {
+          "name": "Get Supplements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/supplements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "supplements"]
+            }
+          }
+        },
+        {
+          "name": "Get Nutrition Tip",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/tips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "tips"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Chat - With Historical Context",
+      "item": [
+        {
+          "name": "Chat with AI",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"How am I doing today?\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat"]
+            },
+            "description": "AI now has access to your progress history and achievements!"
+          }
+        }
+      ]
+    }
+  ]
+}
