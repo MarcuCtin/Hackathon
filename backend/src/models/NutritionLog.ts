@@ -6,6 +6,17 @@ export interface NutritionLogDoc extends Document {
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   items: Array<{ name: string; calories: number; protein: number; carbs: number; fat: number }>;
   total: { calories: number; protein: number; carbs: number; fat: number };
+  micronutrients?: {
+    vitaminD?: number; // mcg
+    calcium?: number; // mg
+    magnesium?: number; // mg
+    iron?: number; // mg
+    zinc?: number; // mg
+    omega3?: number; // mg
+    b12?: number; // mcg
+    folate?: number; // mcg
+    [key: string]: number | undefined;
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,6 +40,10 @@ const NutritionLogSchema = new Schema<NutritionLogDoc>(
       protein: { type: Number, required: true },
       carbs: { type: Number, required: true },
       fat: { type: Number, required: true },
+    },
+    micronutrients: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
   },
   { timestamps: true },

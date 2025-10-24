@@ -4,6 +4,9 @@ import { Log } from '../models/Log.js';
 import { NutritionLog } from '../models/NutritionLog.js';
 import { ChatMessage } from '../models/ChatMessage.js';
 import { Suggestion } from '../models/Suggestion.js';
+import { DailyTask } from '../models/DailyTask.js';
+import { Achievement } from '../models/Achievement.js';
+import { Supplement } from '../models/Supplement.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Types } from 'mongoose';
 
@@ -45,6 +48,42 @@ router.get(
       .limit(5)
       .lean();
 
+    // Get daily tasks
+    const dailyTasks = await DailyTask.find({
+      userId: new Types.ObjectId(req.userId),
+      date: { $gte: today, $lt: tomorrow },
+    })
+      .sort({ scheduledTime: 1 })
+      .lean();
+
+    // Get recent achievements
+    const recentAchievements = await Achievement.find({
+      userId: new Types.ObjectId(req.userId),
+      date: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
+    })
+      .sort({ date: -1 })
+      .limit(10)
+      .lean();
+
+    // Get AI synced actions (from chat messages with actions)
+    const aiSyncedActions = await ChatMessage.find({
+      userId: req.userId,
+      role: 'assistant',
+      content: { $regex: /logged|synced/i },
+    })
+      .sort({ timestamp: -1 })
+      .limit(5)
+      .lean();
+
+    // Get supplements
+    const supplements = await Supplement.find({
+      userId: new Types.ObjectId(req.userId),
+      addedToPlan: true,
+    })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .lean();
+
     // Calculate daily totals
     const hydrationToday = logs
       .filter((log) => log.type === 'hydration')
@@ -69,6 +108,10 @@ router.get(
       (sum, meal) => sum + (meal.total?.protein || 0),
       0,
     );
+
+    const totalCarbsToday = nutritionLogs.reduce((sum, meal) => sum + (meal.total?.carbs || 0), 0);
+
+    const totalFatToday = nutritionLogs.reduce((sum, meal) => sum + (meal.total?.fat || 0), 0);
 
     // Get recent activities (last 7 days)
     const weekAgo = new Date();
@@ -136,10 +179,12 @@ router.get(
 
     const nutritionProgress = {
       protein: Math.min(100, (totalProteinToday / nutritionTargets.protein) * 100),
-      carbs: Math.min(100, (120 / nutritionTargets.carbs) * 100), // Mock carbs
-      fats: Math.min(100, (60 / nutritionTargets.fats) * 100), // Mock fats
+      carbs: Math.min(100, (totalCarbsToday / nutritionTargets.carbs) * 100),
+      fats: Math.min(100, (totalFatToday / nutritionTargets.fats) * 100),
       water: Math.min(100, (hydrationToday / nutritionTargets.water) * 100),
     };
+
+    const completedTasks = dailyTasks.filter((t) => t.completed).length;
 
     void res.json({
       success: true,
@@ -151,8 +196,18 @@ router.get(
           mealCount: mealCountToday,
           totalCalories: totalCaloriesToday,
           totalProtein: totalProteinToday,
+          totalCarbs: totalCarbsToday,
+          totalFat: totalFatToday,
           energyLevel: calculateEnergyLevel(sleepHoursToday),
         },
+        dailyRoutine: {
+          completed: completedTasks,
+          total: dailyTasks.length,
+          tasks: dailyTasks,
+        },
+        aiSyncedActions: aiSyncedActions,
+        achievements: recentAchievements,
+        supplements: supplements,
         recent: {
           logs: recentLogs,
           nutrition: recentNutrition,
@@ -164,6 +219,8 @@ router.get(
           totalNutrition: nutritionLogs.length,
           totalChatMessages: chatMessages.length,
           activeSuggestions: suggestions.length,
+          completedTasks,
+          totalTasks: dailyTasks.length,
         },
         analytics: {
           weeklyEnergy: weeklyEnergyData,

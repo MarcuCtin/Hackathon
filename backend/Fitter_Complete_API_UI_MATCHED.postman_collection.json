@@ -1,0 +1,301 @@
+{
+  "info": {
+    "name": "Fitter Complete API - UI Matched",
+    "description": "All endpoints matching UI widgets from screenshots",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🚀 Setup",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "📊 Dashboard Page",
+      "item": [
+        {
+          "name": "Get All Dashboard Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/data",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "data"]
+            },
+            "description": "Returns ALL widgets: Daily Routine, AI Synced Actions, Energy & Sleep, Nutrition & Supplements, Daily Suggestions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "📅 History Page",
+      "item": [
+        {
+          "name": "Get Weekly Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/weekly-overview",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "weekly-overview"]
+            },
+            "description": "Returns: avgCalories, avgProtein, avgSleep, workouts, goalsHit, streak"
+          }
+        },
+        {
+          "name": "Get Assistant Timeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/assistant-timeline",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "assistant-timeline"]
+            },
+            "description": "Returns latest AI-driven entries"
+          }
+        },
+        {
+          "name": "Get Daily Cards with Progress",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/daily-cards?days=7",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "daily-cards"],
+              "query": [
+                {
+                  "key": "days",
+                  "value": "7"
+                }
+              ]
+            },
+            "description": "Returns daily cards with progress %, hydration, sleep, calories, meals, energy level, steps"
+          }
+        },
+        {
+          "name": "Get Insights",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/history/insights",
+              "host": ["{{base_url}}"],
+              "path": ["api", "history", "insights"]
+            },
+            "description": "Returns progress comparisons (Sleep Quality, Protein Intake, Workout Frequency)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🍎 Nutrition Page",
+      "item": [
+        {
+          "name": "Get Today's Nutrition",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/today",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "today"]
+            },
+            "description": "Returns: calories (with remaining), protein, carbs, fat, water, caffeine, meals grouped by type"
+          }
+        },
+        {
+          "name": "Get Supplements",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/supplements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "supplements"]
+            },
+            "description": "Returns recommended supplements"
+          }
+        },
+        {
+          "name": "Get Nutrition Tip",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/nutrition-page/tips",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nutrition-page", "tips"]
+            },
+            "description": "Returns personalized nutrition tip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Chat (with History)",
+      "item": [
+        {
+          "name": "Chat with Context",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"How am I doing today?\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat"]
+            },
+            "description": "AI has access to: Today's progress, Last 7 days averages, Recent achievements"
+          }
+        }
+      ]
+    },
+    {
+      "name": "💬 Chat Messages",
+      "item": [
+        {
+          "name": "Get Messages by Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages?day=2024-01-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages"],
+              "query": [
+                {
+                  "key": "day",
+                  "value": "2024-01-15"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Messages Grouped by Day",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/chat/messages/by-day",
+              "host": ["{{base_url}}"],
+              "path": ["api", "chat", "messages", "by-day"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
