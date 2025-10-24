@@ -536,10 +536,6 @@ class ApiClient {
     });
   }
 
-  async getSuggestions() {
-    return this.request<{ success: boolean; data: string[] }>("/suggestions");
-  }
-
   async getInsights() {
     return this.request<{ success: boolean; data: DailySummary[] }>(
       "/insights"
@@ -777,12 +773,21 @@ class ApiClient {
     });
   }
 
-  async completeDailyTask(id: string) {
+  async completeDailyTask(id: string, completed: boolean = true) {
     return this.request<{ success: boolean; data: any }>(
       `/daily-tasks/${id}/complete`,
       {
         method: "PATCH",
-        body: JSON.stringify({ completed: true }),
+        body: JSON.stringify({ completed }),
+      }
+    );
+  }
+
+  async generateDailyTasksFromPlan() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/daily-tasks/generate-from-plan",
+      {
+        method: "POST",
       }
     );
   }

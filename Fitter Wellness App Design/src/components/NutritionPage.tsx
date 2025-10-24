@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useEffect } from "react";
-import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -9,7 +8,8 @@ import { NutritionRecommender } from "./NutritionRecommender";
 import { MealLogForm } from "./MealLogForm";
 import { UserAvatar } from "./UserAvatar";
 import { api } from "../lib/api";
-import { Utensils, Droplets, Zap, TrendingUp, Apple, Coffee, Clock, ChevronRight, Trash2, Sparkles, CheckCircle2, Star, Calendar, Pause, Play, X } from "lucide-react";
+import { toast } from "sonner";
+import { Utensils, Droplets, Zap, TrendingUp, Apple, Coffee, Clock, ChevronRight, Trash2, Sparkles, CheckCircle2, Star, Calendar, Pause, Play, X, RefreshCw, Loader2 } from "lucide-react";
 
 interface MealLog {
   id: string;
@@ -759,9 +759,45 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-gradient-modern text-glow text-lg font-bold">Suggested Meals</h3>
-            <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
-              {remaining.calories > 0 ? `${remaining.calories} kcal remaining` : "Goal reached!"}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
+                {remaining.calories > 0 ? `${remaining.calories} kcal remaining` : "Goal reached!"}
+              </Badge>
+              {remaining.calories > 0 && (
+                <Button
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      setIsLoadingSuggestions(true);
+                      const response = await api.getMealSuggestions();
+                      if (response.success && response.data.suggestions) {
+                        setAiSuggestions(response.data.suggestions);
+                        toast.success("Fresh meal suggestions generated!");
+                      }
+                    } catch (error) {
+                      console.error("Failed to regenerate suggestions:", error);
+                      toast.error("Failed to generate suggestions");
+                    } finally {
+                      setIsLoadingSuggestions(false);
+                    }
+                  }}
+                  disabled={isLoadingSuggestions}
+                  className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(107,241,120,0.4)] hover:shadow-[0_0_15px_rgba(107,241,120,0.6)] disabled:opacity-50"
+                >
+                  {isLoadingSuggestions ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Refresh
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
 
           {isLoadingSuggestions ? (
@@ -769,7 +805,7 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
               <div className="animate-spin mx-auto mb-4 w-12 h-12 border-4 border-[#6BF178] border-t-transparent rounded-full" />
               <p className="text-[#DFF2D4]/80">AI is analyzing your nutrition and generating personalized meal suggestions...</p>
             </Card>
-          ) : remaining.calories > 0 ? (
+          ) : remaining.calories > 0 && suggestedMeals.length > 0 ? (
             <div className="grid md:grid-cols-2 gap-4">
               {suggestedMeals.map((meal, index) => (
                 <motion.div
@@ -830,6 +866,47 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                 </motion.div>
               ))}
             </div>
+          ) : remaining.calories > 0 ? (
+            <Card className="modern-card glass-card-intense p-8 rounded-3xl hover-lift overflow-hidden text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center shadow-[0_0_20px_rgba(107,241,120,0.4)]">
+                <Utensils className="w-10 h-10 text-[#04101B]" />
+              </div>
+              <h4 className="mb-2 text-[#6BF178] font-bold">No suggestions yet</h4>
+              <p className="text-[#DFF2D4]/80 mb-4">
+                Click "Refresh" to generate AI-powered meal suggestions based on your remaining targets.
+              </p>
+              <Button
+                onClick={async () => {
+                  try {
+                    setIsLoadingSuggestions(true);
+                    const response = await api.getMealSuggestions();
+                    if (response.success && response.data.suggestions) {
+                      setAiSuggestions(response.data.suggestions);
+                      toast.success("Meal suggestions generated!");
+                    }
+                  } catch (error) {
+                    console.error("Failed to generate suggestions:", error);
+                    toast.error("Failed to generate suggestions");
+                  } finally {
+                    setIsLoadingSuggestions(false);
+                  }
+                }}
+                disabled={isLoadingSuggestions}
+                className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] hover:shadow-[0_0_20px_rgba(107,241,120,0.6)]"
+              >
+                {isLoadingSuggestions ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Suggestions
+                  </>
+                )}
+              </Button>
+            </Card>
           ) : (
             <Card className="modern-card glass-card-intense p-8 rounded-3xl hover-lift overflow-hidden text-center">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center shadow-[0_0_20px_rgba(107,241,120,0.4)]">

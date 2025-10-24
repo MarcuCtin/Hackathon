@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
@@ -353,7 +353,7 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           className="w-full max-w-md"
         >
           <div className="text-center mb-8">
-            <FitterLogo size={48} className="mx-auto mb-4" />
+            <FitterLogo size={48} />
             <h2 className="mb-2">Welcome to Fitter 👋</h2>
             <p className="text-slate-600">
               {showLogin ? "Sign in to continue" : "Create your account to start your wellness journey"}

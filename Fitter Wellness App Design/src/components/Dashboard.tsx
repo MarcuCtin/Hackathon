@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -13,6 +13,7 @@ import { ProgressInsights } from "./ProgressInsights";
 import { DailyTaskForm } from "./DailyTaskForm";
 import { api } from "../lib/api";
 import { toast } from "sonner";
+import { useAuth } from "../hooks/useAuth";
 import {
   Sun,
   Moon,
@@ -88,6 +89,8 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   const [dailyData, setDailyData] = useState<any>(null);
   const [nutritionProgress, setNutritionProgress] = useState<any>(null);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [activePlan, setActivePlan] = useState<any>(null);
 
   // Fetch dashboard data from backend
   useEffect(() => {
@@ -130,6 +133,25 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
       const response = await api.getDailyTasks(today);
       
       if (response.success && response.data) {
+        // If no tasks exist, try to generate from active plan
+        if (response.data.length === 0) {
+          try {
+            const generateResponse = await api.generateDailyTasksFromPlan();
+            if (generateResponse.success && generateResponse.data) {
+              const transformedTasks: Task[] = generateResponse.data.map((task: any) => ({
+                id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
+                title: task.title,
+                completed: task.completed,
+                time: task.scheduledTime,
+              }));
+              setTasks(transformedTasks);
+              return;
+            }
+          } catch (error) {
+            console.error("Failed to generate tasks from plan:", error);
+          }
+        }
+        
         const transformedTasks: Task[] = response.data.map((task: any) => ({
           id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
           title: task.title,
@@ -537,7 +559,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       <div className="w-full h-2 bg-[#04101B] rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${item.progress || (item.value / item.target) * 100}%` }}
+                          animate={{ width: `${Math.min(100, (item.value / item.target) * 100)}%` }}
                           transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
                           className="h-full rounded-full"
                           style={{

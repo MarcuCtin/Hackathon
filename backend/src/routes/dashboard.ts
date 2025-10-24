@@ -7,6 +7,7 @@ import { Suggestion } from '../models/Suggestion.js';
 import { DailyTask } from '../models/DailyTask.js';
 import { Achievement } from '../models/Achievement.js';
 import { Supplement } from '../models/Supplement.js';
+import { UserPlan } from '../models/UserPlan.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Types } from 'mongoose';
 
@@ -49,12 +50,81 @@ router.get(
       .lean();
 
     // Get daily tasks
-    const dailyTasks = await DailyTask.find({
+    let dailyTasks = await DailyTask.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
     })
       .sort({ scheduledTime: 1 })
       .lean();
+
+    // If no tasks exist, generate default tasks from active plan
+    if (dailyTasks.length === 0) {
+      const activePlan = await UserPlan.findOne({
+        userId: new Types.ObjectId(req.userId),
+        status: 'active',
+      }).lean();
+
+      if (activePlan) {
+        dailyTasks = [
+          {
+            _id: new Types.ObjectId(),
+            userId: new Types.ObjectId(req.userId),
+            title: `Track ${activePlan.targetCalories} calories`,
+            scheduledTime: '08:00',
+            date: today,
+            completed: false,
+            category: 'nutrition',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+          {
+            _id: new Types.ObjectId(),
+            userId: new Types.ObjectId(req.userId),
+            title: `Reach ${activePlan.targetProtein}g protein`,
+            scheduledTime: '12:00',
+            date: today,
+            completed: false,
+            category: 'nutrition',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+          {
+            _id: new Types.ObjectId(),
+            userId: new Types.ObjectId(req.userId),
+            title:
+              activePlan.planType === 'bulking' ? 'Strength training session' : 'Workout session',
+            scheduledTime: '18:00',
+            date: today,
+            completed: false,
+            category: 'exercise',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+          {
+            _id: new Types.ObjectId(),
+            userId: new Types.ObjectId(req.userId),
+            title: 'Drink 3L water',
+            scheduledTime: '10:00',
+            date: today,
+            completed: false,
+            category: 'wellness',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+          {
+            _id: new Types.ObjectId(),
+            userId: new Types.ObjectId(req.userId),
+            title: 'Sleep 7-8 hours',
+            scheduledTime: '22:00',
+            date: today,
+            completed: false,
+            category: 'wellness',
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          } as any,
+        ];
+      }
+    }
 
     // Get recent achievements
     const recentAchievements = await Achievement.find({

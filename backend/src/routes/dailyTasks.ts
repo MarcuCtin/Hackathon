@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { DailyTask } from '../models/DailyTask.js';
+import { UserPlan } from '../models/UserPlan.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Types } from 'mongoose';
 
@@ -39,20 +40,96 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const { day } = req.query;
-    const query: Record<string, unknown> = { userId: new Types.ObjectId(req.userId) };
+    const today = new Date();
+    const targetDate = day ? new Date(day as string) : today;
 
-    if (day) {
-      const dayDate = new Date(day as string);
-      const startOfDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
-      const endOfDay = new Date(startOfDay);
-      endOfDay.setDate(endOfDay.getDate() + 1);
+    const startOfDay = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth(),
+      targetDate.getDate(),
+    );
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setDate(endOfDay.getDate() + 1);
 
-      query.date = { $gte: startOfDay, $lt: endOfDay };
+    // Get user's tasks for the day
+    const tasks = await DailyTask.find({
+      userId: new Types.ObjectId(req.userId),
+      date: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .sort({ scheduledTime: 1 })
+      .lean();
+
+    // Get active plan
+    const activePlan = await UserPlan.findOne({
+      userId: new Types.ObjectId(req.userId),
+      status: 'active',
+    }).lean();
+
+    // Generate default tasks from plan if user has tasks
+    const planTasks = [];
+    if (activePlan && tasks.length === 0) {
+      // Generate tasks based on plan type
+      planTasks.push(
+        {
+          _id: new Types.ObjectId(),
+          userId: new Types.ObjectId(req.userId),
+          title: `Track ${activePlan.targetCalories} calories`,
+          scheduledTime: '08:00',
+          date: startOfDay,
+          completed: false,
+          category: 'nutrition',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: new Types.ObjectId(),
+          userId: new Types.ObjectId(req.userId),
+          title: `Reach ${activePlan.targetProtein}g protein`,
+          scheduledTime: '12:00',
+          date: startOfDay,
+          completed: false,
+          category: 'nutrition',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: new Types.ObjectId(),
+          userId: new Types.ObjectId(req.userId),
+          title:
+            activePlan.planType === 'bulking' ? 'Strength training session' : 'Workout session',
+          scheduledTime: '18:00',
+          date: startOfDay,
+          completed: false,
+          category: 'exercise',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: new Types.ObjectId(),
+          userId: new Types.ObjectId(req.userId),
+          title: 'Drink 3L water',
+          scheduledTime: '10:00',
+          date: startOfDay,
+          completed: false,
+          category: 'wellness',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+        {
+          _id: new Types.ObjectId(),
+          userId: new Types.ObjectId(req.userId),
+          title: 'Sleep 7-8 hours',
+          scheduledTime: '22:00',
+          date: startOfDay,
+          completed: false,
+          category: 'wellness',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      );
     }
 
-    const tasks = await DailyTask.find(query).sort({ scheduledTime: 1 }).lean();
-
-    void res.json({ success: true, data: tasks });
+    void res.json({ success: true, data: tasks.length > 0 ? tasks : planTasks });
   }),
 );
 
@@ -99,6 +176,91 @@ router.delete(
     }
 
     void res.json({ success: true, data: task });
+  }),
+);
+
+// Generate and save default tasks from active plan
+router.post(
+  '/generate-from-plan',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+    // Check if tasks already exist for today
+    const existingTasks = await DailyTask.find({
+      userId: new Types.ObjectId(req.userId),
+      date: { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000) },
+    }).lean();
+
+    if (existingTasks.length > 0) {
+      return void res.json({
+        success: true,
+        message: 'Tasks already exist for today',
+        data: existingTasks,
+      });
+    }
+
+    // Get active plan
+    const activePlan = await UserPlan.findOne({
+      userId: new Types.ObjectId(req.userId),
+      status: 'active',
+    }).lean();
+
+    if (!activePlan) {
+      return void res.status(404).json({
+        success: false,
+        error: { message: 'No active plan found' },
+      });
+    }
+
+    // Generate tasks based on plan type
+    const tasksToCreate = [
+      {
+        userId: new Types.ObjectId(req.userId),
+        title: `Track ${activePlan.targetCalories} calories`,
+        scheduledTime: '08:00',
+        date: startOfDay,
+        completed: false,
+        category: 'nutrition' as const,
+      },
+      {
+        userId: new Types.ObjectId(req.userId),
+        title: `Reach ${activePlan.targetProtein}g protein`,
+        scheduledTime: '12:00',
+        date: startOfDay,
+        completed: false,
+        category: 'nutrition' as const,
+      },
+      {
+        userId: new Types.ObjectId(req.userId),
+        title: activePlan.planType === 'bulking' ? 'Strength training session' : 'Workout session',
+        scheduledTime: '18:00',
+        date: startOfDay,
+        completed: false,
+        category: 'exercise' as const,
+      },
+      {
+        userId: new Types.ObjectId(req.userId),
+        title: 'Drink 3L water',
+        scheduledTime: '10:00',
+        date: startOfDay,
+        completed: false,
+        category: 'wellness' as const,
+      },
+      {
+        userId: new Types.ObjectId(req.userId),
+        title: 'Sleep 7-8 hours',
+        scheduledTime: '22:00',
+        date: startOfDay,
+        completed: false,
+        category: 'wellness' as const,
+      },
+    ];
+
+    const createdTasks = await DailyTask.insertMany(tasksToCreate);
+
+    void res.status(201).json({ success: true, data: createdTasks });
   }),
 );
 

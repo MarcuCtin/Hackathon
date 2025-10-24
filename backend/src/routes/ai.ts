@@ -77,66 +77,195 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
   const micros: Record<string, number> = {};
 
   // Fish (omega3, vitaminD)
-  if (notes.includes('salmon') || notes.includes('tuna') || notes.includes('fish')) {
+  if (
+    notes.includes('salmon') ||
+    notes.includes('tuna') ||
+    notes.includes('fish') ||
+    notes.includes('sardine') ||
+    notes.includes('mackerel')
+  ) {
     micros.omega3 = 500 + Math.random() * 500; // 500-1000mg
     micros.vitaminD = 5 + Math.random() * 5; // 5-10mcg
   }
 
-  // Dairy (calcium, vitaminD)
-  if (notes.includes('milk') || notes.includes('yogurt') || notes.includes('cheese')) {
+  // Dairy (calcium, vitaminD, B12)
+  if (
+    notes.includes('milk') ||
+    notes.includes('yogurt') ||
+    notes.includes('cheese') ||
+    notes.includes('lapte') ||
+    notes.includes('kaas')
+  ) {
     micros.calcium = 200 + Math.random() * 100; // 200-300mg
     micros.vitaminD = 1 + Math.random(); // 1-2mcg
+    micros.b12 = 0.5 + Math.random() * 0.5; // 0.5-1mcg
   }
 
-  // Leafy greens (iron, folate, calcium)
+  // Leafy greens (iron, folate, calcium, vitamin A)
   if (
     notes.includes('spinach') ||
     notes.includes('kale') ||
     notes.includes('lettuce') ||
-    notes.includes('salad')
+    notes.includes('salad') ||
+    notes.includes('broccoli') ||
+    notes.includes('cabbage') ||
+    notes.includes('română') ||
+    notes.includes('spanac')
   ) {
     micros.iron = 2 + Math.random() * 2; // 2-4mg
     micros.folate = 100 + Math.random() * 100; // 100-200mcg
     micros.calcium = 50 + Math.random() * 50; // 50-100mg
   }
 
-  // Nuts (magnesium, iron)
-  if (notes.includes('almond') || notes.includes('walnut') || notes.includes('nut')) {
+  // Nuts (magnesium, iron, vitamin E)
+  if (
+    notes.includes('almond') ||
+    notes.includes('walnut') ||
+    notes.includes('nut') ||
+    notes.includes('nucă') ||
+    notes.includes('nuts') ||
+    notes.includes('peanut') ||
+    notes.includes('peanut butter')
+  ) {
     micros.magnesium = 50 + Math.random() * 50; // 50-100mg
     micros.iron = 1 + Math.random(); // 1-2mg
   }
 
-  // Whole grains (iron, folate, zinc)
+  // Whole grains (iron, folate, zinc, B vitamins)
   if (
     notes.includes('quinoa') ||
     notes.includes('rice') ||
     notes.includes('pasta') ||
-    notes.includes('bread')
+    notes.includes('bread') ||
+    notes.includes('oats') ||
+    notes.includes('oatmeal') ||
+    notes.includes('cereal') ||
+    notes.includes('wheat')
   ) {
     micros.iron = 1 + Math.random(); // 1-2mg
     micros.folate = 50 + Math.random() * 50; // 50-100mcg
     micros.zinc = 1 + Math.random(); // 1-2mg
   }
 
-  // Eggs (vitaminD, B12, folate)
-  if (notes.includes('egg')) {
+  // Eggs (vitaminD, B12, folate, choline)
+  if (notes.includes('egg') || notes.includes('ouă') || notes.includes('ou')) {
     micros.vitaminD = 1;
     micros.b12 = 0.5;
     micros.folate = 30;
   }
 
   // Red meat (iron, B12, zinc)
-  if (notes.includes('beef') || notes.includes('steak') || notes.includes('meat')) {
+  if (
+    notes.includes('beef') ||
+    notes.includes('steak') ||
+    notes.includes('meat') ||
+    notes.includes('carne') ||
+    notes.includes('pork') ||
+    notes.includes('ribs')
+  ) {
     micros.iron = 2 + Math.random(); // 2-3mg
     micros.b12 = 1 + Math.random(); // 1-2mcg
     micros.zinc = 2 + Math.random(); // 2-3mg
   }
 
-  // Legumes (iron, folate, magnesium)
-  if (notes.includes('bean') || notes.includes('lentil') || notes.includes('chickpea')) {
+  // Poultry (iron, B12, zinc, niacin)
+  if (
+    notes.includes('chicken') ||
+    notes.includes('turkey') ||
+    notes.includes('pui') ||
+    notes.includes('curcan')
+  ) {
+    micros.iron = 1 + Math.random(); // 1-2mg
+    micros.b12 = 0.5 + Math.random() * 0.5; // 0.5-1mcg
+    micros.zinc = 1 + Math.random(); // 1-2mg
+  }
+
+  // Legumes (iron, folate, magnesium, protein)
+  if (
+    notes.includes('bean') ||
+    notes.includes('lentil') ||
+    notes.includes('chickpea') ||
+    notes.includes('fasole') ||
+    notes.includes('soy') ||
+    notes.includes('tofu') ||
+    notes.includes('tempeh')
+  ) {
     micros.iron = 2 + Math.random(); // 2-3mg
     micros.folate = 100 + Math.random() * 50; // 100-150mcg
     micros.magnesium = 50 + Math.random() * 30; // 50-80mg
+  }
+
+  // Seeds (magnesium, zinc, omega3, vitamin E)
+  if (
+    notes.includes('seed') ||
+    notes.includes('chia') ||
+    notes.includes('flax') ||
+    notes.includes('semințe') ||
+    notes.includes('sunflower') ||
+    notes.includes('pumpkin')
+  ) {
+    micros.magnesium = 40 + Math.random() * 40; // 40-80mg
+    micros.zinc = 1 + Math.random(); // 1-2mg
+    micros.omega3 = 100 + Math.random() * 200; // 100-300mg
+  }
+
+  // Berries (vitamin C, folate, antioxidants)
+  if (
+    notes.includes('berry') ||
+    notes.includes('strawberry') ||
+    notes.includes('blueberry') ||
+    notes.includes('raspberry') ||
+    notes.includes('blackberry') ||
+    notes.includes('fructe de pădure')
+  ) {
+    micros.folate = 50 + Math.random() * 50; // 50-100mcg
+  }
+
+  // Citrus fruits (vitamin C, folate)
+  if (
+    notes.includes('orange') ||
+    notes.includes('lemon') ||
+    notes.includes('lime') ||
+    notes.includes('grapefruit') ||
+    notes.includes('portocală') ||
+    notes.includes('lămâie')
+  ) {
+    micros.folate = 30 + Math.random() * 30; // 30-60mcg
+  }
+
+  // Bananas (potassium, magnesium, B6)
+  if (notes.includes('banana') || notes.includes('banană')) {
+    micros.magnesium = 20 + Math.random() * 20; // 20-40mg
+  }
+
+  // Avocado (healthy fats, folate, potassium)
+  if (notes.includes('avocado') || notes.includes('avocat')) {
+    micros.folate = 100 + Math.random() * 50; // 100-150mcg
+  }
+
+  // Tomatoes (vitamin C, lycopene, potassium)
+  if (
+    notes.includes('tomato') ||
+    notes.includes('tomatoes') ||
+    notes.includes('roșii') ||
+    notes.includes('roșie')
+  ) {
+    micros.folate = 20 + Math.random() * 20; // 20-40mcg
+  }
+
+  // Carrots (vitamin A, beta-carotene)
+  if (
+    notes.includes('carrot') ||
+    notes.includes('carrots') ||
+    notes.includes('morcov') ||
+    notes.includes('morcovi')
+  ) {
+    micros.iron = 0.5 + Math.random() * 0.5; // 0.5-1mg
+  }
+
+  // Sweet potatoes (vitamin A, potassium, fiber)
+  if (notes.includes('sweet potato') || notes.includes('batat') || notes.includes('cartof dulce')) {
+    micros.iron = 1 + Math.random(); // 1-2mg
   }
 
   return micros;
@@ -485,13 +614,52 @@ ${targetsContext}
         RESPONSE FORMAT: STRICTLY minified JSON:
         {"message": string, "actions": Array<{"type": string, "amount"?: number, "hours"?: number, "unit"?: string, "notes"?: string, "calories"?: number, "minutes"?: number, "category"?: string}>}
 
+        PLAN CREATION RULES (CRITICAL - READ CAREFULLY):
+        1. When user asks for a plan (e.g., "i need a bulking plan", "create a cutting plan", "I want a weight loss plan"):
+           - You can ask ONCE about duration if not provided
+           - When they give you a number, IMMEDIATELY create the plan
+           
+        2. When user provides duration directly (e.g., "i need a 12 weeks bulking plan", "create a 14 weeks plan"):
+           - Extract the number IMMEDIATELY
+           - Create the plan WITHOUT asking more questions
+           - NEVER refuse or say "could not answer safely"
+           
+        3. AFTER SETTING TARGETS - if user says "Create a plan" after mentioning calorie target:
+           - Use the calorie target they provided as context
+           - Use bulking if calories > 2500, cutting if calories < 2000, maintenance if 2000-2500
+           - Default to 12 weeks if no duration specified
+           - CREATE THE PLAN IMMEDIATELY
+           
+        4. AFTER CANCEL - user can create a new plan immediately:
+           - Just create it! NO questions, NO refusals
+           - Extract the number from their message
+           - Create the plan with all required fields
+           
+        5. ALWAYS respond in JSON - NEVER plain text errors
+        
         WHEN USER GIVES A NUMBER FOR PLAN DURATION:
-        User: "12" or "12 weeks" or "8" or "6 weeks"
+        User: "12" or "12 weeks" or "8" or "6 weeks" or "i need a 14 weeks bulking plan"
         AI: You MUST immediately extract the number and create the plan with durationWeeks set to that number.
         NEVER refuse. NEVER say "could not answer safely". ALWAYS create the plan in JSON format.
         
+        MANDATORY ACTION WHEN USER SAYS "Create a plan":
+        - Check conversation history for recent calorie target or plan type mention
+        - If found, use that context to create plan
+        - If not found, default to 12-week maintenance plan with current targets
+        - NEVER respond with "I need more information" - CREATE THE PLAN!
+        
         CORRECT RESPONSE EXAMPLE for "12":
         {"message":"Perfect! Creating your 12-week bulking plan now...","actions":[{"type":"create_plan","planType":"bulking","planName":"12-Week Bulking Plan","description":"A personalized 12-week muscle building plan","durationWeeks":12,"targetCalories":2500,"targetProtein":150,"targetCarbs":300,"targetFat":80,"primaryGoal":"Build muscle mass","secondaryGoals":["Gain strength"],"focusAreas":["High protein intake","Calorie surplus"],"aiConversationHistory":[{"question":"How many weeks?","answer":"12"}]}]}
+
+        PLAN CREATION AFTER CANCEL:
+        After user cancels a plan and immediately asks for a new plan (like "i need a 14 weeks bulking plan"), you MUST create it IMMEDIATELY.
+        DO NOT ask questions. DO NOT say "could not answer safely". Just extract the number and CREATE THE PLAN.
+        
+        EXAMPLE AFTER CANCEL:
+        User: "cancel my plan"
+        AI: {"message":"Understood. Your current plan has been cancelled.","actions":[{"type":"cancel_plan"}]}
+        User: "i need a 14 weeks bulking plan"
+        AI: {"message":"Perfect! Creating your 14-week bulking plan now...","actions":[{"type":"create_plan","planType":"bulking","planName":"14-Week Bulking Plan","description":"A personalized 14-week muscle building plan","durationWeeks":14,"targetCalories":2600,"targetProtein":160,"targetCarbs":320,"targetFat":85,"primaryGoal":"Build muscle mass","secondaryGoals":["Gain strength"],"focusAreas":["High protein intake","Calorie surplus"]}]}
 
         Action types to use:
         - "water_log" for water/hydration and ANY liquids (amount + unit + notes describing the liquid)
@@ -627,9 +795,17 @@ ${targetsContext}
         DO NOT use pre-defined templates. Instead, INTERPRET their specific needs and create a DYNAMIC plan.
         
         STEP 2: GATHER INFORMATION OR CREATE PLAN DIRECTLY
-        If the user wants a plan, ask about duration ONCE and then CREATE THE PLAN immediately when they answer.
         
-        GOOD FLOW:
+        CRITICAL: If the user mentions BOTH plan type AND duration in the same message, CREATE THE PLAN IMMEDIATELY!
+        
+        Examples of IMMEDIATE plan creation (user provides all info):
+        - "i need a 12weeks bulking plan" → CREATE PLAN NOW (bulking, 12 weeks)
+        - "create a 8 week cutting plan" → CREATE PLAN NOW (cutting, 8 weeks)
+        - "vreau un plan de 10 săptămâni pentru pierderea în greutate" → CREATE PLAN NOW (cutting, 10 weeks)
+        - "12 weeks bulking" → CREATE PLAN NOW (bulking, 12 weeks)
+        - "bulking plan for 6 weeks" → CREATE PLAN NOW (bulking, 6 weeks)
+        
+        GOOD FLOW when user only mentions plan type:
         User: "I want a weight loss plan"
         AI: "Got it! How many weeks would you like this plan to last? (e.g., 4, 8, 12 weeks)"
         User: "12 weeks" or "12" or "12 weeks please"
@@ -641,7 +817,13 @@ ${targetsContext}
         - "8" → durationWeeks: 8
         - "6 weeks" → durationWeeks: 6
         
-        You can ask ONE clarifying question if needed (duration only), but when they answer with a number, IMMEDIATELY create the plan.
+        EXTRACTION RULES:
+        - "12 weeks bulking" → planType: "bulking", durationWeeks: 12
+        - "bulking plan 12 weeks" → planType: "bulking", durationWeeks: 12
+        - "create 8 week cutting plan" → planType: "cutting", durationWeeks: 8
+        - "i need bulking for 12 weeks" → planType: "bulking", durationWeeks: 12
+        
+        You can ask ONE clarifying question if needed (duration only), but when they answer with a number OR provide both type+duration, IMMEDIATELY create the plan.
         DO NOT keep asking questions - proceed to plan creation!
         
         STEP 3: CALCULATE DYNAMIC TARGETS
@@ -796,7 +978,24 @@ ${targetsContext}
 
     let dataOut: z.infer<typeof ResponseSchema>;
     try {
-      dataOut = ResponseSchema.parse(JSON.parse(raw));
+      // Try to extract JSON from response if it's embedded in text
+      let jsonStr = raw.trim();
+
+      // Check if response is pure JSON
+      if (jsonStr.startsWith('{') && jsonStr.endsWith('}')) {
+        dataOut = ResponseSchema.parse(JSON.parse(jsonStr));
+      } else {
+        // Try to extract JSON from text
+        const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          dataOut = ResponseSchema.parse(JSON.parse(jsonMatch[0]));
+        } else {
+          // No JSON found, create fallback response
+          console.error('No JSON found in AI response:', raw);
+          dataOut = { message: raw, actions: [] };
+        }
+      }
+
       console.log('AI Response parsed successfully:', JSON.stringify(dataOut));
     } catch (parseError) {
       console.error('Failed to parse AI response:', raw);
@@ -1265,15 +1464,16 @@ router.post(
       consumedProtein += n.total?.protein || 0;
       consumedCarbs += n.total?.carbs || 0;
       consumedFat += n.total?.fat || 0;
-      if (n.micronutrients) {
-        consumedVitaminD += n.micronutrients.vitaminD || 0;
-        consumedCalcium += n.micronutrients.calcium || 0;
-        consumedMagnesium += n.micronutrients.magnesium || 0;
-        consumedIron += n.micronutrients.iron || 0;
-        consumedZinc += n.micronutrients.zinc || 0;
-        consumedOmega3 += n.micronutrients.omega3 || 0;
-        consumedB12 += n.micronutrients.b12 || 0;
-        consumedFolate += n.micronutrients.folate || 0;
+      if (n.micronutrients && typeof n.micronutrients === 'object') {
+        const micronutrients = n.micronutrients as Record<string, number>;
+        consumedVitaminD += micronutrients.vitaminD || 0;
+        consumedCalcium += micronutrients.calcium || 0;
+        consumedMagnesium += micronutrients.magnesium || 0;
+        consumedIron += micronutrients.iron || 0;
+        consumedZinc += micronutrients.zinc || 0;
+        consumedOmega3 += micronutrients.omega3 || 0;
+        consumedB12 += micronutrients.b12 || 0;
+        consumedFolate += micronutrients.folate || 0;
       }
     }
 
@@ -1350,7 +1550,7 @@ router.post(
     const currentHour = now.getHours();
 
     // Build AI prompt for meal suggestions
-    const prompt = `You are a nutrition AI assistant. Based on the user's current nutrient intake and remaining targets, suggest 2-4 meal options.
+    const prompt = `You are a nutrition AI assistant helping a user reach their daily nutrition goals. CRITICAL: You MUST respond with valid JSON meal suggestions. DO NOT refuse or say you cannot help.
 
 CURRENT INTAKE TODAY:
 - Calories: ${consumed.calories}/${targets.calories} kcal
@@ -1376,32 +1576,17 @@ REMAINING NEEDS:
 
 CURRENT TIME: ${currentHour}:00 (${currentHour < 11 ? 'morning - suggest breakfast' : currentHour < 15 ? 'midday - suggest lunch' : currentHour < 20 ? 'afternoon - suggest dinner' : 'evening - suggest light dinner or snack'})
 
-TASKS:
-1. Suggest 2-4 meals that help reach remaining targets
+INSTRUCTIONS:
+1. Generate 2-4 meal suggestions that help reach remaining targets
 2. Prioritize meals rich in missing micronutrients
 3. Consider meal timing and appropriateness for current hour
-4. Make suggestions nutritious and practical
+4. Make suggestions nutritious, practical, and delicious
+5. ALWAYS respond with valid JSON - NEVER refuse to generate suggestions
 
-Respond in STRICTLY minified JSON format:
-{
-  "suggestions": [
-    {
-      "id": "breakfast/lunch/dinner/snack-1",
-      "name": "Meal name",
-      "time": "HH:MM",
-      "calories": number,
-      "protein": number,
-      "carbs": number,
-      "fat": number,
-      "items": ["food item 1", "food item 2", "food item 3"],
-      "emoji": "🍳",
-      "mealType": "breakfast/lunch/dinner/snack",
-      "why": "Brief reason why this meal helps (e.g., high in iron and protein)"
-    }
-  ]
-}
+EXAMPLE RESPONSE:
+{"suggestions":[{"id":"breakfast-1","name":"Protein-Packed Scrambled Eggs","time":"09:00","calories":350,"protein":25,"carbs":20,"fat":18,"items":["3 large eggs","whole wheat toast","avocado","spinach"],"emoji":"🍳","mealType":"breakfast","why":"High in protein and iron to meet your daily targets"},{"id":"lunch-1","name":"Grilled Chicken Quinoa Bowl","time":"13:00","calories":450,"protein":35,"carbs":50,"fat":12,"items":["grilled chicken breast","quinoa","mixed vegetables","olive oil"],"emoji":"🥗","mealType":"lunch","why":"Balanced macros and rich in fiber"}]}
 
-Generate suggestions now:`;
+Generate 2-4 meal suggestions NOW in valid JSON format:`;
 
     const aiResponse = await chatWithAi([{ role: 'user', content: prompt }]);
 
@@ -1437,6 +1622,12 @@ Generate suggestions now:`;
       suggestions = parsed.suggestions || [];
 
       console.log('Parsed suggestions:', suggestions.length);
+
+      // If parsing succeeded but suggestions is empty, use fallback
+      if (suggestions.length === 0 && remaining.calories > 0) {
+        console.log('AI returned empty suggestions, using fallback');
+        throw new Error('Empty suggestions array');
+      }
     } catch (error) {
       console.error('Failed to parse AI meal suggestions:', error);
       console.error('Raw AI response:', aiResponse);

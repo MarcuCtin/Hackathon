@@ -18,12 +18,14 @@ interface Recommendation {
   gradientFrom: string;
   gradientTo: string;
   priority: "high" | "medium" | "low";
+  suggestionId?: string; // MongoDB ID from backend
 }
 
 export function DailyRecommendations() {
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [dismissedIds, setDismissedIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   // Fetch recommendations from backend
   useEffect(() => {
@@ -32,51 +34,56 @@ export function DailyRecommendations() {
         const { data } = await api.getSuggestions();
         
         // Transform backend suggestions into recommendation cards
-        const transformedRecs: Recommendation[] = data.map((text: string, index: number) => {
+        const transformedRecs: Recommendation[] = data.map((suggestion: any, index: number) => {
+          // Use suggestion data if available, otherwise infer from text
+          const text = suggestion.title || suggestion;
+          const description = suggestion.description || suggestion;
+          
           // Infer category and styling based on keywords
-          let category = "Wellness";
-          let emoji = "✨";
+          let category = suggestion.category || "Wellness";
+          let emoji = suggestion.emoji || "✨";
           let icon = <Activity className="w-6 h-6" />;
           let gradientFrom = "#6BF178";
           let gradientTo = "#E2F163";
-          let priority: "high" | "medium" | "low" = "medium";
+          let priority: "high" | "medium" | "low" = (suggestion.priority || "medium") as "high" | "medium" | "low";
 
           const lowerText = text.toLowerCase();
           
-          if (lowerText.includes("sleep") || lowerText.includes("bed") || lowerText.includes("rest")) {
+          // Map category to appropriate icon and gradient
+          if (category === "sleep" || lowerText.includes("sleep") || lowerText.includes("bed") || lowerText.includes("rest")) {
             category = "Sleep";
-            emoji = "😴";
+            emoji = emoji || "😴";
             icon = <Moon className="w-6 h-6" />;
             gradientFrom = "#A855F7";
             gradientTo = "#6BF178";
-            priority = "high";
-          } else if (lowerText.includes("water") || lowerText.includes("hydrat")) {
+            priority = suggestion.priority === "high" ? "high" : priority;
+          } else if (category === "hydration" || lowerText.includes("water") || lowerText.includes("hydrat")) {
             category = "Hydration";
-            emoji = "💧";
+            emoji = emoji || "💧";
             icon = <Droplet className="w-6 h-6" />;
             gradientFrom = "#6BF178";
             gradientTo = "#DFF2D4";
-            priority = "high";
-          } else if (lowerText.includes("workout") || lowerText.includes("exercise") || lowerText.includes("recovery")) {
+            priority = suggestion.priority === "high" ? "high" : priority;
+          } else if (category === "exercise" || category === "recovery" || lowerText.includes("workout") || lowerText.includes("exercise") || lowerText.includes("recovery")) {
             category = "Recovery";
-            emoji = "🏋️‍♂️";
+            emoji = emoji || "🏋️‍♂️";
             icon = <Dumbbell className="w-6 h-6" />;
             gradientFrom = "#E2F163";
             gradientTo = "#6BF178";
-            priority = "medium";
-          } else if (lowerText.includes("protein") || lowerText.includes("nutrition") || lowerText.includes("meal") || lowerText.includes("eat")) {
+            priority = suggestion.priority === "high" ? "high" : priority;
+          } else if (category === "nutrition" || lowerText.includes("protein") || lowerText.includes("nutrition") || lowerText.includes("meal") || lowerText.includes("eat")) {
             category = "Nutrition";
-            emoji = "🍗";
+            emoji = emoji || "🍗";
             icon = <Utensils className="w-6 h-6" />;
             gradientFrom = "#FF006E";
             gradientTo = "#E2F163";
-            priority = "medium";
+            priority = suggestion.priority === "high" ? "high" : priority;
           }
 
           return {
-            id: index + 1,
-            title: text.split('.')[0], // First sentence as title
-            description: text.includes('.') ? text.split('.').slice(1).join('.').trim() : "AI-powered recommendation",
+            id: suggestion._id ? parseInt(suggestion._id.slice(-6), 16) : index + 1,
+            title: typeof text === 'string' ? text.split('.')[0] : text,
+            description: typeof description === 'string' ? description : "AI-powered recommendation",
             emoji,
             icon,
             category,
@@ -84,6 +91,7 @@ export function DailyRecommendations() {
             gradientFrom,
             gradientTo,
             priority,
+            suggestionId: suggestion._id, // Store original ID for API calls
           };
         });
 
@@ -99,12 +107,100 @@ export function DailyRecommendations() {
     fetchSuggestions();
   }, []);
 
-  const handleDismiss = (id: number) => {
-    setDismissedIds([...dismissedIds, id]);
+  const handleDismiss = async (rec: Recommendation) => {
+    try {
+      if (rec.suggestionId) {
+        await api.dismissSuggestion(rec.suggestionId);
+        toast.success("Suggestion dismissed");
+      }
+      setDismissedIds([...dismissedIds, rec.id]);
+    } catch (error) {
+      console.error("Failed to dismiss suggestion:", error);
+      toast.error("Failed to dismiss suggestion");
+    }
   };
 
-  const handleComplete = (id: number) => {
-    setDismissedIds([...dismissedIds, id]);
+  const handleComplete = async (rec: Recommendation) => {
+    try {
+      if (rec.suggestionId) {
+        await api.completeSuggestion(rec.suggestionId);
+        toast.success("Great job! ✓");
+      }
+      setDismissedIds([...dismissedIds, rec.id]);
+    } catch (error) {
+      console.error("Failed to complete suggestion:", error);
+      toast.error("Failed to complete suggestion");
+    }
+  };
+
+  const handleGenerateSuggestions = async () => {
+    try {
+      setGenerating(true);
+      const response = await api.generateSuggestions();
+      if (response.success && response.data) {
+        toast.success("New suggestions generated!");
+        // Refresh the list
+        const transformedRecs: Recommendation[] = response.data.map((suggestion: any, index: number) => {
+          const text = suggestion.title || suggestion;
+          const description = suggestion.description || suggestion;
+          
+          let category = suggestion.category || "Wellness";
+          let emoji = suggestion.emoji || "✨";
+          let icon = <Activity className="w-6 h-6" />;
+          let gradientFrom = "#6BF178";
+          let gradientTo = "#E2F163";
+          let priority: "high" | "medium" | "low" = (suggestion.priority || "medium") as "high" | "medium" | "low";
+
+          const lowerText = text.toLowerCase();
+          
+          if (category === "sleep" || lowerText.includes("sleep") || lowerText.includes("bed") || lowerText.includes("rest")) {
+            category = "Sleep";
+            emoji = emoji || "😴";
+            icon = <Moon className="w-6 h-6" />;
+            gradientFrom = "#A855F7";
+            gradientTo = "#6BF178";
+          } else if (category === "hydration" || lowerText.includes("water") || lowerText.includes("hydrat")) {
+            category = "Hydration";
+            emoji = emoji || "💧";
+            icon = <Droplet className="w-6 h-6" />;
+            gradientFrom = "#6BF178";
+            gradientTo = "#DFF2D4";
+          } else if (category === "exercise" || category === "recovery" || lowerText.includes("workout") || lowerText.includes("exercise") || lowerText.includes("recovery")) {
+            category = "Recovery";
+            emoji = emoji || "🏋️‍♂️";
+            icon = <Dumbbell className="w-6 h-6" />;
+            gradientFrom = "#E2F163";
+            gradientTo = "#6BF178";
+          } else if (category === "nutrition" || lowerText.includes("protein") || lowerText.includes("nutrition") || lowerText.includes("meal") || lowerText.includes("eat")) {
+            category = "Nutrition";
+            emoji = emoji || "🍗";
+            icon = <Utensils className="w-6 h-6" />;
+            gradientFrom = "#FF006E";
+            gradientTo = "#E2F163";
+          }
+
+          return {
+            id: suggestion._id ? parseInt(suggestion._id.slice(-6), 16) : index + 1,
+            title: typeof text === 'string' ? text.split('.')[0] : text,
+            description: typeof description === 'string' ? description : "AI-powered recommendation",
+            emoji,
+            icon,
+            category,
+            categoryColor: "bg-blue-500",
+            gradientFrom,
+            gradientTo,
+            priority,
+            suggestionId: suggestion._id,
+          };
+        });
+        setRecommendations(transformedRecs);
+      }
+    } catch (error) {
+      console.error("Failed to generate suggestions:", error);
+      toast.error("Failed to generate suggestions");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const visibleRecommendations = recommendations.filter(
@@ -128,9 +224,29 @@ export function DailyRecommendations() {
           <h3 className="text-[#6BF178]">AI Daily Suggestions</h3>
           <p className="text-[#DFF2D4]/70">Your AI companion's recommendations</p>
         </div>
-        <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(107,241,120,0.4)]">
-          {visibleRecommendations.length} active
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(107,241,120,0.4)]">
+            {visibleRecommendations.length} active
+          </Badge>
+          <Button
+            size="sm"
+            onClick={handleGenerateSuggestions}
+            disabled={generating}
+            className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(107,241,120,0.4)] hover:shadow-[0_0_15px_rgba(107,241,120,0.6)] disabled:opacity-50"
+          >
+            {generating ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-1" />
+                Generate
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -213,7 +329,7 @@ export function DailyRecommendations() {
                     <div className="flex items-center gap-2 mt-4">
                       <Button
                         size="sm"
-                        onClick={() => handleComplete(rec.id)}
+                        onClick={() => handleComplete(rec)}
                         className="rounded-full text-white border-2 font-bold px-5 py-2.5 hover:scale-110 transition-all duration-300 relative overflow-hidden group"
                         style={{
                           background: `linear-gradient(135deg, ${rec.gradientFrom}, ${rec.gradientTo})`,
@@ -231,7 +347,7 @@ export function DailyRecommendations() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleDismiss(rec.id)}
+                        onClick={() => handleDismiss(rec)}
                         className="rounded-full border-2 text-[#DFF2D4] hover:bg-[#FF006E]/20 hover:border-[#FF006E]/50 px-4 py-2 transition-all backdrop-blur-sm"
                         style={{
                           borderColor: 'rgba(107, 241, 120, 0.3)',
