@@ -1,0 +1,222 @@
+/* ========================================
+   COMPLETE COLOR PALETTE SYSTEM
+   ======================================== */
+
+:root {
+  /* PRIMARY COLORS */
+  --navy-dark: #04101B;
+  --neon-green: #6BF178;
+  --soft-green: #DFF2D4;
+  --vibrant-lime: #E2F163;
+  
+  /* DARK VARIANTS */
+  --navy-light: #0a1f33;
+  --navy-lighter: #0f2a45;
+  
+  /* BACKGROUND GRADIENTS */
+  --bg-primary: linear-gradient(135deg, #04101B 0%, #0a1f33 50%, #04101B 100%);
+  --bg-card: linear-gradient(135deg, rgba(4, 16, 27, 0.8) 0%, rgba(10, 31, 51, 0.6) 100%);
+  
+  /* ACCENT GRADIENTS */
+  --gradient-primary: linear-gradient(135deg, #6BF178 0%, #E2F163 100%);
+  --gradient-secondary: linear-gradient(135deg, #E2F163 0%, #6BF178 100%);
+  --gradient-soft: linear-gradient(135deg, #6BF178 0%, #DFF2D4 100%);
+  --gradient-hero: linear-gradient(135deg, #6BF178 0%, #DFF2D4 50%, #E2F163 100%);
+  
+  /* TEXT COLORS */
+  --text-primary: #DFF2D4;
+  --text-secondary: rgba(223, 242, 212, 0.7);
+  --text-accent: #6BF178;
+  --text-lime: #E2F163;
+  --text-dark: #04101B;
+  
+  /* BORDER COLORS */
+  --border-green: rgba(107, 241, 120, 0.3);
+  --border-lime: rgba(226, 241, 99, 0.3);
+  --border-soft: rgba(107, 241, 120, 0.15);
+  
+  /* SHADOW COLORS */
+  --shadow-green: 0 0 20px rgba(107, 241, 120, 0.3);
+  --shadow-green-lg: 0 0 40px rgba(107, 241, 120, 0.4);
+  --shadow-lime: 0 0 20px rgba(226, 241, 99, 0.3);
+  --shadow-glow: 0 0 30px rgba(107, 241, 120, 0.5);
+  
+  /* BACKGROUND OPACITIES */
+  --bg-card-transparent: rgba(4, 16, 27, 0.6);
+  --bg-hover: rgba(107, 241, 120, 0.1);
+}
+
+/* GLOBAL RESET & BASE STYLES */
+* {
+  border-color: var(--border-green);
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(107, 241, 120, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(107, 241, 120, 0.6);
+  }
+}
+
+@keyframes pulse-green {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-glow {
+  animation: glow 3s ease-in-out infinite;
+}
+
+.animate-pulse-green {
+  animation: pulse-green 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--navy-dark);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gradient-primary);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5be068 0%, #d4e155 100%);
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.text-green-neon {
+  color: var(--neon-green);
+}
+
+.text-lime-vibrant {
+  color: var(--vibrant-lime);
+}
+
+.text-soft-green {
+  color: var(--soft-green);
+}
+
+.bg-navy {
+  background-color: var(--navy-dark);
+}
+
+.bg-card-blur {
+  background: var(--bg-card-transparent);
+  backdrop-filter: blur(20px);
+}
+
+.border-neon {
+  border-color: var(--border-green);
+}
+
+.shadow-glow-green {
+  box-shadow: var(--shadow-green);
+}
+
+.shadow-glow-lime {
+  box-shadow: var(--shadow-lime);
+}
+
+/* Gradient Text */
+.gradient-text-green {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-lime {
+  background: var(--gradient-secondary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button Base Styles */
+.btn-primary {
+  background: var(--gradient-primary);
+  color: var(--text-dark);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-accent);
+  border: 1px solid var(--border-green);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  border-color: var(--neon-green);
+}
+
+/* Card Base Styles */
+.card-neon {
+  background: var(--bg-card-transparent);
+  border: 1px solid var(--border-green);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease;
+}
+
+.card-neon:hover {
+  border-color: var(--neon-green);
+  box-shadow: var(--shadow-green);
+}
+

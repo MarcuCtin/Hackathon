@@ -22,6 +22,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Droplet,
+  BedDouble,
+  Utensils,
+  Smile,
+  Frown,
+  Meh,
+  Angry,
 } from "lucide-react";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
@@ -248,18 +255,18 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
     },
   ];
 
-  const getMoodEmoji = (mood: string) => {
+  const getMoodIcon = (mood: string) => {
     switch (mood) {
       case "calm":
-        return "😌";
+        return <Smile className="w-5 h-5" />;
       case "stressed":
-        return "😰";
+        return <Frown className="w-5 h-5" />;
       case "focused":
-        return "🎯";
+        return <Target className="w-5 h-5" />;
       case "energized":
-        return "⚡";
+        return <Zap className="w-5 h-5" />;
       default:
-        return "😊";
+        return <Meh className="w-5 h-5" />;
     }
   };
 
@@ -292,78 +299,96 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50 to-purple-50 pb-24">
+    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
+      {/* Glowing Orbs Background - Fixed position */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 0}}>
+        <div className="glowing-orb glowing-orb-green" style={{position: 'absolute'}}></div>
+        <div className="glowing-orb glowing-orb-purple" style={{position: 'absolute', background: 'radial-gradient(circle, #A855F7, transparent)', width: '450px', height: '450px', top: '20%', right: '10%'}}></div>
+        <div className="glowing-orb glowing-orb-cyan" style={{position: 'absolute'}}></div>
+      </div>
+      
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/20 bg-white/40 backdrop-blur-xl">
-        <div className="container mx-auto px-6 py-4">
+      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+        <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FitterLogo size={36} />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <FitterLogo size={40} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+              </div>
               <div>
-                <h3 className="text-slate-900">History</h3>
-                <p className="text-slate-500">Your wellness journey</p>
+                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">History</h3>
+                <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness journey</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border-0">
-                🔥 {workoutCaloriesToday} kcal
+            <div className="flex items-center gap-3">
+              <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(226,241,99,0.4)] px-3 py-1">
+                <Zap className="w-3 h-3 mr-1" />
+                {workoutCaloriesToday} kcal
               </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-blue-100 text-blue-700 border-0">
-                💧 {hydrationToday}
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#DFF2D4] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-3 py-1">
+                <Droplet className="w-3 h-3 mr-1" />
+                {hydrationToday}
               </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border-0">
-                🛌 {sleepHoursToday ?? "-"} h
+              <Badge className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#6BF178] text-[#DFF2D4] border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-3 py-1">
+                <BedDouble className="w-3 h-3 mr-1" />
+                {sleepHoursToday ?? "-"} h
               </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 border-0">
-                🥗 {mealCountToday}
+              <Badge className="rounded-full bg-gradient-to-r from-[#FF006E] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(255,0,110,0.4)] px-3 py-1">
+                <Utensils className="w-3 h-3 mr-1" />
+                {mealCountToday}
               </Badge>
               <Button
                 variant={viewMode === "week" ? "default" : "outline"}
                 onClick={() => setViewMode("week")}
-                className="rounded-2xl"
+                className="rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_20px_rgba(107,241,120,0.5)] text-[#04101B] font-semibold border-0"
               >
                 Week
               </Button>
               <Button
                 variant={viewMode === "month" ? "default" : "outline"}
                 onClick={() => setViewMode("month")}
-                className="rounded-2xl"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 hover:bg-[#6BF178]/20 hover:border-[#6BF178] text-[#DFF2D4]"
               >
                 Month
               </Button>
-              <button onClick={onProfileClick} className="focus:outline-none ml-2">
-                <UserAvatar size={36} userName="Alex Thompson" />
+              <button 
+                onClick={onProfileClick} 
+                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
+              >
+                <UserAvatar size={40} userName="Alex Thompson" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-6">
+      <div className="container mx-auto px-6 py-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <Card className="p-6 rounded-3xl border-white/20 bg-white/70 backdrop-blur-xl shadow-xl">
+          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-sky-100 flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-emerald-600" />
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern">
+                  <Sparkles className="w-6 h-6 text-[#04101B]" />
                 </div>
                 <div>
-                  <h3>Assistant Timeline</h3>
-                  <p className="text-slate-500">Latest AI-driven entries</p>
+                  <h3 className="text-gradient-modern text-glow text-lg font-bold">Assistant Timeline</h3>
+                  <p className="text-[#DFF2D4]/70 text-sm">Latest AI-driven entries</p>
                 </div>
               </div>
-              <Badge className="rounded-full bg-slate-100 text-slate-600 border-0">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
                 {activityTimeline.length ? `${activityTimeline.length} updates` : "No data yet"}
               </Badge>
             </div>
 
             <div className="space-y-4">
               {activityTimeline.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">
+                <div className="rounded-2xl border border-dashed border-[#6BF178]/30 p-6 text-center text-[#DFF2D4]/70 bg-[#0a1f33]/30">
                   Start a conversation with the assistant to populate your history with real actions.
                 </div>
               )}
@@ -376,31 +401,31 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                   meal: Apple,
                 } as const;
                 const backgroundMap: Record<string, string> = {
-                  hydration: "from-sky-100 to-blue-100",
-                  sleep: "from-indigo-100 to-purple-100",
-                  workout: "from-amber-100 to-orange-100",
-                  meal: "from-rose-100 to-pink-100",
+                  hydration: "from-[#6BF178] to-[#DFF2D4]",
+                  sleep: "from-[#A855F7] to-[#6BF178]",
+                  workout: "from-[#E2F163] to-[#6BF178]",
+                  meal: "from-[#FF006E] to-[#E2F163]",
                 };
                 const Icon = iconMap[entry.type as keyof typeof iconMap] || Sparkles;
-                const background = backgroundMap[entry.type] || "from-slate-100 to-slate-200";
+                const background = backgroundMap[entry.type] || "from-[#6BF178] to-[#E2F163]";
 
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-white/60 p-4"
+                    className="flex items-center justify-between gap-3 rounded-2xl bg-[#0a1f33]/50 backdrop-blur-sm border border-[#6BF178]/20 p-4 hover:bg-[#0a1f33]/70 hover:border-[#6BF178]/40 transition-all"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${background} flex items-center justify-center`}
+                        className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${background} flex items-center justify-center glow-effect-green`}
                       >
-                        <Icon className="w-5 h-5 text-slate-700" />
+                        <Icon className="w-5 h-5 text-[#04101B]" />
                       </div>
                       <div>
-                        <p className="text-slate-700 font-medium">{entry.title}</p>
-                        <p className="text-slate-500 text-sm">{entry.subtitle}</p>
+                        <p className="text-[#DFF2D4] font-medium">{entry.title}</p>
+                        <p className="text-[#DFF2D4]/70 text-sm">{entry.subtitle}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs text-[#DFF2D4]/50">
                       {new Date(entry.timestamp).toLocaleString([], {
                         month: "short",
                         day: "numeric",
@@ -421,65 +446,65 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <Card className="p-6 rounded-3xl border-white/20 bg-gradient-to-br from-violet-400 to-purple-400 text-white shadow-2xl">
+          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
             <div className="flex items-start justify-between mb-6">
               <div>
-                <h3 className="mb-2 text-white">Weekly Overview</h3>
-                <p className="text-white/80">Last 7 days performance</p>
+                <h3 className="mb-2 text-gradient-modern text-glow text-lg font-bold">Weekly Overview</h3>
+                <p className="text-[#DFF2D4]/80 text-sm">Last 7 days performance</p>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 rounded-2xl px-4 py-2 backdrop-blur-sm">
-                <Award className="w-5 h-5" />
-                <span>{weeklyStats.totalAchievements} achievements</span>
+              <div className="flex items-center gap-2 bg-gradient-to-r from-[#6BF178]/20 to-[#E2F163]/20 rounded-2xl px-4 py-2 backdrop-blur-sm border border-[#6BF178]/30">
+                <Award className="w-5 h-5 text-[#6BF178]" />
+                <span className="text-[#DFF2D4] font-semibold">{weeklyStats.totalAchievements} achievements</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Apple className="w-5 h-5" />
-                  <span className="text-white/80">Avg Calories</span>
+                  <Apple className="w-5 h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4]">Avg Calories</span>
                 </div>
-                <div className="text-2xl">{weeklyStats.avgCalories}</div>
+                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgCalories}</div>
               </div>
 
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#E2F163]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5" />
-                  <span className="text-white/80">Avg Protein</span>
+                  <Zap className="w-5 h-5 text-[#E2F163]" />
+                  <span className="text-[#DFF2D4]">Avg Protein</span>
                 </div>
-                <div className="text-2xl">{weeklyStats.avgProtein}g</div>
+                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgProtein}g</div>
               </div>
 
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#A855F7]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#A855F7]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Moon className="w-5 h-5" />
-                  <span className="text-white/80">Avg Sleep</span>
+                  <Moon className="w-5 h-5 text-[#A855F7]" />
+                  <span className="text-[#DFF2D4]">Avg Sleep</span>
                 </div>
-                <div className="text-2xl">{weeklyStats.avgSleep}h</div>
+                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgSleep}h</div>
               </div>
 
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#DFF2D4]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-5 h-5" />
-                  <span className="text-white/80">Workouts</span>
+                  <Activity className="w-5 h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4]">Workouts</span>
                 </div>
-                <div className="text-2xl">{weeklyStats.totalWorkouts}</div>
+                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.totalWorkouts}</div>
               </div>
 
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#A855F7]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#E2F163]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-5 h-5" />
-                  <span className="text-white/80">Goals Hit</span>
+                  <Target className="w-5 h-5 text-[#E2F163]" />
+                  <span className="text-[#DFF2D4]">Goals Hit</span>
                 </div>
-                <div className="text-2xl">{weeklyStats.goalsHit}/7</div>
+                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.goalsHit}/7</div>
               </div>
 
-              <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5" />
-                  <span className="text-white/80">Streak</span>
+                  <Sparkles className="w-5 h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4]">Streak</span>
                 </div>
-                <div className="text-2xl">7 days</div>
+                <div className="text-2xl text-gradient-modern font-bold">7 days</div>
               </div>
             </div>
           </Card>
@@ -492,7 +517,7 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <h3 className="mb-4">Cum te-a ajutat Fitter</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Cum te-a ajutat Fitter</h3>
           <div className="grid md:grid-cols-2 gap-4">
             {improvements.map((improvement, index) => {
               const Icon = improvement.icon;
@@ -507,21 +532,21 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.2 + index * 0.1 }}
                 >
-                  <Card className="p-5 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-shadow">
+                  <Card className="modern-card glass-card-intense p-5 rounded-3xl hover-lift overflow-hidden">
                     <div className="flex items-start gap-4">
                       <div
-                        className={`w-14 h-14 rounded-2xl bg-gradient-to-r ${improvement.gradient} flex items-center justify-center flex-shrink-0`}
+                        className={`w-14 h-14 rounded-2xl bg-gradient-to-r ${improvement.gradient} flex items-center justify-center flex-shrink-0 glow-effect-green pulse-modern`}
                       >
-                        <Icon className="w-7 h-7 text-white" />
+                        <Icon className="w-7 h-7 text-[#04101B]" />
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4>{improvement.metric}</h4>
+                          <h4 className="text-[#DFF2D4] font-semibold">{improvement.metric}</h4>
                           <Badge
                             className={`rounded-full border-0 ${
                               showPositive
-                                ? "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700"
-                                : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+                                ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] shadow-[0_0_15px_rgba(107,241,120,0.4)]"
+                                : "bg-gradient-to-r from-[#0a1f33] to-[#0a1f33]/80 text-[#DFF2D4] border border-[#6BF178]/30"
                             }`}
                           >
                             {showPositive ? (
@@ -532,7 +557,7 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                             {improvement.change}
                           </Badge>
                         </div>
-                        <p className="text-slate-600">{improvement.description}</p>
+                        <p className="text-[#DFF2D4]/70">{improvement.description}</p>
                       </div>
                     </div>
                   </Card>
@@ -548,7 +573,7 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h3 className="mb-4">Istoric Zilnic</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Istoric Zilnic</h3>
           <div className="space-y-3">
             {historyData.map((day, index) => {
               const date = new Date(day.date);
@@ -569,25 +594,25 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.6 + index * 0.05 }}
                 >
-                  <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-lg hover:shadow-xl transition-shadow">
+                  <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
                     {/* Date Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h4 className="capitalize mb-1">{dayName}</h4>
-                        <p className="text-slate-500 capitalize">{dateStr}</p>
+                        <h4 className="capitalize mb-1 text-[#DFF2D4] font-semibold">{dayName}</h4>
+                        <p className="text-[#DFF2D4]/70 capitalize text-sm">{dateStr}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <div
                           className={`px-4 py-2 rounded-2xl bg-gradient-to-r ${getMoodColor(
                             day.mood
-                          )} text-white text-2xl`}
+                          )} text-[#04101B] shadow-[0_0_15px_rgba(107,241,120,0.3)] flex items-center justify-center`}
                         >
-                          {getMoodEmoji(day.mood)}
+                          {getMoodIcon(day.mood)}
                         </div>
                         <Badge
                           className={`rounded-full bg-gradient-to-r ${getSleepQualityColor(
                             day.sleep.quality
-                          )} text-white border-0`}
+                          )} text-[#04101B] border-0 shadow-[0_0_15px_rgba(107,241,120,0.3)]`}
                         >
                           <Moon className="w-3 h-3 mr-1" />
                           {day.sleep.hours}h
@@ -599,45 +624,57 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-slate-600">Calories</span>
-                          <span className="text-slate-900">
+                          <span className="text-[#DFF2D4]">Calories</span>
+                          <span className="text-[#DFF2D4] font-semibold">
                             {day.calories.consumed}/{day.calories.target}
                           </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
                           <div
-                            className="h-full bg-gradient-to-r from-rose-400 to-pink-400 rounded-full transition-all"
-                            style={{ width: `${Math.min(calorieProgress, 100)}%` }}
+                            className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${Math.min(calorieProgress, 100)}%`,
+                              background: 'linear-gradient(90deg, #FF006E, #E2F163)',
+                              boxShadow: '0 0 15px rgba(255, 0, 110, 0.6)'
+                            }}
                           />
                         </div>
                       </div>
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-slate-600">Protein</span>
-                          <span className="text-slate-900">
+                          <span className="text-[#DFF2D4]">Protein</span>
+                          <span className="text-[#DFF2D4] font-semibold">
                             {day.protein.consumed}g/{day.protein.target}g
                           </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#E2F163]/30">
                           <div
-                            className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
-                            style={{ width: `${Math.min(proteinProgress, 100)}%` }}
+                            className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${Math.min(proteinProgress, 100)}%`,
+                              background: 'linear-gradient(90deg, #E2F163, #6BF178)',
+                              boxShadow: '0 0 15px rgba(226, 241, 99, 0.6)'
+                            }}
                           />
                         </div>
                       </div>
 
                       <div>
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-slate-600">Water</span>
-                          <span className="text-slate-900">
+                          <span className="text-[#DFF2D4]">Water</span>
+                          <span className="text-[#DFF2D4] font-semibold">
                             {day.water.consumed}L/{day.water.target}L
                           </span>
                         </div>
-                        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
                           <div
-                            className="h-full bg-gradient-to-r from-sky-400 to-cyan-400 rounded-full transition-all"
-                            style={{ width: `${Math.min(waterProgress, 100)}%` }}
+                            className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${Math.min(waterProgress, 100)}%`,
+                              background: 'linear-gradient(90deg, #6BF178, #DFF2D4)',
+                              boxShadow: '0 0 15px rgba(107, 241, 120, 0.6)'
+                            }}
                           />
                         </div>
                       </div>
@@ -645,11 +682,11 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
 
                     {/* Stats */}
                     <div className="flex items-center gap-4 mb-4">
-                      <Badge className="rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-slate-700 border-0">
+                      <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
                         <Activity className="w-3 h-3 mr-1" />
                         {day.workouts} workout{day.workouts !== 1 ? "s" : ""}
                       </Badge>
-                      <Badge className="rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-slate-700 border-0">
+                      <Badge className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#6BF178] text-[#DFF2D4] border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)]">
                         {day.steps.toLocaleString()} steps
                       </Badge>
                     </div>
@@ -658,14 +695,14 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
                     {day.achievements.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
-                          <Award className="w-4 h-4 text-amber-500" />
-                          <span className="text-slate-700">Achievements</span>
+                          <Award className="w-4 h-4 text-[#E2F163]" />
+                          <span className="text-[#DFF2D4] font-semibold">Achievements</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {day.achievements.map((achievement, i) => (
                             <Badge
                               key={i}
-                              className="rounded-full bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border-0"
+                              className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(226,241,99,0.4)]"
                             >
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               {achievement}
@@ -688,28 +725,28 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
           transition={{ delay: 1 }}
           className="mt-6"
         >
-          <Card className="p-6 rounded-3xl border-white/20 bg-gradient-to-br from-sky-50 to-cyan-50 backdrop-blur-xl">
+          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 flex items-center justify-center flex-shrink-0">
-                <Brain className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] flex items-center justify-center flex-shrink-0 glow-effect-green pulse-modern">
+                <Brain className="w-6 h-6 text-[#04101B]" />
               </div>
               <div>
-                <h4 className="mb-2">AI Insight</h4>
-                <p className="text-slate-600 mb-3">
+                <h4 className="mb-2 text-gradient-modern text-glow font-bold">AI Insight</h4>
+                <p className="text-[#DFF2D4]/80 mb-3">
                   Based on your data, you're making excellent progress! Your consistency in tracking meals
                   has led to a 15% improvement in sleep quality. Keep maintaining your protein intake and
                   aim for 10k steps daily for optimal results.
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Badge className="rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border-0">
+                  <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
                     <TrendingUp className="w-3 h-3 mr-1" />
                     Sleep +15%
                   </Badge>
-                  <Badge className="rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border-0">
+                  <Badge className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#6BF178] text-[#DFF2D4] border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)]">
                     <Target className="w-3 h-3 mr-1" />
                     7-day streak
                   </Badge>
-                  <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border-0">
+                  <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(226,241,99,0.4)]">
                     <Sparkles className="w-3 h-3 mr-1" />
                     {weeklyStats.totalAchievements} achievements
                   </Badge>

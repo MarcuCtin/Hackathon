@@ -17,7 +17,9 @@ const startOfToday = () => {
   return start;
 };
 
-export const ActivityProvider = ({ children }) => {
+type ActivityProviderProps = { children?: any };
+
+export const ActivityProvider = ({ children }: ActivityProviderProps) => {
   const [logs, setLogs] = useState([]);
   const [nutritionLogs, setNutritionLogs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,89 +83,52 @@ export const ActivityProvider = ({ children }) => {
           new Date(log.date).getTime() >= todayStart.getTime()
         );
       })
-      .reduce((total, log) => total + (log.value ?? 0), 0);
+      .reduce((sum, log) => sum + (Number(log.value) || 0), 0);
 
-    const workoutCalories = logs
+    const workoutsToday = logs
       .filter((log) => {
         return (
           log.type === "workout" &&
           new Date(log.date).getTime() >= todayStart.getTime()
         );
-      })
-      .reduce((total, log) => total + (log.value ?? 0), 0);
+      }).length;
 
-    const sleepEntries = logs
+    const sleepToday = logs
       .filter((log) => {
         return (
           log.type === "sleep" &&
           new Date(log.date).getTime() >= todayStart.getTime()
         );
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .reduce((sum, log) => sum + (Number(log.value) || 0), 0);
 
-    const sleepHours = sleepEntries.length > 0 ? sleepEntries[0].value ?? 0 : null;
-
-    const mealsToday = nutritionLogs.filter((log) => {
-      const timestamp = log.date ?? log.loggedAt;
-      return new Date(timestamp).getTime() >= todayStart.getTime();
-    }).length;
+    const mealsToday = nutritionLogs
+      .filter((meal) => {
+        const when = meal.date ?? meal.loggedAt ?? 0;
+        return new Date(when).getTime() >= todayStart.getTime();
+      }).length;
 
     return {
-      hydrationToday: hydration,
-      workoutCaloriesToday: workoutCalories,
-      sleepHoursToday: sleepHours,
+      hydrationToday: `${hydration.toFixed(1)}L`,
+      workoutCaloriesToday: logs
+        .filter((log) => log.type === "workout")
+        .reduce((sum, log) => sum + (Number(log.value) || 0), 0),
+      sleepHoursToday: sleepToday || null,
       mealCountToday: mealsToday,
     };
   }, [logs, nutritionLogs]);
 
-  const addLog = useCallback((log: Log) => {
-    setLogs((previous) =>
-      [log, ...previous].sort((a, b) => {
-        return new Date(b.date).getTime() - new Date(a.date).getTime();
-      })
-    );
-  }, []);
-
-  const addNutritionLog = useCallback((log: NutritionLog) => {
-    setNutritionLogs((previous) =>
-      [log, ...previous].sort((a, b) => {
-        const end = b.date ?? b.loggedAt ?? 0;
-        const start = a.date ?? a.loggedAt ?? 0;
-        return new Date(end).getTime() - new Date(start).getTime();
-      })
-    );
-  }, []);
-
-  const value = useMemo(
-    () => ({
+  const value = useMemo(() => {
+    return {
       logs,
       nutritionLogs,
+      refreshAll,
       hydrationToday: metrics.hydrationToday,
       workoutCaloriesToday: metrics.workoutCaloriesToday,
       sleepHoursToday: metrics.sleepHoursToday,
       mealCountToday: metrics.mealCountToday,
-      isLoading,
-      refreshLogs,
-      refreshNutrition,
-      refreshAll,
-      addLog,
-      addNutritionLog,
-    }),
-    [
-      logs,
-      nutritionLogs,
-      metrics.hydrationToday,
-      metrics.workoutCaloriesToday,
-      metrics.sleepHoursToday,
-      metrics.mealCountToday,
-      isLoading,
-      refreshLogs,
-      refreshNutrition,
-      refreshAll,
-      addLog,
-      addNutritionLog,
-    ]
-  );
+    };
+  }, [logs, nutritionLogs, metrics, refreshAll]);
 
   return (
     <ActivityContext.Provider value={value}>
