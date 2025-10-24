@@ -10,6 +10,8 @@ import { ScrollArea } from "./ui/scroll-area";
 import { FitterLogo } from "./FitterLogo";
 import { DailyRecommendations } from "./DailyRecommendations";
 import { ProgressInsights } from "./ProgressInsights";
+import { api } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 import {
   Sun,
   Moon,
@@ -67,7 +69,10 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onProfileClick }: DashboardProps) {
+  const { isAuthenticated } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [activePlan, setActivePlan] = useState<any>(null);
   const [tasks, setTasks] = useState<Task[]>([
     { id: 1, title: "Morning meditation", completed: true, time: "7:00 AM" },
     { id: 2, title: "Drink water (500ml)", completed: true, time: "7:30 AM" },
@@ -88,7 +93,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   const [chatInput, setChatInput] = useState("");
 
   // Use real energy data or fallback to mock data
-  const energyData = weeklyEnergyData.length > 0 ? weeklyEnergyData : [
+  const energyData = dashboardData?.analytics?.weeklyEnergy || [
     { day: "Mon", energy: 75, sleep: 7.5 },
     { day: "Tue", energy: 82, sleep: 8.0 },
     { day: "Wed", energy: 70, sleep: 6.5 },
@@ -99,7 +104,12 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   ];
 
   // Nutrition tracking with real data
-  const nutritionData = [
+  const nutritionData = dashboardData?.analytics?.nutritionProgress ? [
+    { name: "Protein", value: dashboardData.analytics.nutritionProgress.protein, target: dashboardData.analytics.nutritionTargets.protein, color: "#6BF178" },
+    { name: "Carbs", value: dashboardData.analytics.nutritionProgress.carbs, target: dashboardData.analytics.nutritionTargets.carbs, color: "#E2F163" },
+    { name: "Fats", value: dashboardData.analytics.nutritionProgress.fats, target: dashboardData.analytics.nutritionTargets.fats, color: "#DFF2D4" },
+    { name: "Water", value: dashboardData.analytics.nutritionProgress.water, target: dashboardData.analytics.nutritionTargets.water, color: "#6BF178", unit: "L" },
+  ] : [
     { name: "Protein", value: 85, target: 100, color: "#6BF178" },
     { name: "Carbs", value: 120, target: 150, color: "#E2F163" },
     { name: "Fats", value: 60, target: 70, color: "#DFF2D4" },
@@ -121,6 +131,52 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    const fetchDashboardData = async () => {
+      try {
+        const response = await api.getDashboardData();
+        if (response.success) {
+          setDashboardData(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      }
+    };
+    
+    const fetchActivePlan = async () => {
+      try {
+        const response = await api.getActivePlan();
+        if (response.success && response.data) {
+          setActivePlan(response.data);
+        } else {
+          setActivePlan(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch active plan:", error);
+        setActivePlan(null);
+      }
+    };
+    
+    fetchDashboardData();
+    fetchActivePlan();
+    
+    // Refresh plan every 5 seconds to catch new plans
+    const interval = setInterval(fetchActivePlan, 5000);
+    
+    // Listen for plan changes from other pages
+    const handlePlanChange = (event: CustomEvent) => {
+      setActivePlan(event.detail.plan);
+    };
+    window.addEventListener('planChanged', handlePlanChange as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('planChanged', handlePlanChange as EventListener);
+    };
+  }, [isAuthenticated]);
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
@@ -178,6 +234,20 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                 <Sparkles className="w-3 h-3 mr-1" />
                 Premium
               </Badge>
+              {activePlan ? (
+                <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap">
+                  {activePlan.planType === 'cutting' && '🔥'}
+                  {activePlan.planType === 'bulking' && '💪'}
+                  {activePlan.planType === 'maintenance' && '⚖️'}
+                  {activePlan.planType === 'healing' && '💚'}
+                  {activePlan.planType === 'custom' && '✨'}
+                  {' '}{activePlan.planName}
+                </Badge>
+              ) : (
+                <Badge className="rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1">
+                  📋 Currently no plan set
+                </Badge>
+              )}
               <button onClick={onProfileClick} className="focus:outline-none">
                 <UserAvatar size={40} userName="Alex Thompson" />
               </button>

@@ -59,6 +59,7 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
   const [wellnessHistory, setWellnessHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activePlan, setActivePlan] = useState<any>(null);
   const {
     logs,
     nutritionLogs,
@@ -67,6 +68,39 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
     sleepHoursToday,
     mealCountToday,
   } = useActivityData();
+
+  // Fetch active plan
+  useEffect(() => {
+    const fetchActivePlan = async () => {
+      try {
+        const response = await api.getActivePlan();
+        if (response.success && response.data) {
+          setActivePlan(response.data);
+        } else {
+          setActivePlan(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch active plan:", error);
+        setActivePlan(null);
+      }
+    };
+    
+    fetchActivePlan();
+    
+    // Refresh plan every 5 seconds to catch new plans
+    const interval = setInterval(fetchActivePlan, 5000);
+    
+    // Listen for plan changes from other pages
+    const handlePlanChange = (event: CustomEvent) => {
+      setActivePlan(event.detail.plan);
+    };
+    window.addEventListener('planChanged', handlePlanChange as EventListener);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('planChanged', handlePlanChange as EventListener);
+    };
+  }, []);
 
   // Generate last 7 days for wellness history
   useEffect(() => {
@@ -380,6 +414,20 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {activePlan ? (
+                <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap px-3 py-1">
+                  {activePlan.planType === 'cutting' && '🔥'}
+                  {activePlan.planType === 'bulking' && '💪'}
+                  {activePlan.planType === 'maintenance' && '⚖️'}
+                  {activePlan.planType === 'healing' && '💚'}
+                  {activePlan.planType === 'custom' && '✨'}
+                  {' '}{activePlan.planName}
+                </Badge>
+              ) : (
+                <Badge className="rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1">
+                  📋 Currently no plan set
+                </Badge>
+              )}
               <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(226,241,99,0.4)] px-3 py-1">
                 <Zap className="w-3 h-3 mr-1" />
                 {workoutCaloriesToday} kcal

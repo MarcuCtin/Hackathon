@@ -7,8 +7,9 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { FitterLogo } from "./FitterLogo";
 import { api } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Check, X, Sparkles, Loader2, Mail, Lock, User as UserIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, X, Sparkles, Loader2, Mail, Lock, User as UserIcon, LogIn } from "lucide-react";
 
 interface Answer {
   questionId: string;
@@ -32,6 +33,7 @@ interface OnboardingFormProps {
 }
 
 export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
+  const { isAuthenticated, user, login, register, refreshUser } = useAuth();
   const [currentStep, setCurrentStep] = useState(-1); // Start with auth step
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -42,6 +44,13 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
+  
+  // AI Targets state
+  const [aiTargets, setAiTargets] = useState<any>(null);
+  const [showTargetModal, setShowTargetModal] = useState(false);
+  const [isGeneratingTargets, setIsGeneratingTargets] = useState(false);
 
   // Dynamic question flow based on previous answers
   const getQuestions = (): Question[] => {
@@ -187,7 +196,7 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
 
     setIsRegistering(true);
     try {
-      await api.register(email, password, name);
+      await register(email, password, name);
       toast.success("Welcome to Fitter! Let's personalize your experience.");
       setCurrentStep(0); // Move to first wellness question
     } catch (error) {
@@ -198,36 +207,97 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+
+    setIsLoggingIn(true);
+    try {
+      await login(email, password);
+      await refreshUser(); // Refresh to get latest user data
+      toast.success("Welcome back!");
+      
+      // Get updated user data
+      const updatedUser = await api.getMe();
+      
+      // If user already completed onboarding, skip to dashboard
+      if (updatedUser.data.completedOnboarding) {
+        if (onComplete) onComplete();
+      } else {
+        // Start onboarding flow
+        setCurrentStep(0);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error("Login failed. Please check your credentials.");
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const handleSelectOption = (value: string) => {
     setSelectedOption(value);
   };
 
   const handleNext = async () => {
     if (selectedOption && currentQuestion) {
-      setAnswers([
+      const newAnswers = [
         ...answers,
         { questionId: currentQuestion.id, value: selectedOption },
-      ]);
+      ];
+      setAnswers(newAnswers);
       setSelectedOption(null);
       
-      // If this is the last question, save profile with goals
+      // If this is the last question, save profile with goals and complete onboarding
       if (currentStep === totalSteps - 1) {
         try {
-          const goals = answers
+          const goals = newAnswers
             .map(a => a.value)
-            .filter(v => v && v !== 'calm' && v !== 'stressed' && v !== 'focused')
+            .filter(v => v && v !== 'calm' && v !== 'stressed' && v !== 'focused' && v !== 'tired')
             .slice(0, 5);
           
+          const onboardingAnswers = newAnswers.map(a => `${a.questionId}: ${a.value}`);
+          
+          // Update profile with goals
           await api.updateProfile({ goals });
-          toast.success("Profile saved!");
+          
+          // Complete onboarding
+          await api.completeOnboarding({
+            onboardingAnswers,
+            identityComplete: true,
+          });
+          
+          // Refresh user data to get updated completedOnboarding status
+          await refreshUser();
+          
+          // Generate AI targets
+          setIsGeneratingTargets(true);
+          try {
+            const targetsResponse = await api.generateTargets();
+            if (targetsResponse.success && targetsResponse.data.targets) {
+              setAiTargets(targetsResponse.data);
+              setShowTargetModal(true);
+            } else {
+              // If no targets generated, complete onboarding
+              toast.success("Your personalized plan is ready!");
+              if (onComplete) onComplete();
+            }
+          } catch (error) {
+            console.error("Failed to generate targets:", error);
+            // Continue without AI targets
+            toast.success("Your personalized plan is ready!");
+            if (onComplete) onComplete();
+          } finally {
+            setIsGeneratingTargets(false);
+          }
         } catch (error) {
           console.error("Profile update error:", error);
-          // Continue anyway - profile can be updated later
+          toast.error("Failed to save profile. Please try again.");
         }
+      } else {
+        setCurrentStep(currentStep + 1);
+        setEmotionalState("neutral");
       }
-      
-      setCurrentStep(currentStep + 1);
-      setEmotionalState("neutral");
     }
   };
 
@@ -285,91 +355,170 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           <div className="text-center mb-8">
             <FitterLogo size={48} className="mx-auto mb-4" />
             <h2 className="mb-2">Welcome to Fitter 👋</h2>
-            <p className="text-slate-600">Create your account to start your wellness journey</p>
+            <p className="text-slate-600">
+              {showLogin ? "Sign in to continue" : "Create your account to start your wellness journey"}
+            </p>
           </div>
 
           <Card className="p-8 rounded-3xl border-white/20 bg-white/80 backdrop-blur-xl shadow-2xl">
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <Label htmlFor="name" className="mb-2 block text-slate-700">
-                  <UserIcon className="w-4 h-4 inline mr-2" />
-                  Full Name
-                </Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Alex Thompson"
-                  className="rounded-2xl border-slate-200"
-                  required
+            {showLogin ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <Label htmlFor="login-email" className="mb-2 block text-slate-700">
+                    <Mail className="w-4 h-4 inline mr-2" />
+                    Email
+                  </Label>
+                  <Input
+                    id="login-email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="alex@example.com"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isLoggingIn}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="login-password" className="mb-2 block text-slate-700">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Password
+                  </Label>
+                  <Input
+                    id="login-password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isLoggingIn}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isLoggingIn || !email || !password}
+                  className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 disabled:opacity-50"
+                >
+                  {isLoggingIn ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Sign In
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowLogin(false)}
+                  className="w-full rounded-2xl"
+                  disabled={isLoggingIn}
+                >
+                  Don't have an account? Sign up
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div>
+                  <Label htmlFor="name" className="mb-2 block text-slate-700">
+                    <UserIcon className="w-4 h-4 inline mr-2" />
+                    Full Name
+                  </Label>
+                  <Input
+                    id="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Alex Thompson"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isRegistering}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="email" className="mb-2 block text-slate-700">
+                    <Mail className="w-4 h-4 inline mr-2" />
+                    Email
+                  </Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="alex@example.com"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    disabled={isRegistering}
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="password" className="mb-2 block text-slate-700">
+                    <Lock className="w-4 h-4 inline mr-2" />
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="rounded-2xl border-slate-200"
+                    required
+                    minLength={8}
+                    disabled={isRegistering}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">At least 8 characters</p>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={isRegistering || !name || !email || !password}
+                  className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 disabled:opacity-50"
+                >
+                  {isRegistering ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Account...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Create Account
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowLogin(true)}
+                  className="w-full rounded-2xl"
                   disabled={isRegistering}
-                />
-              </div>
+                >
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Already have an account? Sign in
+                </Button>
 
-              <div>
-                <Label htmlFor="email" className="mb-2 block text-slate-700">
-                  <Mail className="w-4 h-4 inline mr-2" />
-                  Email
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="alex@example.com"
-                  className="rounded-2xl border-slate-200"
-                  required
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleSkip}
+                  className="w-full rounded-2xl"
                   disabled={isRegistering}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="password" className="mb-2 block text-slate-700">
-                  <Lock className="w-4 h-4 inline mr-2" />
-                  Password
-                </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="rounded-2xl border-slate-200"
-                  required
-                  minLength={8}
-                  disabled={isRegistering}
-                />
-                <p className="text-xs text-slate-500 mt-1">At least 8 characters</p>
-              </div>
-
-              <Button
-                type="submit"
-                disabled={isRegistering || !name || !email || !password}
-                className="w-full rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 disabled:opacity-50"
-              >
-                {isRegistering ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating Account...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Create Account
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={handleSkip}
-                className="w-full rounded-2xl"
-                disabled={isRegistering}
-              >
-                Skip for now
-              </Button>
-            </form>
+                >
+                  Skip for now
+                </Button>
+              </form>
+            )}
           </Card>
         </motion.div>
       </div>
@@ -640,6 +789,95 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           </motion.div>
         )}
       </div>
+
+      {/* AI Targets Modal */}
+      {showTargetModal && aiTargets && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-2xl w-full"
+          >
+            <Card className="p-8 rounded-3xl border-white/20 bg-white/95 backdrop-blur-xl shadow-2xl">
+              <div className="text-center mb-6">
+                <h2 className="mb-2 text-2xl font-bold text-slate-900">AI Suggested Nutrition Targets</h2>
+                <p className="text-slate-600">{aiTargets.targets.reason}</p>
+              </div>
+
+              <div className="space-y-4 mb-6 max-h-96 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Calories</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.calories} kcal</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Protein</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.protein}g</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Carbs</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.carbs}g</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Fat</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.fat}g</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Water</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.water}L</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-slate-50">
+                    <p className="text-xs text-slate-500 mb-1">Iron</p>
+                    <p className="text-lg font-semibold text-slate-900">{aiTargets.targets.iron}mg</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    setShowTargetModal(false);
+                    toast.success("Your personalized plan is ready!");
+                    if (onComplete) onComplete();
+                  }}
+                  className="flex-1 rounded-full"
+                >
+                  Use Default Targets
+                </Button>
+                <Button
+                  onClick={async () => {
+                    try {
+                      await api.approveAiTargets(aiTargets.targets);
+                      setShowTargetModal(false);
+                      toast.success("AI targets approved!");
+                      if (onComplete) onComplete();
+                    } catch (error) {
+                      console.error("Failed to approve targets:", error);
+                      toast.error("Failed to save targets");
+                    }
+                  }}
+                  className="flex-1 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500"
+                >
+                  Approve AI Targets
+                </Button>
+              </div>
+            </Card>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Loading overlay for generating targets */}
+      {isGeneratingTargets && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <Card className="p-8 rounded-3xl">
+            <div className="text-center">
+              <div className="animate-spin mx-auto mb-4 w-12 h-12 border-4 border-sky-400 border-t-transparent rounded-full" />
+              <p className="text-slate-700">AI is analyzing your profile and generating personalized targets...</p>
+            </div>
+          </Card>
+        </div>
+      )}
     </motion.div>
   );
 }

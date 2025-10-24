@@ -17,6 +17,7 @@ export interface NutritionLogDoc extends Document {
     folate?: number; // mcg
     [key: string]: number | undefined;
   };
+  suggestedByAi?: boolean; // Whether this meal was suggested by AI
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,6 +45,10 @@ const NutritionLogSchema = new Schema<NutritionLogDoc>(
     micronutrients: {
       type: Schema.Types.Mixed,
       default: {},
+    },
+    suggestedByAi: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },

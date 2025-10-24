@@ -22,6 +22,8 @@ import supplementsRoutes from './routes/supplements.js';
 import nutritionTipsRoutes from './routes/nutritionTips.js';
 import historyRoutes from './routes/history.js';
 import nutritionPageRoutes from './routes/nutritionPage.js';
+import userTargetsRoutes from './routes/userTargets.js';
+import userPlansRoutes from './routes/userPlans.js';
 
 const env = loadEnv();
 
@@ -61,6 +63,8 @@ export function createApp() {
   app.use('/api/nutrition-tips', nutritionTipsRoutes);
   app.use('/api/history', historyRoutes);
   app.use('/api/nutrition-page', nutritionPageRoutes);
+  app.use('/api/user-targets', userTargetsRoutes);
+  app.use('/api/user-plans', userPlansRoutes);
 
   app.use(notFoundHandler);
   app.use(errorHandler);

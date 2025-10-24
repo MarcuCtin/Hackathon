@@ -10,6 +10,7 @@ import { FitterLogo } from "./FitterLogo";
 import { UserAvatar } from "./UserAvatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { api } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
 import {
   User,
@@ -30,6 +31,7 @@ import {
   Edit2,
   ArrowLeft,
   Loader2,
+  LogOut,
 } from "lucide-react";
 
 interface UserProfile {
@@ -51,6 +53,7 @@ interface ProfilePageProps {
 }
 
 export function ProfilePage({ onBack }: ProfilePageProps) {
+  const { logout } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -118,6 +121,12 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
 
   const handleAvatarChange = (newImageUrl: string) => {
     setProfile({ ...profile, avatarUrl: newImageUrl });
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    // Redirect to landing page will happen automatically via App.tsx useEffect
   };
 
   const stats = [
@@ -220,32 +229,42 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness journey</p>
               </div>
             </div>
-            <Button
-              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-              disabled={saving}
-              className={`rounded-2xl px-6 py-2.5 transition-all ${
-                isEditing
-                  ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_25px_rgba(107,241,120,0.6)] hover:scale-105"
-                  : "bg-gradient-to-r from-[#E2F163] to-[#6BF178] hover:shadow-[0_0_25px_rgba(226,241,99,0.6)] hover:scale-105"
-              } text-[#04101B] font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(107,241,120,0.4)]`}
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : isEditing ? (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </>
-              ) : (
-                <>
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+                disabled={saving}
+                className={`rounded-2xl px-6 py-2.5 transition-all ${
+                  isEditing
+                    ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_25px_rgba(107,241,120,0.6)] hover:scale-105"
+                    : "bg-gradient-to-r from-[#E2F163] to-[#6BF178] hover:shadow-[0_0_25px_rgba(226,241,99,0.6)] hover:scale-105"
+                } text-[#04101B] font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(107,241,120,0.4)]`}
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : isEditing ? (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                ) : (
+                  <>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </>
+                )}
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="outline"
+                className="rounded-2xl border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 px-6 py-2.5 transition-all"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>

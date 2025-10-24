@@ -25,26 +25,40 @@ export const ActivityProvider = ({ children }: ActivityProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshLogs = useCallback(async () => {
-    const response = await api.getLogs({ limit: 100 });
-    if (response?.success && Array.isArray(response.data)) {
-      setLogs(
-        response.data.slice().sort((a, b) => {
-          return new Date(b.date).getTime() - new Date(a.date).getTime();
-        })
-      );
+    try {
+      const token = api.getToken();
+      if (!token) return; // Don't fetch if not authenticated
+      
+      const response = await api.getLogs({ limit: 100 });
+      if (response?.success && Array.isArray(response.data)) {
+        setLogs(
+          response.data.slice().sort((a, b) => {
+            return new Date(b.date).getTime() - new Date(a.date).getTime();
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to refresh logs:", error);
     }
   }, []);
 
   const refreshNutrition = useCallback(async () => {
-    const response = await api.getNutritionLogs();
-    if (response?.success && Array.isArray(response.data)) {
-      setNutritionLogs(
-        response.data.slice().sort((a, b) => {
-          const end = b.date ?? b.loggedAt ?? 0;
-          const start = a.date ?? a.loggedAt ?? 0;
-          return new Date(end).getTime() - new Date(start).getTime();
-        })
-      );
+    try {
+      const token = api.getToken();
+      if (!token) return; // Don't fetch if not authenticated
+      
+      const response = await api.getNutritionLogs();
+      if (response?.success && Array.isArray(response.data)) {
+        setNutritionLogs(
+          response.data.slice().sort((a, b) => {
+            const end = b.date ?? b.loggedAt ?? 0;
+            const start = a.date ?? a.loggedAt ?? 0;
+            return new Date(end).getTime() - new Date(start).getTime();
+          })
+        );
+      }
+    } catch (error) {
+      console.error("Failed to refresh nutrition:", error);
     }
   }, []);
 
@@ -56,9 +70,17 @@ export const ActivityProvider = ({ children }: ActivityProviderProps) => {
     let cancelled = false;
 
     const bootstrap = async () => {
+      const token = api.getToken();
+      if (!token) {
+        setIsLoading(false);
+        return; // Don't fetch if not authenticated
+      }
+      
       setIsLoading(true);
       try {
         await refreshAll();
+      } catch (error) {
+        console.error("Failed to bootstrap activity data:", error);
       } finally {
         if (!cancelled) {
           setIsLoading(false);

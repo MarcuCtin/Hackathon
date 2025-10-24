@@ -26,6 +26,17 @@ interface Message {
   sender: "user" | "ai";
   timestamp: Date;
   suggestions?: string[];
+  actions?: Array<{
+    type: string;
+    amount?: number;
+    hours?: number;
+    unit?: string;
+    notes?: string;
+    calories?: number;
+    minutes?: number;
+    category?: string;
+    micronutrients?: Record<string, number>;
+  }>;
 }
 
 interface AssistantPageProps {
@@ -49,7 +60,63 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<string>("today");
+  const [messagesByDay, setMessagesByDay] = useState<Array<{day: string, messageCount: number, messages: any[]}>>([]);
+  const [activePlan, setActivePlan] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch messages grouped by day
+  useEffect(() => {
+    const fetchMessagesByDay = async () => {
+      try {
+        const response = await api.getChatMessagesGroupedByDay();
+        if (response.success && response.data) {
+          setMessagesByDay(response.data);
+          
+          // Set today's messages as default
+          const today = new Date().toISOString().split('T')[0];
+          const todayData = response.data.find((day: any) => day.day === today);
+          if (todayData && todayData.messages.length > 0) {
+            const formattedMessages = todayData.messages.map((msg: any, idx: number) => ({
+              id: idx + 1,
+              text: msg.content,
+              sender: msg.role === 'user' ? 'user' : 'ai',
+              timestamp: new Date(msg.timestamp),
+            }));
+            setMessages(formattedMessages);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages by day:", error);
+      }
+    };
+    
+    fetchMessagesByDay();
+  }, []);
+
+  // Fetch active plan
+  useEffect(() => {
+    const fetchActivePlan = async () => {
+      try {
+        const response = await api.getActivePlan();
+        if (response.success && response.data) {
+          setActivePlan(response.data);
+        } else {
+          setActivePlan(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch active plan:", error);
+        setActivePlan(null);
+      }
+    };
+    
+    fetchActivePlan();
+    
+    // Refresh every 3 seconds to catch new plans created via AI
+    const interval = setInterval(fetchActivePlan, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -99,15 +166,93 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
       // Call backend AI endpoint
       const { data } = await api.chat([...conversationHistory, { role: "user", content: textToSend }]);
 
+      // Process actions and build confirmation message
+      let confirmationText = data.reply;
+      let planCreated = false;
+      let planCancelled = false;
+      
+      if (data.actions && data.actions.length > 0) {
+        const actionConfirmations = data.actions.map((action: any) => {
+          if (action.type === 'meal_log') {
+            const mealInfo = action.calories ? ` ${action.calories} cal` : '';
+            const micronutrients = action.micronutrients ? 
+              ` (micronutrients: ${Object.keys(action.micronutrients).join(', ')})` : '';
+            return `✓ Logged meal: ${action.notes}${mealInfo}${micronutrients}`;
+          } else if (action.type === 'water_log') {
+            return `✓ Logged water: ${action.amount} ${action.unit || 'glasses'}`;
+          } else if (action.type === 'sleep_log') {
+            return `✓ Logged sleep: ${action.hours} hours`;
+          } else if (action.type === 'workout_log') {
+            const info = action.calories ? `${action.calories} cal` : `${action.minutes} min`;
+            return `✓ Logged workout: ${info}`;
+          } else if (action.type === 'create_plan') {
+            planCreated = true;
+            return `✓ Created ${action.planName}`;
+          } else if (action.type === 'cancel_plan') {
+            planCancelled = true;
+            return `✓ Plan cancelled`;
+          } else if (action.type === 'update_targets') {
+            return `✓ Updated nutrition targets`;
+          }
+          return null;
+        }).filter(Boolean);
+        
+        if (actionConfirmations.length > 0) {
+          confirmationText += '\n\n' + actionConfirmations.join('\n');
+        }
+      }
+
+      // If user consumed a suggested meal, mark it in localStorage
+      if (data.consumedSuggestionId) {
+        const consumedMeals = JSON.parse(localStorage.getItem('consumedSuggestions') || '[]');
+        if (!consumedMeals.includes(data.consumedSuggestionId)) {
+          consumedMeals.push(data.consumedSuggestionId);
+          localStorage.setItem('consumedSuggestions', JSON.stringify(consumedMeals));
+        }
+      }
+
+      // Reload active plan if a new plan was created or cancelled
+      if (planCreated || planCancelled) {
+        try {
+          const planResponse = await api.getActivePlan();
+          if (planResponse.success && planResponse.data) {
+            setActivePlan(planResponse.data);
+            if (planCreated) {
+              toast.success(`🎉 Plan "${planResponse.data.planName}" is now active!`);
+            }
+          } else {
+            // No active plan found
+            setActivePlan(null);
+          }
+          
+          // Broadcast plan change event to other pages
+          window.dispatchEvent(new CustomEvent('planChanged', { 
+            detail: { plan: planResponse.success && planResponse.data ? planResponse.data : null } 
+          }));
+        } catch (error) {
+          console.error("Failed to reload active plan:", error);
+          setActivePlan(null);
+          
+          // Broadcast that plan was cleared
+          window.dispatchEvent(new CustomEvent('planChanged', { detail: { plan: null } }));
+        }
+      }
+
       const aiMessage: Message = {
         id: messages.length + 2,
-        text: data.reply,
+        text: confirmationText,
         sender: "ai",
         timestamp: new Date(),
         suggestions: ["Tell me more", "What else?", "Create a plan"],
+        actions: data.actions,
       };
 
       setMessages((prev) => [...prev, aiMessage]);
+      
+      // Show toast for logged actions
+      if (data.actions && data.actions.length > 0) {
+        toast.success(`Logged ${data.actions.length} action(s) successfully!`);
+      }
     } catch (error) {
       console.error("AI chat error:", error);
       toast.error("Failed to get AI response. Please try again.");
@@ -162,6 +307,20 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
                 <Bot className="w-4 h-4 mr-1.5" />
                 Online
               </Badge>
+              {activePlan ? (
+                <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap">
+                  {activePlan.planType === 'cutting' && '🔥'}
+                  {activePlan.planType === 'bulking' && '💪'}
+                  {activePlan.planType === 'maintenance' && '⚖️'}
+                  {activePlan.planType === 'healing' && '💚'}
+                  {activePlan.planType === 'custom' && '✨'}
+                  {' '}{activePlan.planName}
+                </Badge>
+              ) : (
+                <Badge className="rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1">
+                  📋 Currently no plan set
+                </Badge>
+              )}
               <button 
                 onClick={onProfileClick} 
                 className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
@@ -202,6 +361,40 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
         {/* Chat Messages */}
         <Card className="modern-card glass-card-intense rounded-3xl overflow-hidden">
           <div className="flex flex-col relative" style={{height: 'calc(100vh - 350px)', minHeight: '500px', maxHeight: 'calc(100vh - 350px)'}}>
+            {/* Day Tabs */}
+            {messagesByDay.length > 0 && (
+              <div className="border-b border-[#6BF178]/20 px-6 py-3 flex gap-2 overflow-x-auto" style={{scrollbarWidth: 'thin'}}>
+                {messagesByDay.map((dayData) => {
+                  const isToday = dayData.day === new Date().toISOString().split('T')[0];
+                  const isSelected = selectedDay === dayData.day;
+                  const dayLabel = isToday ? 'Today' : new Date(dayData.day).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  
+                  return (
+                    <button
+                      key={dayData.day}
+                      onClick={() => {
+                        setSelectedDay(dayData.day);
+                        const formattedMessages = dayData.messages.map((msg: any, idx: number) => ({
+                          id: idx + 1,
+                          text: msg.content,
+                          sender: msg.role === 'user' ? 'user' : 'ai',
+                          timestamp: new Date(msg.timestamp),
+                        }));
+                        setMessages(formattedMessages);
+                      }}
+                      className={`px-4 py-2 rounded-full whitespace-nowrap transition-all ${
+                        isSelected
+                          ? 'bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]'
+                          : 'bg-[#04101B]/60 text-[#DFF2D4] hover:bg-[#04101B]/80'
+                      }`}
+                    >
+                      {dayLabel} ({dayData.messageCount})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            
             {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10" style={{scrollBehavior: 'smooth', scrollbarWidth: 'thin', scrollbarColor: 'rgba(107, 241, 120, 0.5) transparent'}}>
               {messages.map((message) => (

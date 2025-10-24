@@ -328,11 +328,211 @@ class ApiClient {
           calories?: number;
           minutes?: number;
           category?: string;
+          micronutrients?: Record<string, number>;
         }>;
+        supplementSuggestions?: string[];
+        consumedSuggestionId?: string;
       };
     }>("/ai/chat", {
       method: "POST",
       body: JSON.stringify({ messages }),
+    });
+  }
+
+  async getMealSuggestions() {
+    return this.request<{
+      success: boolean;
+      data: {
+        suggestions: Array<{
+          id: string;
+          name: string;
+          time: string;
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          items: string[];
+          emoji: string;
+          mealType: "breakfast" | "lunch" | "dinner" | "snack";
+          why?: string;
+        }>;
+        consumed: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+        remaining: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+        targets: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+      };
+    }>("/ai/meal-suggestions", {
+      method: "POST",
+    });
+  }
+
+  async generateTargets() {
+    return this.request<{
+      success: boolean;
+      data: {
+        targets: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+          water: number;
+          caffeine: number;
+          reason: string;
+        };
+        userProfile: {
+          age: number;
+          heightCm: number;
+          weightKg: number;
+          gender: string;
+          goals: string[];
+          activityLevel: string;
+        };
+      };
+    }>("/ai/generate-targets", {
+      method: "POST",
+    });
+  }
+
+  async getUserTargets() {
+    return this.request<{
+      success: boolean;
+      data: {
+        calories: { target: number; current: number };
+        protein: { target: number; current: number };
+        carbs: { target: number; current: number };
+        fat: { target: number; current: number };
+        vitaminD: { target: number; current: number };
+        calcium: { target: number; current: number };
+        magnesium: { target: number; current: number };
+        iron: { target: number; current: number };
+        zinc: { target: number; current: number };
+        omega3: { target: number; current: number };
+        b12: { target: number; current: number };
+        folate: { target: number; current: number };
+        water: { target: number; current: number };
+        caffeine: { target: number; current: number };
+        suggestedByAi: boolean;
+        aiReason?: string;
+      };
+    }>("/user-targets");
+  }
+
+  async approveAiTargets(targets: any) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/user-targets/approve-ai-targets", {
+      method: "POST",
+      body: JSON.stringify({ targets }),
+    });
+  }
+
+  async getActivePlan() {
+    return this.request<{
+      success: boolean;
+      data: {
+        planType: "cutting" | "bulking" | "maintenance" | "healing" | "custom";
+        planName: string;
+        description?: string;
+        durationWeeks: number;
+        startDate: string;
+        endDate: string;
+        status: "active" | "completed" | "paused" | "cancelled";
+        targetCalories: number;
+        targetProtein: number;
+        targetCarbs: number;
+        targetFat: number;
+        primaryGoal: string;
+        secondaryGoals?: string[];
+        focusAreas?: string[];
+      } | null;
+    }>("/user-plans/active");
+  }
+
+  async getAllPlans() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        planType: string;
+        planName: string;
+        description?: string;
+        durationWeeks: number;
+        startDate: string;
+        endDate: string;
+        status: string;
+        targetCalories: number;
+        targetProtein: number;
+        targetCarbs: number;
+        targetFat: number;
+        primaryGoal: string;
+      }>;
+    }>("/user-plans");
+  }
+
+  async createPlan(planData: any) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/user-plans", {
+      method: "POST",
+      body: JSON.stringify(planData),
+    });
+  }
+
+  async updatePlanStatus(planId: string, status: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/user-plans/${planId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
     });
   }
 
@@ -560,6 +760,150 @@ class ApiClient {
         updatedAt: string;
       };
     }>(`/workouts/plans/${id}`);
+  }
+
+  // Daily Tasks
+  async getDailyTasks(day?: string) {
+    const query = day ? `?day=${day}` : "";
+    return this.request<{ success: boolean; data: any[] }>(
+      `/daily-tasks${query}`
+    );
+  }
+
+  async createDailyTask(task: any) {
+    return this.request<{ success: boolean; data: any }>("/daily-tasks", {
+      method: "POST",
+      body: JSON.stringify(task),
+    });
+  }
+
+  async completeDailyTask(id: string) {
+    return this.request<{ success: boolean; data: any }>(
+      `/daily-tasks/${id}/complete`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ completed: true }),
+      }
+    );
+  }
+
+  // Achievements
+  async getAchievements() {
+    return this.request<{ success: boolean; data: any[] }>("/achievements");
+  }
+
+  async createAchievement(achievement: any) {
+    return this.request<{ success: boolean; data: any }>("/achievements", {
+      method: "POST",
+      body: JSON.stringify(achievement),
+    });
+  }
+
+  // Supplements
+  async getSupplements() {
+    return this.request<{ success: boolean; data: any[] }>("/supplements");
+  }
+
+  async createSupplement(supplement: any) {
+    return this.request<{ success: boolean; data: any }>("/supplements", {
+      method: "POST",
+      body: JSON.stringify(supplement),
+    });
+  }
+
+  async addSupplementToPlan(id: string) {
+    return this.request<{ success: boolean; data: any }>(
+      `/supplements/${id}/add-to-plan`,
+      {
+        method: "PATCH",
+      }
+    );
+  }
+
+  async logSupplement(log: any) {
+    return this.request<{ success: boolean; data: any }>("/supplements/log", {
+      method: "POST",
+      body: JSON.stringify(log),
+    });
+  }
+
+  async getNutritionAnalysis() {
+    return this.request<{ success: boolean; data: any }>(
+      "/supplements/nutrition-analysis"
+    );
+  }
+
+  // Nutrition Tips
+  async getNutritionTips() {
+    return this.request<{ success: boolean; data: any[] }>("/nutrition-tips");
+  }
+
+  async createNutritionTip(tip: any) {
+    return this.request<{ success: boolean; data: any }>("/nutrition-tips", {
+      method: "POST",
+      body: JSON.stringify(tip),
+    });
+  }
+
+  // History
+  async getWeeklyOverview() {
+    return this.request<{ success: boolean; data: any }>(
+      "/history/weekly-overview"
+    );
+  }
+
+  async getAssistantTimeline() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/history/assistant-timeline"
+    );
+  }
+
+  async getDailyCards(days: number = 7) {
+    return this.request<{ success: boolean; data: any[] }>(
+      `/history/daily-cards?days=${days}`
+    );
+  }
+
+  async getHistoryInsights() {
+    return this.request<{ success: boolean; data: any }>("/history/insights");
+  }
+
+  // Nutrition Page
+  async getNutritionPageToday() {
+    return this.request<{ success: boolean; data: any }>(
+      "/nutrition-page/today"
+    );
+  }
+
+  async getNutritionPageSupplements() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/nutrition-page/supplements"
+    );
+  }
+
+  async getNutritionPageTips() {
+    return this.request<{ success: boolean; data: any }>(
+      "/nutrition-page/tips"
+    );
+  }
+
+  // Chat Messages by Day
+  async getChatMessagesByDay(day?: string) {
+    const query = day ? `?day=${day}` : "";
+    return this.request<{ success: boolean; data: ChatMessage[] }>(
+      `/chat/messages${query}`
+    );
+  }
+
+  async getChatMessagesGroupedByDay() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        day: string;
+        messageCount: number;
+        messages: ChatMessage[];
+      }>;
+    }>("/chat/messages/by-day");
   }
 }
 

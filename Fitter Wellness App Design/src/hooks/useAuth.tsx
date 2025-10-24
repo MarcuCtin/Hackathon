@@ -13,6 +13,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
@@ -57,6 +58,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }
 
+  async function refreshUser() {
+    try {
+      const token = api.getToken();
+      if (token) {
+        const { data } = await api.getMe();
+        setUser(data);
+      }
+    } catch (err) {
+      console.error("Failed to refresh user:", err);
+      api.clearToken();
+      setUser(null);
+    }
+  }
+
   return (
     <AuthContext.Provider
       value={{
@@ -65,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         register,
         logout,
+        refreshUser,
         isAuthenticated: !!user,
       }}
     >

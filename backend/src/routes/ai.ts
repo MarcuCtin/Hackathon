@@ -11,10 +11,65 @@ import { DailyTask } from '../models/DailyTask.js';
 import { Achievement } from '../models/Achievement.js';
 import { SupplementLog } from '../models/SupplementLog.js';
 import { Supplement } from '../models/Supplement.js';
+import { UserPlan } from '../models/UserPlan.js';
+import { UserTargets } from '../models/UserTargets.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Types } from 'mongoose';
 
 const router = Router();
+
+// Helper function to detect liquids and calculate water content
+function calculateLiquidWaterContent(
+  liquidDescription: string,
+  amount: number,
+  unit: string,
+): number {
+  const liquid = liquidDescription.toLowerCase();
+
+  // Convert amount to ml first
+  let amountInMl = amount;
+  if (unit === 'glass' || unit === 'glasses') {
+    amountInMl = amount * 200; // 1 glass = 200ml
+  } else if (unit === 'cup' || unit === 'cups') {
+    amountInMl = amount * 250; // 1 cup = 250ml
+  } else if (unit === 'can' || unit === 'cans') {
+    amountInMl = amount * 330; // 1 can = 330ml
+  } else if (unit === 'bottle' || unit === 'bottles') {
+    amountInMl = amount * 500; // 1 bottle = 500ml
+  } else if (unit === 'liter' || unit === 'liters' || unit === 'l') {
+    amountInMl = amount * 1000;
+  }
+
+  // Water content percentage for different liquids
+  let waterPercentage = 100; // Default to 100% (plain water)
+
+  if (liquid.includes('milk') || liquid.includes('lapte')) {
+    waterPercentage = 87; // Milk is ~87% water
+  } else if (liquid.includes('cola') || liquid.includes('soda') || liquid.includes('suc')) {
+    waterPercentage = 89; // Cola/soda is ~89% water
+  } else if (liquid.includes('juice') || liquid.includes('suc de')) {
+    waterPercentage = 88; // Juice is ~88% water
+  } else if (liquid.includes('coffee') || liquid.includes('cafea')) {
+    waterPercentage = 99; // Coffee is ~99% water
+  } else if (liquid.includes('tea') || liquid.includes('ceai')) {
+    waterPercentage = 99; // Tea is ~99% water
+  } else if (liquid.includes('beer') || liquid.includes('bere')) {
+    waterPercentage = 93; // Beer is ~93% water
+  } else if (liquid.includes('wine') || liquid.includes('vin')) {
+    waterPercentage = 86; // Wine is ~86% water
+  } else if (liquid.includes('smoothie') || liquid.includes('shake')) {
+    waterPercentage = 80; // Smoothies are ~80% water
+  } else if (liquid.includes('soup') || liquid.includes('supa')) {
+    waterPercentage = 85; // Soup is ~85% water
+  } else if (liquid.includes('yogurt') || liquid.includes('iaurt')) {
+    waterPercentage = 85; // Yogurt is ~85% water
+  } else if (liquid.includes('water') || liquid.includes('apa')) {
+    waterPercentage = 100; // Pure water
+  }
+
+  // Calculate water amount in ml
+  return Math.round(amountInMl * (waterPercentage / 100));
+}
 
 // Helper function to estimate micronutrients from food description
 function estimateMicronutrients(foodNotes: string): Record<string, number> {
@@ -111,6 +166,20 @@ async function suggestSupplementsNeeded(
     }
   }
 
+  // Calculate total micronutrients from supplements taken today
+  const supplementMicros: Record<string, number> = {};
+  for (const supplementLog of todaySupplements) {
+    const s = supplementLog as { supplementId: Types.ObjectId };
+    const supplement = await Supplement.findById(s.supplementId).lean();
+    if (supplement?.nutrients) {
+      for (const [key, value] of Object.entries(supplement.nutrients)) {
+        if (typeof value === 'number') {
+          supplementMicros[key] = (supplementMicros[key] || 0) + value;
+        }
+      }
+    }
+  }
+
   // Get supplements in plan
   const supplementsInPlan = await Supplement.find({
     userId: new Types.ObjectId(userId),
@@ -134,9 +203,11 @@ async function suggestSupplementsNeeded(
   // Check deficiencies
   for (const [nutrient, recommended] of Object.entries(rda)) {
     const fromFood = foodMicros[nutrient] || 0;
+    const fromSupplements = supplementMicros[nutrient] || 0;
+    const total = fromFood + fromSupplements;
     const hasSupplement = supplementsInPlan.some((s) => s.nutrients?.[nutrient]);
 
-    if (fromFood < recommended * 0.5 && !hasSupplement) {
+    if (total < recommended * 0.5 && !hasSupplement) {
       // Less than 50% of RDA and no supplement in plan
       switch (nutrient) {
         case 'omega3':
@@ -217,6 +288,8 @@ router.post(
       weekNutrition,
       recentAchievements,
       todaySupplements,
+      activePlan,
+      userTargets,
     ] = await Promise.all([
       Log.find({
         userId: new Types.ObjectId(req.userId),
@@ -248,6 +321,15 @@ router.post(
       SupplementLog.find({
         userId: new Types.ObjectId(req.userId),
         date: { $gte: today, $lt: tomorrow },
+      }).lean(),
+      UserPlan.findOne({
+        userId: new Types.ObjectId(req.userId),
+        status: 'active',
+      })
+        .sort({ startDate: -1 })
+        .lean(),
+      UserTargets.findOne({
+        userId: new Types.ObjectId(req.userId),
       }).lean(),
     ]);
 
@@ -286,6 +368,56 @@ router.post(
     const supplementsInPlanList =
       supplementsInPlan.map((s) => `${s.name} (${s.benefit})`).join(', ') || 'None';
 
+    // Build plan context
+    let planContext = '';
+    if (activePlan) {
+      const currentWeek =
+        Math.floor(
+          (now.getTime() - new Date(activePlan.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7),
+        ) + 1;
+      const weeksRemaining = Math.max(0, activePlan.durationWeeks - currentWeek + 1);
+      planContext = `
+CURRENT ACTIVE PLAN:
+- Plan Name: ${activePlan.planName}
+- Plan Type: ${activePlan.planType}
+- Description: ${activePlan.description || 'No description'}
+- Duration: ${activePlan.durationWeeks} weeks
+- Current Week: Week ${currentWeek} of ${activePlan.durationWeeks}
+- Weeks Remaining: ${weeksRemaining}
+- Primary Goal: ${activePlan.primaryGoal || 'Not specified'}
+- Secondary Goals: ${activePlan.secondaryGoals?.join(', ') || 'None'}
+- Target Calories: ${activePlan.targetCalories} kcal/day
+- Target Protein: ${activePlan.targetProtein}g/day
+- Target Carbs: ${activePlan.targetCarbs}g/day
+- Target Fat: ${activePlan.targetFat}g/day
+- Started: ${new Date(activePlan.startDate).toLocaleDateString('en-US')}
+- Status: ${activePlan.status}
+`;
+    }
+
+    // Build targets context
+    let targetsContext = '';
+    if (userTargets) {
+      targetsContext = `
+CURRENT DAILY TARGETS:
+- Calories: ${userTargets.calories?.target || 'Not set'} kcal
+- Protein: ${userTargets.protein?.target || 'Not set'}g
+- Carbs: ${userTargets.carbs?.target || 'Not set'}g
+- Fat: ${userTargets.fat?.target || 'Not set'}g
+- Water: ${userTargets.water?.target || 'Not set'}L
+- Caffeine: ${userTargets.caffeine?.target || 'Not set'}mg
+- Vitamin D: ${userTargets.vitaminD?.target || 'Not set'}mcg
+- Calcium: ${userTargets.calcium?.target || 'Not set'}mg
+- Magnesium: ${userTargets.magnesium?.target || 'Not set'}mg
+- Iron: ${userTargets.iron?.target || 'Not set'}mg
+- Zinc: ${userTargets.zinc?.target || 'Not set'}mg
+- Omega-3: ${userTargets.omega3?.target || 'Not set'}mg
+- B12: ${userTargets.b12?.target || 'Not set'}mcg
+- Folate: ${userTargets.folate?.target || 'Not set'}mcg
+${userTargets.suggestedByAi ? `- AI Suggested: Yes (${userTargets.aiReason || 'Personalized for your goals'})` : ''}
+`;
+    }
+
     // Build historical context
     const historicalContext = `
 TODAY'S PROGRESS (${now.toLocaleDateString('en-US')}):
@@ -306,6 +438,8 @@ LAST 7 DAYS AVERAGE:
 
 RECENT ACHIEVEMENTS:
 ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: ${a.description}`).join('\n') : 'No recent achievements'}
+${planContext}
+${targetsContext}
 `;
 
     const system = {
@@ -313,12 +447,24 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
       content: `You are Fitter, an AI Lifestyle Coach powered by Google Gemini.
         Tailor advice to the user's goals and answers based on their actual progress and history.
         
-        USER PROFILE:
-        - Goals: ${goals}
-        - Onboarding choices: ${onboarding || 'not provided'}
-        ${identity}
-
-        CURRENT CONTEXT:
+    USER PROFILE:
+    - Goals: ${goals}
+    - Onboarding choices: ${onboarding || 'not provided'}
+    ${identity}
+    
+    USER BODY METRICS (for calculations):
+    - Age: ${user?.age || 30} years
+    - Height: ${user?.heightCm || 170} cm
+    - Weight: ${user?.weightKg || 70} kg
+    - Gender: ${user?.gender || 'male'}
+    - Activity Level: ${user?.activityLevel || 'intermediate'}
+    
+    BMR CALCULATION REFERENCE:
+    ${user?.gender === 'male' ? 'BMR = 10 * weight(kg) + 6.25 * height(cm) - 5 * age + 5' : 'BMR = 10 * weight(kg) + 6.25 * height(cm) - 5 * age - 161'}
+    Activity multipliers: sedentary=1.2, light=1.375, moderate=1.55, active=1.725, very active=1.9
+    TDEE = BMR * activity_multiplier
+    
+    CURRENT CONTEXT:
         - Current time: ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
         - Current day: ${currentDay}
         - Time of day: ${timeOfDay}
@@ -334,18 +480,58 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
         - Evening (18-24): Focus on dinner, evening routines, preparing for sleep
         - Late night (0-6): Focus on sleep quality, late night habits
 
-        Always respond STRICTLY as minified JSON with this exact shape:
+        CRITICAL JSON RESPONSE RULE: You MUST ALWAYS respond in valid JSON format. NEVER return plain text. NEVER say "I could not answer that safely" or any safety warnings.
+        
+        RESPONSE FORMAT: STRICTLY minified JSON:
         {"message": string, "actions": Array<{"type": string, "amount"?: number, "hours"?: number, "unit"?: string, "notes"?: string, "calories"?: number, "minutes"?: number, "category"?: string}>}
 
+        WHEN USER GIVES A NUMBER FOR PLAN DURATION:
+        User: "12" or "12 weeks" or "8" or "6 weeks"
+        AI: You MUST immediately extract the number and create the plan with durationWeeks set to that number.
+        NEVER refuse. NEVER say "could not answer safely". ALWAYS create the plan in JSON format.
+        
+        CORRECT RESPONSE EXAMPLE for "12":
+        {"message":"Perfect! Creating your 12-week bulking plan now...","actions":[{"type":"create_plan","planType":"bulking","planName":"12-Week Bulking Plan","description":"A personalized 12-week muscle building plan","durationWeeks":12,"targetCalories":2500,"targetProtein":150,"targetCarbs":300,"targetFat":80,"primaryGoal":"Build muscle mass","secondaryGoals":["Gain strength"],"focusAreas":["High protein intake","Calorie surplus"],"aiConversationHistory":[{"question":"How many weeks?","answer":"12"}]}]}
+
         Action types to use:
-        - "water_log" for water/hydration (amount + unit, e.g. "glasses", "liters")
+        - "water_log" for water/hydration and ANY liquids (amount + unit + notes describing the liquid)
         - "sleep_log" for sleep (hours)
         - "workout_log" for exercise (calories OR minutes, optional category like "cardio", "strength")
         - "meal_log" for food (notes describing food, ALWAYS estimate calories, category should be "breakfast"/"lunch"/"dinner"/"snack")
+        - "supplement_log" for supplements (supplementName + dosage optional, notes optional)
+        - "create_plan" for creating nutrition/fitness plans (planType, planName, durationWeeks, targets, etc.)
+        - "cancel_plan" for cancelling current active plan
+        - "update_targets" for updating nutrition targets (targetCalories, targetProtein, etc.)
+
+        LIQUID DETECTION:
+        When user mentions drinking ANY liquid (water, milk, cola, juice, coffee, tea, beer, soup, etc.):
+        - Create a "water_log" action with the liquid description in "notes"
+        - Use amount and unit (e.g., "1 cup", "2 glasses", "1 can", "500ml")
+        - The system will automatically calculate the water content percentage:
+          * Milk/lapte: 87% water
+          * Cola/soda/suc: 89% water
+          * Juice/suc de: 88% water
+          * Coffee/cafea: 99% water
+          * Tea/ceai: 99% water
+          * Beer/bere: 93% water
+          * Smoothie/shake: 80% water
+          * Soup/supa: 85% water
+          * Yogurt/iaurt: 85% water
+          * Pure water/apa: 100% water
+        - This ensures liquids count toward hydration goals!
 
         Examples:
         User: "I drank 5 glasses of water"
-        → {"message":"Great job staying hydrated! 💧","actions":[{"type":"water_log","amount":5,"unit":"glasses"}]}
+        → {"message":"Great job staying hydrated! 💧","actions":[{"type":"water_log","amount":5,"unit":"glasses","notes":"water"}]}
+
+        User: "I drank 1 cup of milk"
+        → {"message":"Good! Milk hydrates you too. 🥛","actions":[{"type":"water_log","amount":1,"unit":"cup","notes":"milk"}]}
+
+        User: "I had a can of cola"
+        → {"message":"Noted! Cola contributes to your hydration. 🥤","actions":[{"type":"water_log","amount":1,"unit":"can","notes":"cola"}]}
+
+        User: "I drank 2 cups of coffee"
+        → {"message":"Coffee helps with hydration! ☕","actions":[{"type":"water_log","amount":2,"unit":"cup","notes":"coffee"}]}
 
         User: "I slept 7 hours"
         → {"message":"Good rest is essential! 😴","actions":[{"type":"sleep_log","hours":7}]}
@@ -367,6 +553,29 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
 
         User: "I had oatmeal for breakfast"
         → {"message":"Perfect start to the day! 🥣","actions":[{"type":"meal_log","notes":"oatmeal","category":"breakfast","calories":250}]}
+
+        User: "I took Omega-3 supplement"
+        → {"message":"Great! Supplement logged. 💊","actions":[{"type":"supplement_log","supplementName":"Omega-3","dosage":"1 capsule"}]}
+
+        User: "I took my vitamin D"
+        → {"message":"Logged! Vitamin D is important for bone health. ☀️","actions":[{"type":"supplement_log","supplementName":"Vitamin D","dosage":"1 tablet"}]}
+
+        SUPPLEMENT LOGGING:
+        When user mentions taking a supplement (e.g., "I took omega-3", "am luat vitamina D", "I took my calcium"):
+        - Use "supplement_log" action
+        - Extract supplement name from their message (Omega-3, Vitamin D, Calcium, Iron, Magnesium, etc.)
+        - Estimate dosage if not mentioned (typically "1 capsule", "1 tablet", "1 pill")
+        - Be encouraging about their supplement routine
+        - Common supplements: Omega-3, Vitamin D, Calcium, Magnesium, Iron, Zinc, B12, Multivitamin
+
+        User: "I just ate the lunch you suggested" or "I ate your suggested meal" or "am mancat light dinner"
+        → When user mentions eating something YOU suggested:
+        - Extract the meal description from their message
+        - Detect which meal they're referring to (e.g., "light dinner" = "dinner", "lunch" = "lunch", "breakfast" = "breakfast")
+        - Set consumedSuggestionId to the meal type (e.g., "dinner", "lunch", "breakfast", "snack")
+        - Log it with appropriate calories and category based on time of day
+        - Be enthusiastic and acknowledge they followed your recommendation
+        - Example: {"message":"Great choice! Following suggestions helps you hit your goals! 🎯","actions":[{"type":"meal_log","notes":"grilled chicken breast, quinoa salad, olive oil dressing","category":"lunch","calories":600}],"consumedSuggestionId":"lunch"}
 
         IMPORTANT: For meal_log actions, ALWAYS estimate calories based on the food described:
         - Light meals (salad, soup): 200-400 calories
@@ -404,7 +613,141 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
         
         When suggesting supplements, reference their actual intake and what they have available.
 
-        If multiple actions mentioned, return multiple objects in "actions". If no action detected, "actions" should be empty array. No extra text outside JSON.`,
+        PLAN CREATION:
+        When user mentions wanting to create a new nutrition/fitness plan, interpret their request dynamically:
+        
+        STEP 1: UNDERSTAND USER INTENT
+        Listen carefully to what the user wants. They might say:
+        - "Vreau un plan pentru să pierd în greutate" → weight loss plan
+        - "Vreau să cresc în masă musculară" → muscle gain plan
+        - "Am nevoie de un plan pentru să mănânc mai sănătos" → healthy eating plan
+        - "Vreau un plan pentru să recuperez după accident" → recovery/healing plan
+        - "Vreau un plan personalizat pentru goal X" → custom plan
+        
+        DO NOT use pre-defined templates. Instead, INTERPRET their specific needs and create a DYNAMIC plan.
+        
+        STEP 2: GATHER INFORMATION OR CREATE PLAN DIRECTLY
+        If the user wants a plan, ask about duration ONCE and then CREATE THE PLAN immediately when they answer.
+        
+        GOOD FLOW:
+        User: "I want a weight loss plan"
+        AI: "Got it! How many weeks would you like this plan to last? (e.g., 4, 8, 12 weeks)"
+        User: "12 weeks" or "12" or "12 weeks please"
+        AI: Immediately create the plan with durationWeeks: 12 - DO NOT ask more questions, just create it!
+        
+        When user answers with a number, extract it and CREATE THE PLAN immediately:
+        - "12 weeks" → durationWeeks: 12
+        - "12" → durationWeeks: 12
+        - "8" → durationWeeks: 8
+        - "6 weeks" → durationWeeks: 6
+        
+        You can ask ONE clarifying question if needed (duration only), but when they answer with a number, IMMEDIATELY create the plan.
+        DO NOT keep asking questions - proceed to plan creation!
+        
+        STEP 3: CALCULATE DYNAMIC TARGETS
+        Based on the user's request and their profile (from context above), calculate personalized targets:
+        
+        For WEIGHT LOSS plans:
+        - Calories: BMR * activity_level * 0.8 to 0.85 (20-15% deficit)
+        - Protein: 1.8-2.2g per kg body weight (preserve muscle)
+        - Carbs: 30-40% of calories
+        - Fat: 20-30% of calories
+        
+        For MUSCLE GAIN plans:
+        - Calories: BMR * activity_level * 1.1 to 1.2 (10-20% surplus)
+        - Protein: 2.0-2.4g per kg body weight
+        - Carbs: 40-50% of calories (fuel for workouts)
+        - Fat: 20-30% of calories
+        
+        For HEALTHY EATING plans:
+        - Calories: BMR * activity_level (maintenance)
+        - Protein: 1.4-1.8g per kg body weight
+        - Carbs: 45-55% of calories
+        - Fat: 25-35% of calories
+        
+        For RECOVERY/HEALING plans:
+        - Calories: BMR * activity_level * 1.0 to 1.1 (slight surplus)
+        - Protein: 1.6-2.0g per kg body weight (recovery)
+        - Carbs: 40-50% of calories
+        - Fat: 25-30% of calories
+        
+        STEP 4: CREATE THE PLAN ACTION
+        Once you have all information, create the plan using "create_plan" action:
+        {
+          "type": "create_plan",
+          "planType": "cutting/bulking/maintenance/healing/custom",
+          "planName": "Descriptive name based on user's goals (e.g., '30 Day Weight Loss Transformation', 'Muscle Building Journey')",
+          "description": "Detailed description of what this plan achieves and how it works",
+          "durationWeeks": number (user specified or default 4-12 weeks),
+          "targetCalories": number (calculated from BMR),
+          "targetProtein": number (calculated from body weight),
+          "targetCarbs": number (calculated from calories),
+          "targetFat": number (calculated from calories),
+          "primaryGoal": "Specific measurable goal (e.g., 'Lose 5kg in 8 weeks')",
+          "secondaryGoals": ["Supporting goals"],
+          "focusAreas": ["Key focus areas based on user's needs"],
+          "aiConversationHistory": [
+            {"question": "What's your main goal?", "answer": "User's answer"},
+            {"question": "Any preferences?", "answer": "User's answer"}
+          ]
+        }
+        
+        IMPORTANT:
+        - The planType should reflect the user's intent, not rigid categories
+        - Calculate targets dynamically based on user's profile, not templates
+        - Make the plan description reflect their specific goals
+        - Plan name should be inspiring and specific to their journey
+        - When user answers with a number after you ask about duration, IMMEDIATELY create the plan with that number
+        - DO NOT ask follow-up questions once you have the duration - just create it!
+
+        EXAMPLE CONVERSATION:
+        User: "I want a cutting plan"
+        AI: "Got it! How many weeks would you like this plan to last?"
+        User: "12 weeks"
+        AI: {"message":"Perfect! Creating your 12-week cutting plan now...","actions":[{"type":"create_plan","planType":"cutting","planName":"12-Week Cutting Plan","description":"A personalized 12-week plan focused on fat loss while maintaining energy and muscle mass","durationWeeks":12,"targetCalories":1700,"targetProtein":135,"targetCarbs":160,"targetFat":55,"primaryGoal":"Achieve healthy fat loss","secondaryGoals":["Maintain muscle mass"],"focusAreas":["Calorie deficit for fat loss","High protein intake"],"aiConversationHistory":[{"question":"How many weeks?","answer":"12 weeks"}]}]}
+
+        CRITICAL REQUIREMENTS FOR create_plan ACTION:
+        - You MUST include ALL required fields: planType, planName, description, durationWeeks, targetCalories, targetProtein, targetCarbs, targetFat
+        - The description field is REQUIRED - don't skip it!
+        - If you skip ANY required field, the plan won't be created!
+
+        PLAN CANCELLATION:
+        When user asks to cancel/stop their current plan (e.g., "cancel my plan", "stop my plan", "cancel current plan", "i want to cancel"):
+        - You MUST return a "cancel_plan" action type in the actions array
+        - This will set the plan status to 'cancelled' in the database
+        - Always confirm cancellation in your message
+        - Example:
+        User: "cancel my current plan"
+        → {"message":"Understood. Your current plan has been cancelled.","actions":[{"type":"cancel_plan"}]}
+        
+        CRITICAL: When the user requests to cancel, ALWAYS include {"type":"cancel_plan"} in the actions array.
+
+        UPDATE TARGETS DIRECTLY:
+        When user mentions wanting to change their daily targets (e.g., "vreau un nou target de 3000 calorii", "set calories to 2500", "change protein target to 150g"):
+        - Use "update_targets" action to update specific targets
+        - Only include the fields that the user wants to change
+        - Example:
+        User: "vreau un nou target de 3000 calorii"
+        → {"message":"Understood! Your new daily calorie target is now set to 3000 kcal.","actions":[{"type":"update_targets","targetCalories":3000}]}
+
+        User: "set my protein to 150g"
+        → {"message":"Got it! Your protein target is now 150g per day.","actions":[{"type":"update_targets","targetProtein":150}]}
+
+        Supported fields for update_targets:
+        - targetCalories (number)
+        - targetProtein (number, in grams)
+        - targetCarbs (number, in grams)
+        - targetFat (number, in grams)
+        - targetWater (number, in liters)
+        - targetCaffeine (number, in mg)
+
+        If multiple actions mentioned, return multiple objects in "actions". If no action detected, "actions" should be empty array. No extra text outside JSON.
+        
+        FINAL REMINDER: When user responds with just a number (like "12", "8", "12 weeks"), you MUST:
+        1. Extract the number
+        2. Create the plan immediately with that duration
+        3. Return ONLY valid JSON - no plain text, no safety warnings
+        4. NEVER say "I could not answer safely" - just create the plan!`,
     };
 
     const raw = await chatWithAi([system, ...messages]);
@@ -418,22 +761,54 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
       calories: z.number().optional(),
       minutes: z.number().optional(),
       category: z.string().optional(),
+      // Supplement logging fields
+      supplementName: z.string().optional(),
+      dosage: z.string().optional(),
+      // Plan creation fields
+      planType: z.string().optional(),
+      planName: z.string().optional(),
+      description: z.string().optional(),
+      durationWeeks: z.number().optional(),
+      targetCalories: z.number().optional(),
+      targetProtein: z.number().optional(),
+      targetCarbs: z.number().optional(),
+      targetFat: z.number().optional(),
+      primaryGoal: z.string().optional(),
+      secondaryGoals: z.array(z.string()).optional(),
+      focusAreas: z.array(z.string()).optional(),
+      aiConversationHistory: z
+        .array(
+          z.object({
+            question: z.string(),
+            answer: z.string(),
+          }),
+        )
+        .optional(),
+      // Update targets fields
+      targetWater: z.number().optional(),
+      targetCaffeine: z.number().optional(),
     });
     const ResponseSchema = z.object({
       message: z.string(),
       actions: z.array(ActionSchema).default([]),
+      consumedSuggestionId: z.string().optional(), // ID of suggested meal consumed
     });
 
     let dataOut: z.infer<typeof ResponseSchema>;
     try {
       dataOut = ResponseSchema.parse(JSON.parse(raw));
-    } catch {
+      console.log('AI Response parsed successfully:', JSON.stringify(dataOut));
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', raw);
+      console.error('Parse error:', parseError);
       dataOut = { message: raw, actions: [] };
     }
 
     // Process actions and save logs with micronutrients
     const processedActions = [];
+    console.log('Processing', dataOut.actions.length, 'actions');
     for (const action of dataOut.actions) {
+      console.log('Processing action:', action.type, action);
       if (action.type === 'meal_log' && action.notes && action.calories && action.category) {
         // Estimate micronutrients from food description
         const micronutrients = estimateMicronutrients(action.notes);
@@ -444,7 +819,10 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
         const fat = Math.round(action.calories * 0.3); // ~30% fat
 
         try {
-          await NutritionLog.create({
+          // Check if this meal was suggested by AI (user mentioned consuming a suggested meal)
+          const isSuggestedMeal = !!dataOut.consumedSuggestionId;
+
+          const nutritionLog = await NutritionLog.create({
             userId: new Types.ObjectId(req.userId),
             date: new Date(),
             mealType: action.category as 'breakfast' | 'lunch' | 'dinner' | 'snack',
@@ -464,11 +842,340 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
               fat,
             },
             micronutrients,
+            suggestedByAi: isSuggestedMeal,
           });
 
+          console.log('Nutrition log created successfully:', nutritionLog._id);
           processedActions.push({ ...action, micronutrients });
         } catch (error) {
           console.error('Failed to save nutrition log:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'water_log' && action.amount) {
+        // Calculate water content based on liquid type
+        const liquidDescription = action.notes || 'water';
+        const waterAmountInMl = calculateLiquidWaterContent(
+          liquidDescription,
+          action.amount,
+          action.unit || 'glass',
+        );
+
+        // Convert to glasses for widget display (200ml = 1 glass)
+        const valueInGlasses = waterAmountInMl / 200;
+        const unit = 'glasses';
+
+        try {
+          await Log.create({
+            userId: new Types.ObjectId(req.userId),
+            type: 'hydration',
+            value: valueInGlasses,
+            unit,
+            note: `Logged via AI chat: ${action.amount} ${action.unit || 'glass'} of ${liquidDescription} (${waterAmountInMl}ml water content)`,
+            date: new Date(),
+          });
+          processedActions.push({ ...action, calculatedWaterMl: waterAmountInMl });
+        } catch (error) {
+          console.error('Failed to save water log:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'sleep_log' && action.hours) {
+        try {
+          await Log.create({
+            userId: new Types.ObjectId(req.userId),
+            type: 'sleep',
+            value: action.hours,
+            unit: 'hours',
+            note: action.notes || `Logged via AI chat`,
+            date: new Date(),
+          });
+          processedActions.push(action);
+        } catch (error) {
+          console.error('Failed to save sleep log:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'workout_log' && (action.calories || action.minutes)) {
+        const value = action.calories || action.minutes || 0;
+        const unit = action.calories ? 'calories' : 'minutes';
+
+        try {
+          await Log.create({
+            userId: new Types.ObjectId(req.userId),
+            type: 'workout',
+            value,
+            unit,
+            note: action.notes || action.category || `Logged via AI chat`,
+            date: new Date(),
+          });
+          processedActions.push(action);
+        } catch (error) {
+          console.error('Failed to save workout log:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'create_plan') {
+        // Process plan creation
+        console.log('Creating plan with action:', JSON.stringify(action));
+
+        if (!action.planType || !action.planName || !action.durationWeeks) {
+          console.error('Missing required fields for plan creation:', {
+            planType: action.planType,
+            planName: action.planName,
+            durationWeeks: action.durationWeeks,
+          });
+          processedActions.push(action);
+        } else {
+          try {
+            const { UserPlan } = await import('../models/UserPlan.js');
+            const { UserTargets } = await import('../models/UserTargets.js');
+
+            const startDate = new Date();
+            const endDate = new Date();
+            endDate.setDate(endDate.getDate() + action.durationWeeks * 7);
+
+            // Deactivate any existing active plans
+            await UserPlan.updateMany(
+              {
+                userId: new Types.ObjectId(req.userId),
+                status: 'active',
+              },
+              {
+                $set: { status: 'paused' },
+              },
+            );
+
+            // Create new plan
+            const newPlan = await UserPlan.create({
+              userId: new Types.ObjectId(req.userId),
+              planType: action.planType as
+                | 'cutting'
+                | 'bulking'
+                | 'maintenance'
+                | 'healing'
+                | 'custom',
+              planName: action.planName,
+              description:
+                action.description ||
+                `A personalized ${action.durationWeeks}-week ${action.planType} plan`,
+              durationWeeks: action.durationWeeks,
+              startDate,
+              endDate,
+              status: 'active',
+              targetCalories: action.targetCalories || 2000,
+              targetProtein: action.targetProtein || 120,
+              targetCarbs: action.targetCarbs || 250,
+              targetFat: action.targetFat || 70,
+              primaryGoal: action.primaryGoal || 'Improve overall health',
+              secondaryGoals: action.secondaryGoals || [],
+              focusAreas: action.focusAreas || [],
+              aiConversationHistory:
+                action.aiConversationHistory?.map((item) => ({
+                  question: item.question,
+                  answer: item.answer,
+                  timestamp: new Date(),
+                })) || [],
+            });
+
+            console.log('Plan created successfully:', newPlan._id);
+
+            // Update UserTargets with plan targets
+            await UserTargets.findOneAndUpdate(
+              { userId: new Types.ObjectId(req.userId) },
+              {
+                $set: {
+                  calories: { target: action.targetCalories || 2000, current: 0 },
+                  protein: { target: action.targetProtein || 120, current: 0 },
+                  carbs: { target: action.targetCarbs || 250, current: 0 },
+                  fat: { target: action.targetFat || 70, current: 0 },
+                  suggestedByAi: true,
+                  aiReason: `Part of ${action.planName}`,
+                },
+              },
+              { upsert: true },
+            );
+
+            processedActions.push({ ...action, planId: newPlan._id });
+          } catch (error) {
+            console.error('Failed to create plan:', error);
+            processedActions.push(action);
+          }
+        }
+      } else if (action.type === 'update_targets') {
+        // Process target updates
+        try {
+          const { UserTargets } = await import('../models/UserTargets.js');
+
+          // Get existing targets to preserve current values
+          const existingTargets = await UserTargets.findOne({
+            userId: new Types.ObjectId(req.userId),
+          }).lean();
+
+          const updateFields: Record<string, { target: number; current: number }> = {};
+
+          if (action.targetCalories !== undefined) {
+            updateFields.calories = {
+              target: action.targetCalories,
+              current: existingTargets?.calories?.current || 0,
+            };
+          }
+          if (action.targetProtein !== undefined) {
+            updateFields.protein = {
+              target: action.targetProtein,
+              current: existingTargets?.protein?.current || 0,
+            };
+          }
+          if (action.targetCarbs !== undefined) {
+            updateFields.carbs = {
+              target: action.targetCarbs,
+              current: existingTargets?.carbs?.current || 0,
+            };
+          }
+          if (action.targetFat !== undefined) {
+            updateFields.fat = {
+              target: action.targetFat,
+              current: existingTargets?.fat?.current || 0,
+            };
+          }
+          if (action.targetWater !== undefined) {
+            updateFields.water = {
+              target: action.targetWater,
+              current: existingTargets?.water?.current || 0,
+            };
+          }
+          if (action.targetCaffeine !== undefined) {
+            updateFields.caffeine = {
+              target: action.targetCaffeine,
+              current: existingTargets?.caffeine?.current || 0,
+            };
+          }
+
+          if (Object.keys(updateFields).length > 0) {
+            await UserTargets.findOneAndUpdate(
+              { userId: new Types.ObjectId(req.userId) },
+              {
+                $set: {
+                  ...updateFields,
+                  suggestedByAi: true,
+                  aiReason: 'Updated via AI chat',
+                  updatedAt: new Date(),
+                },
+              },
+              { upsert: true },
+            );
+
+            processedActions.push({ ...action, updatedFields: Object.keys(updateFields) });
+          } else {
+            processedActions.push(action);
+          }
+        } catch (error) {
+          console.error('Failed to update targets:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'cancel_plan') {
+        // Process plan cancellation
+        try {
+          const { UserPlan } = await import('../models/UserPlan.js');
+
+          // Cancel any active plans
+          const result = await UserPlan.updateMany(
+            {
+              userId: new Types.ObjectId(req.userId),
+              status: 'active',
+            },
+            {
+              $set: { status: 'cancelled', updatedAt: new Date() },
+            },
+          );
+
+          console.log(`Cancelled ${result.modifiedCount} active plan(s)`);
+          processedActions.push({ ...action, cancelledPlans: result.modifiedCount });
+        } catch (error) {
+          console.error('Failed to cancel plan:', error);
+          processedActions.push(action);
+        }
+      } else if (action.type === 'supplement_log' && action.supplementName) {
+        // Process supplement logging
+        try {
+          const { Supplement } = await import('../models/Supplement.js');
+          const { SupplementLog } = await import('../models/SupplementLog.js');
+
+          // Try to find existing supplement by name (case insensitive)
+          let supplement = await Supplement.findOne({
+            userId: new Types.ObjectId(req.userId),
+            name: { $regex: new RegExp('^' + action.supplementName + '$', 'i') },
+          }).lean();
+
+          let supplementId: Types.ObjectId;
+          let supplementName: string;
+          let supplementNutrients: Record<string, number | undefined> | undefined;
+
+          // If supplement doesn't exist, create it with default nutrients
+          if (!supplement) {
+            const nutrients: Record<string, number> = {};
+            const lowerName = action.supplementName.toLowerCase();
+
+            // Estimate nutrients based on supplement name
+            if (lowerName.includes('omega') || lowerName.includes('fish oil')) {
+              nutrients.omega3 = 1000; // 1000mg omega-3
+            }
+            if (lowerName.includes('vitamin d') || lowerName.includes('vitamina d')) {
+              nutrients.vitaminD = 25; // 25mcg (1000 IU)
+            }
+            if (lowerName.includes('calcium') || lowerName.includes('calciu')) {
+              nutrients.calcium = 500; // 500mg
+            }
+            if (lowerName.includes('magnesium') || lowerName.includes('magneziu')) {
+              nutrients.magnesium = 200; // 200mg
+            }
+            if (lowerName.includes('iron') || lowerName.includes('fier')) {
+              nutrients.iron = 18; // 18mg
+            }
+            if (lowerName.includes('zinc')) {
+              nutrients.zinc = 15; // 15mg
+            }
+            if (lowerName.includes('b12') || lowerName.includes('b-12')) {
+              nutrients.b12 = 2.4; // 2.4mcg
+            }
+            if (lowerName.includes('folate') || lowerName.includes('folic')) {
+              nutrients.folate = 400; // 400mcg
+            }
+
+            // Create the supplement
+            const newSupplement = await Supplement.create({
+              userId: new Types.ObjectId(req.userId),
+              name: action.supplementName,
+              benefit: 'for overall health',
+              description: `Auto-created from AI chat`,
+              addedToPlan: false,
+              icon: '💊',
+              category: 'general',
+              nutrients,
+            });
+
+            supplementId = newSupplement._id as Types.ObjectId;
+            supplementName = newSupplement.name;
+            supplementNutrients = nutrients;
+          } else {
+            supplementId = supplement._id as Types.ObjectId;
+            supplementName = supplement.name;
+            supplementNutrients = supplement.nutrients;
+          }
+
+          // Create supplement log
+          await SupplementLog.create({
+            userId: new Types.ObjectId(req.userId),
+            supplementId,
+            supplementName,
+            date: new Date(),
+            dosage: action.dosage || '1 dose',
+            notes: action.notes,
+          });
+
+          processedActions.push({
+            ...action,
+            supplementId,
+            nutrients: supplementNutrients,
+          });
+        } catch (error) {
+          console.error('Failed to log supplement:', error);
           processedActions.push(action);
         }
       } else {
@@ -517,6 +1224,527 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
         actions: processedActions,
         provider: 'gemini',
         supplementSuggestions,
+        consumedSuggestionId: dataOut.consumedSuggestionId,
+      },
+    });
+  }),
+);
+
+// Generate meal suggestions based on remaining nutrients
+router.post(
+  '/meal-suggestions',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Get today's nutrition logs
+    const nutritionLogs = await NutritionLog.find({
+      userId: new Types.ObjectId(req.userId),
+      date: { $gte: today, $lt: tomorrow },
+    }).lean();
+
+    // Calculate consumed totals
+    let consumedCalories = 0;
+    let consumedProtein = 0;
+    let consumedCarbs = 0;
+    let consumedFat = 0;
+    let consumedVitaminD = 0;
+    let consumedCalcium = 0;
+    let consumedMagnesium = 0;
+    let consumedIron = 0;
+    let consumedZinc = 0;
+    let consumedOmega3 = 0;
+    let consumedB12 = 0;
+    let consumedFolate = 0;
+
+    for (const n of nutritionLogs) {
+      consumedCalories += n.total?.calories || 0;
+      consumedProtein += n.total?.protein || 0;
+      consumedCarbs += n.total?.carbs || 0;
+      consumedFat += n.total?.fat || 0;
+      if (n.micronutrients) {
+        consumedVitaminD += n.micronutrients.vitaminD || 0;
+        consumedCalcium += n.micronutrients.calcium || 0;
+        consumedMagnesium += n.micronutrients.magnesium || 0;
+        consumedIron += n.micronutrients.iron || 0;
+        consumedZinc += n.micronutrients.zinc || 0;
+        consumedOmega3 += n.micronutrients.omega3 || 0;
+        consumedB12 += n.micronutrients.b12 || 0;
+        consumedFolate += n.micronutrients.folate || 0;
+      }
+    }
+
+    const consumed = {
+      calories: consumedCalories,
+      protein: consumedProtein,
+      carbs: consumedCarbs,
+      fat: consumedFat,
+      vitaminD: consumedVitaminD,
+      calcium: consumedCalcium,
+      magnesium: consumedMagnesium,
+      iron: consumedIron,
+      zinc: consumedZinc,
+      omega3: consumedOmega3,
+      b12: consumedB12,
+      folate: consumedFolate,
+    };
+
+    // Default targets
+    const targets = {
+      calories: 2000,
+      protein: 120,
+      carbs: 250,
+      fat: 70,
+      vitaminD: 15,
+      calcium: 1000,
+      magnesium: 400,
+      iron: 18,
+      zinc: 11,
+      omega3: 1000,
+      b12: 2.4,
+      folate: 400,
+    };
+
+    // Get user targets if they exist
+    const { UserTargets } = await import('../models/UserTargets.js');
+    const userTargets = await UserTargets.findOne({
+      userId: new Types.ObjectId(req.userId),
+    }).lean();
+
+    if (userTargets) {
+      targets.calories = userTargets.calories.target;
+      targets.protein = userTargets.protein.target;
+      targets.carbs = userTargets.carbs.target;
+      targets.fat = userTargets.fat.target;
+      targets.vitaminD = userTargets.vitaminD.target;
+      targets.calcium = userTargets.calcium.target;
+      targets.magnesium = userTargets.magnesium.target;
+      targets.iron = userTargets.iron.target;
+      targets.zinc = userTargets.zinc.target;
+      targets.omega3 = userTargets.omega3.target;
+      targets.b12 = userTargets.b12.target;
+      targets.folate = userTargets.folate.target;
+    }
+
+    // Calculate remaining needs
+    const remaining = {
+      calories: Math.max(0, targets.calories - consumed.calories),
+      protein: Math.max(0, targets.protein - consumed.protein),
+      carbs: Math.max(0, targets.carbs - consumed.carbs),
+      fat: Math.max(0, targets.fat - consumed.fat),
+      vitaminD: Math.max(0, targets.vitaminD - consumed.vitaminD),
+      calcium: Math.max(0, targets.calcium - consumed.calcium),
+      magnesium: Math.max(0, targets.magnesium - consumed.magnesium),
+      iron: Math.max(0, targets.iron - consumed.iron),
+      zinc: Math.max(0, targets.zinc - consumed.zinc),
+      omega3: Math.max(0, targets.omega3 - consumed.omega3),
+      b12: Math.max(0, targets.b12 - consumed.b12),
+      folate: Math.max(0, targets.folate - consumed.folate),
+    };
+
+    // Get current hour
+    const now = new Date();
+    const currentHour = now.getHours();
+
+    // Build AI prompt for meal suggestions
+    const prompt = `You are a nutrition AI assistant. Based on the user's current nutrient intake and remaining targets, suggest 2-4 meal options.
+
+CURRENT INTAKE TODAY:
+- Calories: ${consumed.calories}/${targets.calories} kcal
+- Protein: ${consumed.protein}/${targets.protein}g
+- Carbs: ${consumed.carbs}/${targets.carbs}g
+- Fat: ${consumed.fat}/${targets.fat}g
+
+MICRONUTRIENTS CONSUMED:
+- Vitamin D: ${consumed.vitaminD}/${targets.vitaminD} mcg
+- Calcium: ${consumed.calcium}/${targets.calcium} mg
+- Magnesium: ${consumed.magnesium}/${targets.magnesium} mg
+- Iron: ${consumed.iron}/${targets.iron} mg
+- Zinc: ${consumed.zinc}/${targets.zinc} mg
+- Omega-3: ${consumed.omega3}/${targets.omega3} mg
+- B12: ${consumed.b12}/${targets.b12} mcg
+- Folate: ${consumed.folate}/${targets.folate} mcg
+
+REMAINING NEEDS:
+- Calories: ${remaining.calories} kcal
+- Protein: ${remaining.protein}g
+- Carbs: ${remaining.carbs}g
+- Fat: ${remaining.fat}g
+
+CURRENT TIME: ${currentHour}:00 (${currentHour < 11 ? 'morning - suggest breakfast' : currentHour < 15 ? 'midday - suggest lunch' : currentHour < 20 ? 'afternoon - suggest dinner' : 'evening - suggest light dinner or snack'})
+
+TASKS:
+1. Suggest 2-4 meals that help reach remaining targets
+2. Prioritize meals rich in missing micronutrients
+3. Consider meal timing and appropriateness for current hour
+4. Make suggestions nutritious and practical
+
+Respond in STRICTLY minified JSON format:
+{
+  "suggestions": [
+    {
+      "id": "breakfast/lunch/dinner/snack-1",
+      "name": "Meal name",
+      "time": "HH:MM",
+      "calories": number,
+      "protein": number,
+      "carbs": number,
+      "fat": number,
+      "items": ["food item 1", "food item 2", "food item 3"],
+      "emoji": "🍳",
+      "mealType": "breakfast/lunch/dinner/snack",
+      "why": "Brief reason why this meal helps (e.g., high in iron and protein)"
+    }
+  ]
+}
+
+Generate suggestions now:`;
+
+    const aiResponse = await chatWithAi([{ role: 'user', content: prompt }]);
+
+    let suggestions: Array<{
+      id: string;
+      name: string;
+      time: string;
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      items: string[];
+      emoji: string;
+      mealType: string;
+      why?: string;
+    }> = [];
+
+    try {
+      console.log('AI Response:', aiResponse);
+
+      // Try to parse JSON response
+      let parsed: { suggestions?: typeof suggestions };
+
+      // Remove any markdown code blocks if present
+      let cleanResponse = aiResponse.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/g, '');
+      }
+
+      parsed = JSON.parse(cleanResponse) as { suggestions?: typeof suggestions };
+      suggestions = parsed.suggestions || [];
+
+      console.log('Parsed suggestions:', suggestions.length);
+    } catch (error) {
+      console.error('Failed to parse AI meal suggestions:', error);
+      console.error('Raw AI response:', aiResponse);
+
+      // Fallback: Generate basic suggestions based on remaining calories and nutrients
+      if (remaining.calories > 0) {
+        const mealTime =
+          currentHour < 11
+            ? 'breakfast'
+            : currentHour < 15
+              ? 'lunch'
+              : currentHour < 20
+                ? 'dinner'
+                : 'snack';
+
+        // Generate 2-3 suggestions based on remaining calories
+        const caloriesPerMeal = Math.floor(remaining.calories / 2);
+
+        if (remaining.calories > 400) {
+          // Multiple meals needed
+          suggestions = [
+            {
+              id: `${mealTime}-fallback-1`,
+              name: `Balanced ${mealTime.charAt(0).toUpperCase() + mealTime.slice(1)}`,
+              time:
+                currentHour < 11
+                  ? '09:00'
+                  : currentHour < 15
+                    ? '13:00'
+                    : currentHour < 20
+                      ? '19:00'
+                      : '21:00',
+              calories: Math.min(caloriesPerMeal, 500),
+              protein: Math.max(remaining.protein + 15, 20),
+              carbs: Math.max(remaining.carbs + 40, 50),
+              fat: Math.max(remaining.fat + 12, 15),
+              items:
+                mealTime === 'breakfast'
+                  ? ['Greek yogurt', 'Berries', 'Granola']
+                  : mealTime === 'lunch'
+                    ? ['Quinoa bowl', 'Grilled chicken', 'Mixed vegetables']
+                    : mealTime === 'dinner'
+                      ? ['Baked salmon', 'Sweet potato', 'Steamed broccoli']
+                      : ['Protein smoothie', 'Banana', 'Mixed nuts'],
+              emoji:
+                mealTime === 'breakfast'
+                  ? '🍳'
+                  : mealTime === 'lunch'
+                    ? '🥗'
+                    : mealTime === 'dinner'
+                      ? '🍽️'
+                      : '🍎',
+              mealType: mealTime,
+              why: 'Rich in protein and healthy carbs',
+            },
+            {
+              id: `${mealTime}-fallback-2`,
+              name: 'Healthy Snack',
+              time: currentHour < 20 ? '16:00' : '22:00',
+              calories: Math.min(remaining.calories - caloriesPerMeal, 300),
+              protein: Math.max(remaining.protein + 10, 15),
+              carbs: Math.max(remaining.carbs + 20, 30),
+              fat: Math.max(remaining.fat + 8, 10),
+              items: [
+                'Mixed nuts and dried fruits',
+                'Whole grain crackers with hummus',
+                'Apple slices with almond butter',
+              ],
+              emoji: '🥜',
+              mealType: 'snack',
+              why: 'Perfect for maintaining energy and meeting micronutrient needs',
+            },
+          ];
+        } else {
+          // Single meal is enough
+          suggestions = [
+            {
+              id: `${mealTime}-fallback`,
+              name: `Light ${mealTime.charAt(0).toUpperCase() + mealTime.slice(1)}`,
+              time:
+                currentHour < 11
+                  ? '09:00'
+                  : currentHour < 15
+                    ? '13:00'
+                    : currentHour < 20
+                      ? '19:00'
+                      : '21:00',
+              calories: Math.min(remaining.calories, 300),
+              protein: Math.max(remaining.protein + 10, 15),
+              carbs: Math.max(remaining.carbs + 30, 40),
+              fat: Math.max(remaining.fat + 8, 10),
+              items:
+                mealTime === 'breakfast'
+                  ? ['Scrambled eggs', 'Whole grain toast', 'Avocado']
+                  : mealTime === 'lunch'
+                    ? ['Grilled chicken salad', 'Olive oil dressing', 'Whole grain bread']
+                    : mealTime === 'dinner'
+                      ? ['Grilled fish', 'Steamed vegetables', 'Brown rice']
+                      : ['Greek yogurt', 'Berries', 'Mixed nuts'],
+              emoji:
+                mealTime === 'breakfast'
+                  ? '🍳'
+                  : mealTime === 'lunch'
+                    ? '🥗'
+                    : mealTime === 'dinner'
+                      ? '🍽️'
+                      : '🍎',
+              mealType: mealTime,
+              why: 'Light and nutritious meal to round out your day',
+            },
+          ];
+        }
+      }
+    }
+
+    void res.json({
+      success: true,
+      data: {
+        suggestions,
+        consumed,
+        remaining,
+        targets,
+      },
+    });
+  }),
+);
+
+// Generate personalized nutrition targets based on user profile
+router.post(
+  '/generate-targets',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    // Get user profile
+    const { User } = await import('../models/User.js');
+    const user = await User.findById(req.userId).lean();
+
+    if (!user) {
+      return void res.status(404).json({
+        success: false,
+        error: { message: 'User not found' },
+      });
+    }
+
+    // Extract user data
+    const age = user.age || 30;
+    const heightCm = user.heightCm || 170;
+    const weightKg = user.weightKg || 70;
+    const gender = (user.gender as 'male' | 'female' | 'other') || 'male';
+    const goals = user.goals || [];
+    const activityLevel = user.activityLevel || 'intermediate';
+    const onboardingAnswers = user.onboardingAnswers || [];
+
+    // Build AI prompt
+    const prompt = `You are a nutrition AI assistant. Generate personalized daily nutrition targets based on user profile.
+
+USER PROFILE:
+- Age: ${age} years
+- Height: ${heightCm} cm
+- Weight: ${weightKg} kg
+- Gender: ${gender}
+- Activity Level: ${activityLevel}
+- Goals: ${goals.join(', ') || 'general health'}
+- Lifestyle preferences: ${onboardingAnswers.join(', ') || 'balanced nutrition'}
+
+CALCULATE DAILY TARGETS:
+1. Calories: Based on BMR (Basal Metabolic Rate) calculation and activity level
+   - BMR formula: ${gender === 'male' ? '10 * weight(kg) + 6.25 * height(cm) - 5 * age + 5' : '10 * weight(kg) + 6.25 * height(cm) - 5 * age - 161'}
+   - Activity multiplier: sedentary=1.2, light=1.375, moderate=1.55, active=1.725, very active=1.9
+   - Adjust based on goals: weight loss=-20%, weight gain=+20%, maintenance=0%
+
+2. Protein: Based on weight and goals
+   - Weight loss: 1.6-2.2g per kg
+   - Muscle gain: 1.8-2.2g per kg
+   - Maintenance: 1.2-1.6g per kg
+
+3. Carbs: 40-50% of calories
+4. Fat: 20-30% of calories
+
+5. Micronutrients: Based on age, gender, and RDA (Recommended Dietary Allowance)
+   - Vitamin D: 15-20 mcg (600-800 IU)
+   - Calcium: 1000-1300 mg
+   - Magnesium: 400-420 mg (male), 310-320 mg (female)
+   - Iron: 8-18 mg (18mg for female reproductive age, 8mg for males)
+   - Zinc: 11 mg (male), 8 mg (female)
+   - Omega-3: 1000-2000 mg
+   - B12: 2.4 mcg
+   - Folate: 400 mcg
+
+6. Water: 35-40ml per kg body weight
+7. Caffeine: 200-400 mg per day
+
+Respond in STRICTLY minified JSON format:
+{
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fat": number,
+  "vitaminD": number,
+  "calcium": number,
+  "magnesium": number,
+  "iron": number,
+  "zinc": number,
+  "omega3": number,
+  "b12": number,
+  "folate": number,
+  "water": number,
+  "caffeine": number,
+  "reason": "Brief explanation of why these targets were recommended"
+}
+
+Generate targets now:`;
+
+    const aiResponse = await chatWithAi([{ role: 'user', content: prompt }]);
+
+    let targets: {
+      calories: number;
+      protein: number;
+      carbs: number;
+      fat: number;
+      vitaminD: number;
+      calcium: number;
+      magnesium: number;
+      iron: number;
+      zinc: number;
+      omega3: number;
+      b12: number;
+      folate: number;
+      water: number;
+      caffeine: number;
+      reason: string;
+    } | null = null;
+
+    try {
+      console.log('AI Targets Response:', aiResponse);
+
+      // Clean response
+      let cleanResponse = aiResponse.trim();
+      if (cleanResponse.startsWith('```json')) {
+        cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      } else if (cleanResponse.startsWith('```')) {
+        cleanResponse = cleanResponse.replace(/```\n?/g, '');
+      }
+
+      const parsed = JSON.parse(cleanResponse) as typeof targets;
+      targets = parsed;
+      console.log('Parsed targets:', targets);
+    } catch (error) {
+      console.error('Failed to parse AI targets:', error);
+      console.error('Raw AI response:', aiResponse);
+
+      // Fallback: Calculate basic targets
+      const bmr =
+        gender === 'male'
+          ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
+          : 10 * weightKg + 6.25 * heightCm - 5 * age - 161;
+
+      const activityMultipliers: Record<string, number> = {
+        sedentary: 1.2,
+        beginner: 1.375,
+        intermediate: 1.55,
+        advanced: 1.725,
+      };
+
+      const tdee = bmr * (activityMultipliers[activityLevel] || 1.55);
+
+      // Adjust for goals
+      let calorieTarget = tdee;
+      if (goals.some((g: string) => g.includes('lose') || g.includes('weight'))) {
+        calorieTarget = tdee * 0.8; // -20% for weight loss
+      } else if (goals.some((g: string) => g.includes('gain') || g.includes('muscle'))) {
+        calorieTarget = tdee * 1.2; // +20% for muscle gain
+      }
+
+      const proteinTarget = goals.some((g: string) => g.includes('muscle'))
+        ? weightKg * 2.0
+        : weightKg * 1.6;
+
+      targets = {
+        calories: Math.round(calorieTarget),
+        protein: Math.round(proteinTarget),
+        carbs: Math.round((calorieTarget * 0.45) / 4), // 45% of calories from carbs
+        fat: Math.round((calorieTarget * 0.25) / 9), // 25% of calories from fat
+        vitaminD: gender === 'male' ? 15 : 15,
+        calcium: age > 50 ? 1200 : 1000,
+        magnesium: gender === 'male' ? 420 : 320,
+        iron: gender === 'female' && age < 50 ? 18 : 8,
+        zinc: gender === 'male' ? 11 : 8,
+        omega3: 1000,
+        b12: 2.4,
+        folate: 400,
+        water: Math.round((weightKg * 35) / 1000), // L
+        caffeine: 400,
+        reason: `Calculated based on your BMR (${Math.round(bmr)} kcal), activity level (${activityLevel}), and goals (${goals.join(', ')})`,
+      };
+    }
+
+    void res.json({
+      success: true,
+      data: {
+        targets,
+        userProfile: {
+          age,
+          heightCm,
+          weightKg,
+          gender,
+          goals,
+          activityLevel,
+        },
       },
     });
   }),

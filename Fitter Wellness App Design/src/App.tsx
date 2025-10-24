@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FitterLogo } from "./components/FitterLogo";
 import { LifestyleIcons } from "./components/LifestyleIcons";
 import { OnboardingOrb } from "./components/OnboardingOrb";
@@ -17,12 +17,47 @@ import { Card } from "./components/ui/card";
 import { Badge } from "./components/ui/badge";
 import { Sparkles, Heart, Brain, Zap } from "lucide-react";
 import { ActivityProvider } from "./context/ActivityContext";
+import { useAuth } from "./hooks/useAuth";
 
 type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
 
 export default function App() {
+  const { isAuthenticated, user, loading } = useAuth();
   const [currentView, setCurrentView] = useState<AppView>("landing");
   const [currentParams, setCurrentParams] = useState<{ date?: string }>({});
+
+  // Auto-redirect based on authentication status
+  useEffect(() => {
+    if (loading) return; // Wait for auth to load
+    
+    if (isAuthenticated && user) {
+      // User is logged in
+      if (user.completedOnboarding) {
+        // User completed onboarding, go to dashboard
+        setCurrentView("dashboard");
+      } else {
+        // User logged in but didn't complete onboarding
+        setCurrentView("onboarding");
+      }
+    } else {
+      // User not logged in, stay on landing
+      setCurrentView("landing");
+    }
+  }, [isAuthenticated, user, loading]);
+
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#04101B] via-[#0a1f33] to-[#04101B] flex items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 animate-pulse">
+            <FitterLogo size={64} />
+          </div>
+          <p className="text-[#DFF2D4]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (currentView === "onboarding") {
     return (
