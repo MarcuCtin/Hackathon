@@ -116,11 +116,20 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     mealCount: mealCountToday,
     totalCalories: 0,
     totalProtein: 0,
+    energyLevel: 80, // Default energy level
   };
 
   const recentChatMessages = dashboardData?.recent.chatMessages || [];
   const recentLogs = dashboardData?.recent.logs || [];
   const recentNutrition = dashboardData?.recent.nutrition || [];
+  const suggestions = dashboardData?.recent.suggestions || [];
+  const weeklyEnergyData = dashboardData?.analytics.weeklyEnergy || [];
+  const nutritionProgress = dashboardData?.analytics.nutritionProgress || {
+    protein: 85,
+    carbs: 80,
+    fats: 86,
+    water: 83,
+  };
 
   const activityEntries = useMemo(() => {
     const start = new Date();
@@ -177,8 +186,8 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
       .slice(0, 6);
   }, [logs, nutritionLogs]);
 
-  // Energy data for the week
-  const energyData = [
+  // Use real energy data or fallback to mock data
+  const energyData = weeklyEnergyData.length > 0 ? weeklyEnergyData : [
     { day: "Mon", energy: 75, sleep: 7.5 },
     { day: "Tue", energy: 82, sleep: 8.0 },
     { day: "Wed", energy: 70, sleep: 6.5 },
@@ -188,12 +197,37 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     { day: "Sun", energy: 80, sleep: 8.0 },
   ];
 
-  // Nutrition tracking
+  // Nutrition tracking with real data
   const nutritionData = [
-    { name: "Protein", value: 85, target: 100, color: "#7dd3fc" },
-    { name: "Carbs", value: 120, target: 150, color: "#6ee7b7" },
-    { name: "Fats", value: 60, target: 70, color: "#fbbf24" },
-    { name: "Water", value: 2.5, target: 3, color: "#60a5fa", unit: "L" },
+    { 
+      name: "Protein", 
+      value: Math.round(dailyStats.totalProtein), 
+      target: 100, 
+      color: "#7dd3fc",
+      progress: nutritionProgress.protein
+    },
+    { 
+      name: "Carbs", 
+      value: 120, 
+      target: 150, 
+      color: "#6ee7b7",
+      progress: nutritionProgress.carbs
+    },
+    { 
+      name: "Fats", 
+      value: 60, 
+      target: 70, 
+      color: "#fbbf24",
+      progress: nutritionProgress.fats
+    },
+    { 
+      name: "Water", 
+      value: dailyStats.hydration, 
+      target: 3, 
+      color: "#60a5fa", 
+      unit: "glasses",
+      progress: nutritionProgress.water
+    },
   ];
 
   // Weekly progress
@@ -465,9 +499,9 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       <span className="text-slate-600">Energy Level</span>
                     </div>
                     <div className="text-3xl bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                      80%
+                      {Math.round(dailyStats.energyLevel)}%
                     </div>
-                    <p className="text-slate-500">+5% from last week</p>
+                    <p className="text-slate-500">Based on {dailyStats.sleepHours}h sleep</p>
                   </div>
 
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/50">
@@ -551,7 +585,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
-                          animate={{ width: `${(item.value / item.target) * 100}%` }}
+                          animate={{ width: `${item.progress || (item.value / item.target) * 100}%` }}
                           transition={{ delay: 0.5 + index * 0.1, duration: 0.8 }}
                           className="h-full rounded-full"
                           style={{
@@ -577,14 +611,72 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Daily Recommendations */}
+            {/* Daily Suggestions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
               <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
-                <DailyRecommendations />
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+                      <Sparkles className="w-6 h-6 text-violet-600" />
+                    </div>
+                    <div>
+                      <h3>Daily Suggestions</h3>
+                      <p className="text-slate-500">AI-powered actions for today</p>
+                    </div>
+                  </div>
+                  <Badge className="rounded-full bg-slate-100 text-slate-700 border-0">
+                    {suggestions.length} active
+                  </Badge>
+                </div>
+
+                <div className="space-y-4">
+                  {suggestions.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">
+                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                      <p>No suggestions yet</p>
+                      <p className="text-sm">AI will generate personalized suggestions soon!</p>
+                    </div>
+                  ) : (
+                    suggestions.map((suggestion, index) => (
+                      <motion.div
+                        key={suggestion._id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 + index * 0.05 }}
+                        className="flex items-center justify-between gap-4 rounded-2xl bg-white/70 p-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+                            <span className="text-lg">{suggestion.emoji}</span>
+                          </div>
+                          <div>
+                            <p className="text-slate-700 font-medium">{suggestion.title}</p>
+                            <p className="text-slate-500 text-sm">{suggestion.description}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            className="rounded-xl bg-gradient-to-r from-violet-400 to-purple-400 hover:from-violet-500 hover:to-purple-500 text-white"
+                          >
+                            {suggestion.actionText || "I'll do it"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
+                          >
+                            {suggestion.dismissText || "Dismiss"}
+                          </Button>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
               </Card>
             </motion.div>
           </div>

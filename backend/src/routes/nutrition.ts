@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { NutritionLog } from '../models/NutritionLog.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { Types } from 'mongoose';
 
 const router = Router();
 
@@ -37,7 +38,7 @@ router.post(
       { calories: 0, protein: 0, carbs: 0, fat: 0 },
     );
     const created = await NutritionLog.create({
-      userId: req.userId,
+      userId: new Types.ObjectId(req.userId),
       date: new Date(date),
       mealType,
       items,
@@ -57,7 +58,7 @@ router.get(
   validate({ query: listQuery }),
   asyncHandler(async (req, res) => {
     const { day } = req.query as z.infer<typeof listQuery>;
-    const q: Record<string, unknown> = { userId: req.userId };
+    const q: Record<string, unknown> = { userId: new Types.ObjectId(req.userId) };
     if (day) {
       const d = new Date(day);
       const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());

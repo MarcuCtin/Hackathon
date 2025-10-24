@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -22,10 +22,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  Droplet,
+  Utensils,
 } from "lucide-react";
 import { Calendar } from "./ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { useActivityData } from "../context/ActivityContext";
+import { DayCard } from "./DayCard";
+import { api } from "../lib/api";
+import { toast } from "sonner";
 
 interface DayData {
   date: string;
@@ -41,11 +46,14 @@ interface DayData {
 
 interface HistoryPageProps {
   onProfileClick?: () => void;
+  onNavigate?: (view: string, params?: any) => void;
 }
 
-export function HistoryPage({ onProfileClick }: HistoryPageProps) {
+export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<"week" | "month">("week");
+  const [wellnessHistory, setWellnessHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const {
     logs,
     nutritionLogs,
@@ -54,6 +62,58 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
     sleepHoursToday,
     mealCountToday,
   } = useActivityData();
+
+  // Generate last 7 days for wellness history
+  useEffect(() => {
+    const generateWellnessHistory = async () => {
+      try {
+        setLoading(true);
+        const today = new Date();
+        const historyPromises = [];
+        
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date(today);
+          date.setDate(date.getDate() - i);
+          const dateStr = date.toISOString().split('T')[0];
+          
+          try {
+            const response = await api.getDailyWellness(dateStr);
+            historyPromises.push(response.data);
+          } catch (error) {
+            // If no data for this day, create empty data
+            historyPromises.push({
+              date: dateStr,
+              wellness: { score: 0, energyLevel: 0, hydration: 0, sleepHours: 0 },
+              movement: { workoutCalories: 0, steps: 0, activeMinutes: 0 },
+              nutrition: { totalCalories: 0, totalProtein: 0, mealCount: 0 }
+            });
+          }
+        }
+        
+        const history = await Promise.all(historyPromises);
+        setWellnessHistory(history);
+      } catch (error) {
+        console.error("Failed to fetch wellness history:", error);
+        toast.error("Failed to load wellness history.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    generateWellnessHistory();
+  }, []);
+
+  const handleViewDayDetails = (date: string) => {
+    // Navigate to day details page
+    if (onNavigate) {
+      onNavigate('dayinfo', { date });
+    } else {
+      // Fallback to URL navigation
+      const dayInfoUrl = `/dayinfo/${date}`;
+      window.history.pushState({}, '', dayInfoUrl);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    }
+  };
 
   const activityTimeline = useMemo(() => {
     const entries: Array<{
@@ -540,6 +600,33 @@ export function HistoryPage({ onProfileClick }: HistoryPageProps) {
               );
             })}
           </div>
+        </motion.div>
+
+        {/* Wellness History */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h3 className="mb-4">Wellness History</h3>
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {wellnessHistory.map((day, index) => (
+                <DayCard
+                  key={day.date}
+                  date={day.date}
+                  wellness={day.wellness}
+                  movement={day.movement}
+                  nutrition={day.nutrition}
+                  onViewDetails={handleViewDayDetails}
+                />
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Daily History */}
