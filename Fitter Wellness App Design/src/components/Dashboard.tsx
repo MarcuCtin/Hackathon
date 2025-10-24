@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -10,8 +10,6 @@ import { ScrollArea } from "./ui/scroll-area";
 import { FitterLogo } from "./FitterLogo";
 import { DailyRecommendations } from "./DailyRecommendations";
 import { ProgressInsights } from "./ProgressInsights";
-import { api, type DashboardData } from "../lib/api";
-import { useActivityData } from "../context/ActivityContext";
 import {
   Sun,
   Moon,
@@ -70,11 +68,6 @@ interface DashboardProps {
 
 export function Dashboard({ onProfileClick }: DashboardProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [chatInput, setChatInput] = useState("");
-  
-  // Mock tasks for daily routine (can be replaced with real data later)
   const [tasks, setTasks] = useState<Task[]>([
     { id: 1, title: "Morning meditation", completed: true, time: "7:00 AM" },
     { id: 2, title: "Drink water (500ml)", completed: true, time: "7:30 AM" },
@@ -83,108 +76,16 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     { id: 5, title: "Gym workout", completed: false, time: "6:00 PM" },
     { id: 6, title: "Evening walk", completed: false, time: "7:30 PM" },
   ]);
-  
-  const {
-    logs,
-    nutritionLogs,
-    hydrationToday,
-    workoutCaloriesToday,
-    sleepHoursToday,
-    mealCountToday,
-  } = useActivityData();
 
-  // Fetch dashboard data from database
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        const { data } = await api.getDashboardData();
-        setDashboardData(data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDashboardData();
-  }, []);
-
-  // Use database data or fallback to context data
-  const dailyStats = dashboardData?.daily || {
-    hydration: hydrationToday,
-    workoutCalories: workoutCaloriesToday,
-    sleepHours: sleepHoursToday || 0,
-    mealCount: mealCountToday,
-    totalCalories: 0,
-    totalProtein: 0,
-    energyLevel: 80, // Default energy level
-  };
-
-  const recentChatMessages = dashboardData?.recent.chatMessages || [];
-  const recentLogs = dashboardData?.recent.logs || [];
-  const recentNutrition = dashboardData?.recent.nutrition || [];
-  const suggestions = dashboardData?.recent.suggestions || [];
-  const weeklyEnergyData = dashboardData?.analytics.weeklyEnergy || [];
-  const nutritionProgress = dashboardData?.analytics.nutritionProgress || {
-    protein: 85,
-    carbs: 80,
-    fats: 86,
-    water: 83,
-  };
-
-  const activityEntries = useMemo(() => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-
-    const logEntries = (logs || [])
-      .filter((log) => new Date(log.date).getTime() >= start.getTime())
-      .map((log) => {
-        const baseLabel: Record<string, string> = {
-          hydration: "Hydration",
-          sleep: "Sleep",
-          workout: "Workout",
-        };
-
-        const details = (() => {
-          if (log.type === "hydration") {
-            return `${log.value}${log.unit ? ` ${log.unit}` : ""}`;
-          }
-          if (log.type === "sleep") {
-            return `${log.value} hours${log.note ? ` · ${log.note}` : ""}`;
-          }
-          if (log.type === "workout") {
-            return `${log.value} kcal${log.note ? ` · ${log.note}` : ""}`;
-          }
-          return `${log.value}${log.unit ? ` ${log.unit}` : ""}`;
-        })();
-
-        return {
-          id: log._id,
-          type: log.type,
-          label: `${baseLabel[log.type] || "Log"} saved`,
-          details,
-          timestamp: log.date,
-        };
-      });
-
-    const mealEntries = (nutritionLogs || [])
-      .filter((meal) => new Date(meal.date).getTime() >= start.getTime())
-      .map((meal) => {
-        const totalCalories = meal.total?.calories ?? 0;
-        const primaryItem = meal.items?.[0]?.name || "Meal";
-
-        return {
-          id: meal._id,
-          type: "meal",
-          label: `Meal logged • ${meal.mealType}`,
-          details: `${primaryItem}${totalCalories ? ` · ${totalCalories} kcal` : ""}`,
-          timestamp: meal.date,
-        };
-      });
-
-    return [...logEntries, ...mealEntries]
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
-      .slice(0, 6);
-  }, [logs, nutritionLogs]);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    {
+      id: 1,
+      text: "Good morning, Marcu! You're doing great today. You've completed 3 of 6 tasks already!",
+      sender: "ai",
+      timestamp: new Date(),
+    },
+  ]);
+  const [chatInput, setChatInput] = useState("");
 
   // Use real energy data or fallback to mock data
   const energyData = weeklyEnergyData.length > 0 ? weeklyEnergyData : [
@@ -199,35 +100,10 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
 
   // Nutrition tracking with real data
   const nutritionData = [
-    { 
-      name: "Protein", 
-      value: Math.round(dailyStats.totalProtein), 
-      target: 100, 
-      color: "#7dd3fc",
-      progress: nutritionProgress.protein
-    },
-    { 
-      name: "Carbs", 
-      value: 120, 
-      target: 150, 
-      color: "#6ee7b7",
-      progress: nutritionProgress.carbs
-    },
-    { 
-      name: "Fats", 
-      value: 60, 
-      target: 70, 
-      color: "#fbbf24",
-      progress: nutritionProgress.fats
-    },
-    { 
-      name: "Water", 
-      value: dailyStats.hydration, 
-      target: 3, 
-      color: "#60a5fa", 
-      unit: "glasses",
-      progress: nutritionProgress.water
-    },
+    { name: "Protein", value: 85, target: 100, color: "#6BF178" },
+    { name: "Carbs", value: 120, target: 150, color: "#E2F163" },
+    { name: "Fats", value: 60, target: 70, color: "#DFF2D4" },
+    { name: "Water", value: 2.5, target: 3, color: "#6BF178", unit: "L" },
   ];
 
   // Weekly progress
@@ -259,41 +135,48 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return;
-    
-    // TODO: Implement real chat functionality with AI
-    // For now, just clear the input
+
+    const newUserMessage: ChatMessage = {
+      id: chatMessages.length + 1,
+      text: chatInput,
+      sender: "user",
+      timestamp: new Date(),
+    };
+
+    setChatMessages([...chatMessages, newUserMessage]);
     setChatInput("");
-    
-    // Show a placeholder message
-    console.log("Chat message:", chatInput);
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiResponse: ChatMessage = {
+        id: chatMessages.length + 2,
+        text: "I'm here to help! Based on your current progress, I suggest focusing on your evening workout. Would you like some motivation tips?",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      setChatMessages((prev) => [...prev, aiResponse]);
+    }, 1000);
   };
 
   const completedTasks = tasks.filter((t) => t.completed).length;
   const completionPercentage = (completedTasks / tasks.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-emerald-50">
+    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
+      {/* Glowing Orbs Background */}
+      <div className="glowing-orb glowing-orb-green"></div>
+      <div className="glowing-orb glowing-orb-lime"></div>
+      <div className="glowing-orb glowing-orb-cyan"></div>
+      
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/20 bg-white/40 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-[#6BF178]/20 bg-[#04101B]/95 backdrop-blur-2xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <FitterLogo size={36} />
             <div className="flex items-center gap-4">
-              <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-emerald-100 text-slate-700 border-0">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Premium
-              </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 border-0">
-                🔥 {dailyStats.workoutCalories} kcal
-              </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-blue-100 text-blue-700 border-0">
-                💧 {dailyStats.hydration}
-              </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-violet-100 to-purple-100 text-violet-700 border-0">
-                🛌 {dailyStats.sleepHours || "-"} h
-              </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-rose-100 to-pink-100 text-rose-700 border-0">
-                🥗 {dailyStats.mealCount}
               </Badge>
               <button onClick={onProfileClick} className="focus:outline-none">
                 <UserAvatar size={40} userName="Alex Thompson" />
@@ -311,10 +194,10 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="mb-2">
-            {getGreeting()}, Marcu 👋
+          <h1 className="mb-2 bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent flex items-center gap-2">
+            {getGreeting()}, Marcu <Sparkles className="w-6 h-6 text-[#6BF178]" />
           </h1>
-          <p className="text-slate-600">
+          <p className="text-[#DFF2D4]">
             {currentTime.toLocaleDateString("en-US", {
               weekday: "long",
               month: "long",
@@ -333,21 +216,21 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
+              <Card className="modern-card glass-card-intense p-6 overflow-hidden">
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-100 to-sky-200 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-sky-600" />
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern">
+                      <Calendar className="w-6 h-6 text-[#04101B]" />
                     </div>
                     <div>
-                      <h3>Daily Routine</h3>
-                      <p className="text-slate-500">
+                      <h3 className="text-gradient-modern text-glow text-lg font-bold">Daily Routine</h3>
+                      <p className="text-[#DFF2D4]/70 text-sm">
                         {completedTasks} of {tasks.length} completed
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-2xl bg-gradient-to-r from-sky-600 to-emerald-600 bg-clip-text text-transparent">
+                    <div className="text-2xl text-gradient-modern font-bold text-glow">
                       {Math.round(completionPercentage)}%
                     </div>
                   </div>
@@ -363,22 +246,22 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + index * 0.05 }}
                       onClick={() => toggleTask(task.id)}
-                      className="flex items-center gap-3 p-4 rounded-2xl bg-white/50 hover:bg-white/80 cursor-pointer transition-all group"
+                      className="flex items-center gap-3 p-4 rounded-2xl bg-[#0a1f33]/50 hover:bg-[#0a1f33]/80 hover:border-[#6BF178]/50 border border-transparent cursor-pointer transition-all group"
                     >
                       {task.completed ? (
-                        <CheckCircle2 className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                        <CheckCircle2 className="w-5 h-5 text-[#6BF178] flex-shrink-0" />
                       ) : (
-                        <Circle className="w-5 h-5 text-slate-300 group-hover:text-slate-400 flex-shrink-0" />
+                        <Circle className="w-5 h-5 text-[#DFF2D4]/30 group-hover:text-[#6BF178]/50 flex-shrink-0" />
                       )}
                       <span
                         className={`flex-1 ${
-                          task.completed ? "text-slate-400 line-through" : "text-slate-700"
+                          task.completed ? "text-[#DFF2D4]/50 line-through" : "text-[#DFF2D4]"
                         }`}
                       >
                         {task.title}
                       </span>
                       {task.time && (
-                        <span className="text-slate-400 flex items-center gap-1">
+                        <span className="text-[#E2F163] flex items-center gap-1">
                           <Clock className="w-4 h-4" />
                           {task.time}
                         </span>
@@ -389,130 +272,44 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-            >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center">
-                      <Activity className="w-6 h-6 text-emerald-600" />
-                    </div>
-                    <div>
-                      <h3>AI Synced Actions</h3>
-                      <p className="text-slate-500">Latest from assistant</p>
-                    </div>
-                  </div>
-                  <Badge className="rounded-full bg-slate-100 text-slate-700 border-0">
-                    {recentLogs.length > 0 ? `${recentLogs.length} recent` : "No entries yet"}
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  {loading ? (
-                    <div className="flex items-center justify-center h-32">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-400"></div>
-                    </div>
-                  ) : recentLogs.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">
-                      <Activity className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>No recent activities</p>
-                      <p className="text-sm">Start logging activities to see them here!</p>
-                    </div>
-                  ) : (
-                    recentLogs.map((log) => {
-                      const iconMap = {
-                        hydration: Droplet,
-                        sleep: Moon,
-                        workout: Dumbbell,
-                        meal: Utensils,
-                      } as const;
-                      const bgMap: Record<string, string> = {
-                        hydration: "from-sky-100 to-blue-100",
-                        sleep: "from-indigo-100 to-purple-100",
-                        workout: "from-amber-100 to-orange-100",
-                        meal: "from-rose-100 to-pink-100",
-                      };
-                      const Icon = iconMap[log.type as keyof typeof iconMap] || Sparkles;
-                      const background = bgMap[log.type] || "from-slate-100 to-slate-200";
-
-                      return (
-                        <div
-                          key={log._id}
-                          className="flex items-center justify-between gap-3 rounded-2xl bg-white/70 p-4"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={`w-11 h-11 flex items-center justify-center rounded-2xl bg-gradient-to-br ${background}`}
-                            >
-                              <Icon className="w-5 h-5 text-slate-700" />
-                            </div>
-                            <div>
-                              <p className="text-slate-700 font-medium">
-                                {log.type === 'hydration' ? 'Water logged' :
-                                 log.type === 'sleep' ? 'Sleep logged' :
-                                 log.type === 'workout' ? 'Workout logged' :
-                                 log.type === 'meal' ? 'Meal logged' : 'Activity logged'}
-                              </p>
-                              <p className="text-slate-500 text-sm">
-                                {log.value} {log.unit || ''} {log.note ? `· ${log.note}` : ''}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-xs text-slate-400">
-                            {new Date(log.date).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </Card>
-            </motion.div>
-
             {/* Energy & Sleep */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
+              <Card className="modern-card glass-card-intense p-6 hover-lift overflow-hidden">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center">
-                    <Zap className="w-6 h-6 text-amber-600" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#E2F163] to-[#6BF178] flex items-center justify-center glow-effect-lime pulse-modern">
+                    <Zap className="w-6 h-6 text-[#04101B]" />
                   </div>
                   <div>
-                    <h3>Energy & Sleep</h3>
-                    <p className="text-slate-500">Last 7 days</p>
+                    <h3 className="text-gradient-modern text-glow text-lg font-bold">Energy & Sleep</h3>
+                    <p className="text-[#DFF2D4]/70 text-sm">Last 7 days</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-amber-100/50">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#E2F163]/20 to-[#E2F163]/10 border border-[#E2F163]/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <Sun className="w-5 h-5 text-amber-600" />
-                      <span className="text-slate-600">Energy Level</span>
+                      <Sun className="w-5 h-5 text-[#E2F163]" />
+                      <span className="text-[#DFF2D4]">Energy Level</span>
                     </div>
-                    <div className="text-3xl bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
-                      {Math.round(dailyStats.energyLevel)}%
+                    <div className="text-3xl bg-gradient-to-r from-[#E2F163] to-[#6BF178] bg-clip-text text-transparent font-bold">
+                      80%
                     </div>
-                    <p className="text-slate-500">Based on {dailyStats.sleepHours}h sleep</p>
+                    <p className="text-[#6BF178]">+5% from last week</p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/50">
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#6BF178]/20 to-[#6BF178]/10 border border-[#6BF178]/30">
                     <div className="flex items-center gap-2 mb-2">
-                      <BedDouble className="w-5 h-5 text-indigo-600" />
-                      <span className="text-slate-600">Sleep Quality</span>
+                      <BedDouble className="w-5 h-5 text-[#6BF178]" />
+                      <span className="text-[#DFF2D4]">Sleep Quality</span>
                     </div>
-                    <div className="text-3xl bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                    <div className="text-3xl bg-gradient-to-r from-[#6BF178] to-[#DFF2D4] bg-clip-text text-transparent font-bold">
                       8.0h
                     </div>
-                    <p className="text-slate-500">Average this week</p>
+                    <p className="text-[#E2F163]">Average this week</p>
                   </div>
                 </div>
 
@@ -520,26 +317,27 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                   <AreaChart data={energyData}>
                     <defs>
                       <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#7dd3fc" stopOpacity={0.8} />
-                        <stop offset="95%" stopColor="#7dd3fc" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#6BF178" stopOpacity={0.8} />
+                        <stop offset="95%" stopColor="#6BF178" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis dataKey="day" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DFF2D4" opacity={0.1} />
+                    <XAxis dataKey="day" stroke="#DFF2D4" />
+                    <YAxis stroke="#DFF2D4" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "rgba(255, 255, 255, 0.9)",
-                        border: "none",
+                        backgroundColor: "rgba(4, 16, 27, 0.9)",
+                        border: "1px solid #6BF178",
                         borderRadius: "12px",
-                        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                        boxShadow: "0 0 20px rgba(107, 241, 120, 0.3)",
+                        color: "#DFF2D4"
                       }}
                     />
                     <Area
                       type="monotone"
                       dataKey="energy"
-                      stroke="#7dd3fc"
-                      strokeWidth={2}
+                      stroke="#6BF178"
+                      strokeWidth={3}
                       fillOpacity={1}
                       fill="url(#colorEnergy)"
                     />
@@ -554,14 +352,14 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
+              <Card className="modern-card glass-card-intense p-6 hover-lift overflow-hidden">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center">
-                    <Utensils className="w-6 h-6 text-emerald-600" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#DFF2D4] flex items-center justify-center glow-effect-green pulse-modern">
+                    <Utensils className="w-6 h-6 text-[#04101B]" />
                   </div>
                   <div>
-                    <h3>Nutrition & Supplements</h3>
-                    <p className="text-slate-500">Today's intake</p>
+                    <h3 className="text-gradient-modern text-glow text-lg font-bold">Nutrition & Supplements</h3>
+                    <p className="text-[#DFF2D4]/70 text-sm">Today's intake</p>
                   </div>
                 </div>
 
@@ -572,17 +370,17 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3 + index * 0.05 }}
-                      className="p-4 rounded-2xl bg-white/50"
+                      className="p-4 rounded-2xl bg-[#0a1f33]/50 border border-[#6BF178]/20"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-slate-600">{item.name}</span>
-                        <span className="text-slate-900">
+                        <span className="text-[#DFF2D4]">{item.name}</span>
+                        <span className="text-[#E2F163] font-semibold">
                           {item.value}
                           {item.unit || "g"} / {item.target}
                           {item.unit || "g"}
                         </span>
                       </div>
-                      <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                      <div className="w-full h-2 bg-[#04101B] rounded-full overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${item.progress || (item.value / item.target) * 100}%` }}
@@ -590,6 +388,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                           className="h-full rounded-full"
                           style={{
                             background: `linear-gradient(90deg, ${item.color}, ${item.color}dd)`,
+                            boxShadow: `0 0 10px ${item.color}60`
                           }}
                         />
                       </div>
@@ -597,14 +396,14 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                   ))}
                 </div>
 
-                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-sky-50 to-emerald-50 border border-sky-200/50">
+                <div className="mt-4 p-4 rounded-2xl bg-gradient-to-r from-[#6BF178]/20 to-[#E2F163]/20 border border-[#6BF178]/30">
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0">
-                      💊
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center flex-shrink-0 shadow-[0_0_10px_rgba(107,241,120,0.5)]">
+                      <Heart className="w-4 h-4 text-[#04101B]" />
                     </div>
                     <div>
-                      <p className="text-slate-700 mb-1">Don't forget your supplements!</p>
-                      <p className="text-slate-500">Vitamin D, Omega-3, Magnesium</p>
+                      <p className="text-[#DFF2D4] mb-1 font-semibold">Don't forget your supplements!</p>
+                      <p className="text-[#DFF2D4]/70">Vitamin D, Omega-3, Magnesium</p>
                     </div>
                   </div>
                 </div>
@@ -617,66 +416,8 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
-                      <Sparkles className="w-6 h-6 text-violet-600" />
-                    </div>
-                    <div>
-                      <h3>Daily Suggestions</h3>
-                      <p className="text-slate-500">AI-powered actions for today</p>
-                    </div>
-                  </div>
-                  <Badge className="rounded-full bg-slate-100 text-slate-700 border-0">
-                    {suggestions.length} active
-                  </Badge>
-                </div>
-
-                <div className="space-y-4">
-                  {suggestions.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-center text-slate-500">
-                      <Sparkles className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                      <p>No suggestions yet</p>
-                      <p className="text-sm">AI will generate personalized suggestions soon!</p>
-                    </div>
-                  ) : (
-                    suggestions.map((suggestion, index) => (
-                      <motion.div
-                        key={suggestion._id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 + index * 0.05 }}
-                        className="flex items-center justify-between gap-4 rounded-2xl bg-white/70 p-4"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
-                            <span className="text-lg">{suggestion.emoji}</span>
-                          </div>
-                          <div>
-                            <p className="text-slate-700 font-medium">{suggestion.title}</p>
-                            <p className="text-slate-500 text-sm">{suggestion.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            className="rounded-xl bg-gradient-to-r from-violet-400 to-purple-400 hover:from-violet-500 hover:to-purple-500 text-white"
-                          >
-                            {suggestion.actionText || "I'll do it"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-50"
-                          >
-                            {suggestion.dismissText || "Dismiss"}
-                          </Button>
-                        </div>
-                      </motion.div>
-                    ))
-                  )}
-                </div>
+              <Card className="modern-card glass-card-intense p-6 hover-lift overflow-hidden">
+                <DailyRecommendations />
               </Card>
             </motion.div>
           </div>
@@ -750,49 +491,37 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
+              <Card className="modern-card glass-card-intense p-6 hover-lift overflow-hidden">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-100 to-violet-200 flex items-center justify-center">
-                    <Brain className="w-6 h-6 text-violet-600" />
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern">
+                    <Brain className="w-6 h-6 text-[#04101B]" />
                   </div>
                   <div>
-                    <h3>AI Coach</h3>
-                    <p className="text-slate-500">Your wellness assistant</p>
+                    <h3 className="text-gradient-modern text-glow text-lg font-bold">AI Coach</h3>
+                    <p className="text-[#DFF2D4]/70 text-sm">Your wellness assistant</p>
                   </div>
                 </div>
 
-                <ScrollArea className="h-[300px] mb-4 pr-4">
+                <ScrollArea className="h-[280px] mb-4 pr-2 max-h-[280px]">
                   <div className="space-y-4">
-                    {loading ? (
-                      <div className="flex items-center justify-center h-32">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-400"></div>
-                      </div>
-                    ) : recentChatMessages.length > 0 ? (
-                      recentChatMessages.map((message) => (
-                        <motion.div
-                          key={message._id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    {chatMessages.map((message) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[80%] p-3 rounded-2xl break-words ${
+                            message.sender === "user"
+                              ? "bg-gradient-to-br from-[#6BF178] to-[#E2F163] text-[#04101B] font-semibold shadow-[0_0_10px_rgba(107,241,120,0.3)]"
+                              : "bg-[#0a1f33]/90 text-[#DFF2D4] border border-[#6BF178]/20 backdrop-blur-sm"
+                          }`}
                         >
-                          <div
-                            className={`max-w-[80%] p-4 rounded-2xl ${
-                              message.role === "user"
-                                ? "bg-gradient-to-br from-sky-400 to-emerald-400 text-white"
-                                : "bg-white/80 text-slate-700"
-                            }`}
-                          >
-                            {message.content}
-                          </div>
-                        </motion.div>
-                      ))
-                    ) : (
-                      <div className="text-center text-slate-500 py-8">
-                        <Brain className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                        <p>No chat messages yet</p>
-                        <p className="text-sm">Start a conversation with your AI coach!</p>
-                      </div>
-                    )}
+                          <p className="text-sm">{message.text}</p>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
                 </ScrollArea>
 
@@ -802,11 +531,11 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
                     placeholder="Ask your AI coach..."
-                    className="rounded-2xl border-slate-200 bg-white/50"
+                    className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50"
                   />
                   <Button
                     onClick={handleSendMessage}
-                    className="rounded-2xl bg-gradient-to-r from-sky-400 to-emerald-400 hover:from-sky-500 hover:to-emerald-500 flex-shrink-0"
+                    className="rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_20px_rgba(107,241,120,0.5)] text-[#04101B] font-semibold flex-shrink-0"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
@@ -820,35 +549,35 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
             >
-              <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
-                <h3 className="mb-4">Quick Actions</h3>
+              <Card className="modern-card glass-card-intense p-6 hover-lift overflow-hidden">
+                <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Quick Actions</h3>
                 <div className="grid grid-cols-2 gap-3">
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-slate-200 bg-white/50 hover:bg-white/80"
+                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 hover:bg-[#6BF178]/20 hover:border-[#6BF178] text-[#DFF2D4] transition-all"
                   >
-                    <Activity className="w-5 h-5 text-sky-600" />
+                    <Activity className="w-5 h-5 text-[#6BF178]" />
                     <span>Log Activity</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-slate-200 bg-white/50 hover:bg-white/80"
+                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 hover:bg-[#6BF178]/20 hover:border-[#6BF178] text-[#DFF2D4] transition-all"
                   >
-                    <Apple className="w-5 h-5 text-emerald-600" />
+                    <Apple className="w-5 h-5 text-[#6BF178]" />
                     <span>Log Meal</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-slate-200 bg-white/50 hover:bg-white/80"
+                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-[#E2F163]/30 bg-[#0a1f33]/50 hover:bg-[#E2F163]/20 hover:border-[#E2F163] text-[#DFF2D4] transition-all"
                   >
-                    <Droplet className="w-5 h-5 text-blue-600" />
+                    <Droplet className="w-5 h-5 text-[#E2F163]" />
                     <span>Add Water</span>
                   </Button>
                   <Button
                     variant="outline"
-                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-slate-200 bg-white/50 hover:bg-white/80"
+                    className="h-auto py-4 flex-col gap-2 rounded-2xl border-[#E2F163]/30 bg-[#0a1f33]/50 hover:bg-[#E2F163]/20 hover:border-[#E2F163] text-[#DFF2D4] transition-all"
                   >
-                    <Moon className="w-5 h-5 text-indigo-600" />
+                    <Moon className="w-5 h-5 text-[#E2F163]" />
                     <span>Sleep Log</span>
                   </Button>
                 </div>

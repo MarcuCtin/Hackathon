@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -8,8 +7,7 @@ import { FitterLogo } from "./FitterLogo";
 import { NutritionRecommender } from "./NutritionRecommender";
 import { MealLogForm } from "./MealLogForm";
 import { UserAvatar } from "./UserAvatar";
-import { Utensils, Droplets, Zap, TrendingUp, Apple, Coffee, Clock, ChevronRight, Trash2 } from "lucide-react";
-import { useActivityData } from "../context/ActivityContext";
+import { Utensils, Droplets, Zap, TrendingUp, Apple, Coffee, Clock, ChevronRight, Trash2, Sparkles } from "lucide-react";
 
 interface MealLog {
   id: string;
@@ -45,16 +43,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
       items: ["Greek yogurt with berries", "Whole grain toast", "Scrambled eggs"],
     },
   ]);
-  const { nutritionLogs, hydrationToday, mealCountToday } = useActivityData();
-
-  const aiMeals = useMemo(() => {
-    const start = new Date();
-    start.setHours(0, 0, 0, 0);
-
-    return (nutritionLogs || [])
-      .filter((meal) => new Date(meal.date).getTime() >= start.getTime())
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [nutritionLogs]);
 
   // Daily targets
   const dailyTargets = {
@@ -75,28 +63,11 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
     );
   }, [loggedMeals]);
 
-  const aiTotals = useMemo(() => {
-    return aiMeals.reduce(
-      (acc, meal) => ({
-        calories: acc.calories + (meal.total?.calories ?? 0),
-        protein: acc.protein + (meal.total?.protein ?? 0),
-      }),
-      { calories: 0, protein: 0 }
-    );
-  }, [aiMeals]);
-
-  const combinedConsumed = {
-    calories: consumed.calories + aiTotals.calories,
-    protein: consumed.protein + aiTotals.protein,
-  };
-
   // Calculate remaining nutrition needed
   const remaining = {
-    calories: Math.max(0, dailyTargets.calories - combinedConsumed.calories),
-    protein: Math.max(0, dailyTargets.protein - combinedConsumed.protein),
+    calories: dailyTargets.calories - consumed.calories,
+    protein: dailyTargets.protein - consumed.protein,
   };
-
-  const hydrationLiters = (hydrationToday * 0.25).toFixed(1);
 
   // Generate dynamic meal suggestions based on remaining needs
   const suggestedMeals = useMemo((): SuggestedMeal[] => {
@@ -226,8 +197,8 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
     {
       icon: Apple,
       label: "Calories",
-      value: combinedConsumed.calories,
-      target: dailyTargets.calories,
+      value: consumed.calories.toString(),
+      target: dailyTargets.calories.toString(),
       unit: "kcal",
       gradient: "from-rose-400 to-pink-400",
       bgGradient: "from-rose-50 to-pink-50",
@@ -235,8 +206,8 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
     {
       icon: Zap,
       label: "Protein",
-      value: combinedConsumed.protein,
-      target: dailyTargets.protein,
+      value: consumed.protein.toString(),
+      target: dailyTargets.protein.toString(),
       unit: "g",
       gradient: "from-amber-400 to-orange-400",
       bgGradient: "from-amber-50 to-orange-50",
@@ -244,8 +215,8 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
     {
       icon: Droplets,
       label: "Water",
-      value: parseFloat(hydrationLiters),
-      target: dailyTargets.water,
+      value: "2.3",
+      target: dailyTargets.water.toString(),
       unit: "L",
       gradient: "from-sky-400 to-cyan-400",
       bgGradient: "from-sky-50 to-cyan-50",
@@ -253,8 +224,8 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
     {
       icon: Coffee,
       label: "Caffeine",
-      value: 180,
-      target: dailyTargets.caffeine,
+      value: "180",
+      target: dailyTargets.caffeine.toString(),
       unit: "mg",
       gradient: "from-amber-600 to-yellow-600",
       bgGradient: "from-amber-50 to-yellow-50",
@@ -262,31 +233,39 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50 to-orange-50 pb-24">
+    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
+      {/* Glowing Orbs Background - Fixed position */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 0}}>
+        <div className="glowing-orb glowing-orb-green" style={{position: 'absolute'}}></div>
+        <div className="glowing-orb glowing-orb-purple" style={{position: 'absolute', background: 'radial-gradient(circle, #A855F7, transparent)', width: '450px', height: '450px', top: '20%', right: '10%'}}></div>
+        <div className="glowing-orb glowing-orb-cyan" style={{position: 'absolute'}}></div>
+      </div>
+      
       {/* Header with Next Meal */}
-      <header className="sticky top-0 z-40 border-b border-white/20 bg-white/40 backdrop-blur-xl">
-        <div className="container mx-auto px-6 py-4">
+      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+        <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <FitterLogo size={36} />
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <FitterLogo size={40} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+              </div>
               <div>
-                <h3 className="text-slate-900">Nutrition</h3>
-                <p className="text-slate-500">Smart meal & supplement guidance</p>
+                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">Nutrition</h3>
+                <p className="text-[#DFF2D4]/80 text-sm font-medium">Smart meal & supplement guidance</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-slate-700 border-0">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-3 py-1">
                 <Utensils className="w-3 h-3 mr-1" />
                 Today
               </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 border-0">
-                🥗 {mealCountToday} AI meals
-              </Badge>
-              <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-blue-100 text-blue-700 border-0">
-                💧 {hydrationLiters} L logged
-              </Badge>
-              <button onClick={onProfileClick} className="focus:outline-none">
-                <UserAvatar size={36} userName="Alex Thompson" />
+              <button 
+                onClick={onProfileClick} 
+                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
+              >
+                <UserAvatar size={40} userName="Alex Thompson" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
               </button>
             </div>
           </div>
@@ -298,24 +277,26 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
               animate={{ opacity: 1, y: 0 }}
               className="mt-3"
             >
-              <Card className="p-4 rounded-2xl border-white/20 bg-gradient-to-r from-amber-400 to-orange-400 text-white shadow-lg">
+              <Card className="modern-card glass-card-intense p-4 rounded-2xl hover-lift overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="text-3xl">{nextMeal.emoji}</div>
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green">
+                      <Utensils className="w-6 h-6 text-[#04101B]" />
+                    </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium">Next: {nextMeal.name}</span>
-                        <Badge className="rounded-full bg-white/20 text-white border-0">
+                        <span className="font-semibold text-[#DFF2D4]">Next: {nextMeal.name}</span>
+                        <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(226,241,99,0.4)]">
                           <Clock className="w-3 h-3 mr-1" />
                           {nextMeal.time}
                         </Badge>
                       </div>
-                      <p className="text-white/80 text-sm">
+                      <p className="text-[#DFF2D4]/80 text-sm">
                         {nextMeal.calories} kcal · {nextMeal.protein}g protein
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-white/60" />
+                  <ChevronRight className="w-5 h-5 text-[#6BF178]" />
                 </div>
               </Card>
             </motion.div>
@@ -323,24 +304,18 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-6">
+      <div className="container mx-auto px-6 py-6 relative z-10">
         {/* Nutrition Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-6"
         >
-          <h3 className="mb-4">Today's Nutrition</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Today's Nutrition</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {nutritionStats.map((stat, index) => {
               const Icon = stat.icon;
-              const percentage = (stat.target === 0 ? 0 : (stat.value / stat.target) * 100);
-              const displayValue = stat.label === "Water"
-                ? stat.value.toFixed(1)
-                : Math.round(stat.value).toString();
-              const displayTarget = stat.label === "Water"
-                ? stat.target.toFixed(1)
-                : stat.target.toString();
+              const percentage = (parseInt(stat.value) / parseInt(stat.target)) * 100;
 
               return (
                 <motion.div
@@ -349,23 +324,26 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className="p-5 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl">
-                    <div
-                      className={`w-12 h-12 mb-3 rounded-2xl bg-gradient-to-r ${stat.gradient} flex items-center justify-center`}
-                    >
-                      <Icon className="w-6 h-6 text-white" />
+                  <Card className="modern-card glass-card-intense p-5 rounded-3xl hover-lift overflow-hidden">
+                    <div className="w-12 h-12 mb-3 rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern">
+                      <Icon className="w-6 h-6 text-[#04101B]" />
                     </div>
-                    <p className="text-slate-600 mb-1">{stat.label}</p>
+                    <p className="text-[#DFF2D4] mb-1 font-semibold">{stat.label}</p>
                     <div className="flex items-baseline gap-1 mb-2">
-                      <span className={`text-2xl bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
-                        {displayValue}
+                      <span className="text-2xl text-gradient-modern font-bold">
+                        {stat.value}
                       </span>
-                      <span className="text-slate-500">/ {displayTarget}</span>
-                      <span className="text-slate-400">{stat.unit}</span>
+                      <span className="text-[#DFF2D4]/70">/ {stat.target}</span>
+                      <span className="text-[#DFF2D4]/50">{stat.unit}</span>
                     </div>
-                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="relative h-3 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
                       <motion.div
-                        className={`h-full bg-gradient-to-r ${stat.gradient} rounded-full`}
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${Math.min(percentage, 100)}%`,
+                          background: 'linear-gradient(90deg, #6BF178, #E2F163)',
+                          boxShadow: '0 0 15px rgba(107, 241, 120, 0.6)'
+                        }}
                         initial={{ width: 0 }}
                         animate={{ width: `${Math.min(percentage, 100)}%` }}
                         transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
@@ -377,56 +355,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
             })}
           </div>
         </motion.div>
-
-        {aiMeals.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45 }}
-            className="mb-6"
-          >
-            <h3 className="mb-4">AI Logged Meals</h3>
-            <div className="space-y-3">
-              {aiMeals.map((meal) => (
-                <Card
-                  key={meal._id}
-                  className="p-5 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-lg"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <h4 className="mb-1 capitalize">{meal.mealType}</h4>
-                      <div className="flex items-center gap-3 text-slate-500 mb-2">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {new Date(meal.date).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
-                        <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-slate-700 border-0">
-                          {meal.total?.calories ?? 0} kcal
-                        </Badge>
-                        {meal.total?.protein ? (
-                          <Badge className="rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-slate-700 border-0">
-                            {meal.total.protein}g protein
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <ul className="text-slate-500 text-sm list-disc pl-5 space-y-1">
-                        {meal.items?.map((item, index) => (
-                          <li key={`${meal._id}-${index}`}>
-                            {item.name}
-                            {item.calories ? ` · ${item.calories} kcal` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </motion.div>
-        )}
 
         {/* Meal Log Form */}
         <motion.div
@@ -446,7 +374,7 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
             transition={{ delay: 0.5 }}
             className="mb-6"
           >
-            <h3 className="mb-4">Meals Eaten Today</h3>
+            <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Meals Eaten Today</h3>
             <div className="space-y-3">
               <AnimatePresence>
                 {loggedMeals.map((meal, index) => (
@@ -457,27 +385,27 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                     exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.05 }}
                   >
-                    <Card className="p-5 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-lg hover:shadow-xl transition-shadow group">
+                    <Card className="modern-card glass-card-intense p-5 rounded-3xl hover-lift overflow-hidden group">
                       <div className="flex items-start gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center text-2xl flex-shrink-0">
-                          {meal.name.toLowerCase().includes("breakfast") ? "🍳" :
-                           meal.name.toLowerCase().includes("lunch") ? "🥗" :
-                           meal.name.toLowerCase().includes("dinner") ? "🍽️" : "🍴"}
+                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center flex-shrink-0 glow-effect-green">
+                          {meal.name.toLowerCase().includes("breakfast") ? <Coffee className="w-6 h-6 text-[#04101B]" /> :
+                           meal.name.toLowerCase().includes("lunch") ? <Apple className="w-6 h-6 text-[#04101B]" /> :
+                           meal.name.toLowerCase().includes("dinner") ? <Utensils className="w-6 h-6 text-[#04101B]" /> : <Utensils className="w-6 h-6 text-[#04101B]" />}
                         </div>
                         <div className="flex-1">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h4 className="mb-1">{meal.name}</h4>
-                              <div className="flex items-center gap-3 text-slate-500">
+                              <h4 className="mb-1 text-[#DFF2D4] font-semibold">{meal.name}</h4>
+                              <div className="flex items-center gap-3 text-[#DFF2D4]/70">
                                 <span className="flex items-center gap-1">
                                   <Clock className="w-3 h-3" />
                                   {meal.time}
                                 </span>
-                                <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-slate-700 border-0">
+                                <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(226,241,99,0.4)]">
                                   {meal.calories} kcal
                                 </Badge>
                                 {meal.protein > 0 && (
-                                  <Badge className="rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-slate-700 border-0">
+                                  <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#DFF2D4] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(107,241,120,0.4)]">
                                     {meal.protein}g protein
                                   </Badge>
                                 )}
@@ -487,16 +415,16 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                               variant="ghost"
                               size="icon"
                               onClick={() => handleDeleteMeal(meal.id)}
-                              className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-[#FF006E]/20"
                             >
-                              <Trash2 className="w-4 h-4 text-slate-400 hover:text-red-500" />
+                              <Trash2 className="w-4 h-4 text-[#DFF2D4]/60 hover:text-[#FF006E]" />
                             </Button>
                           </div>
 
                           <div className="space-y-1">
                             {meal.items.map((item, i) => (
-                              <div key={i} className="flex items-center gap-2 text-slate-600">
-                                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400" />
+                              <div key={i} className="flex items-center gap-2 text-[#DFF2D4]/80">
+                                <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163]" />
                                 <span>{item}</span>
                               </div>
                             ))}
@@ -528,8 +456,8 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           transition={{ delay: 0.7 }}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3>Suggested Meals</h3>
-            <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-emerald-100 text-slate-700 border-0">
+            <h3 className="text-gradient-modern text-glow text-lg font-bold">Suggested Meals</h3>
+            <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
               {remaining.calories > 0 ? `${remaining.calories} kcal remaining` : "Goal reached!"}
             </Badge>
           </div>
@@ -543,30 +471,30 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.8 + index * 0.1 }}
                 >
-                  <Card className="p-6 rounded-3xl border-white/20 bg-white/60 backdrop-blur-xl shadow-xl hover:shadow-2xl transition-shadow">
+                  <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
                     <div className="flex items-start gap-4 mb-4">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-3xl">
-                        {meal.emoji}
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green">
+                        <Utensils className="w-6 h-6 text-[#04101B]" />
                       </div>
                       <div className="flex-1">
-                        <h4 className="mb-1">{meal.name}</h4>
-                        <p className="text-slate-500 flex items-center gap-1">
+                        <h4 className="mb-1 text-[#DFF2D4] font-semibold">{meal.name}</h4>
+                        <p className="text-[#DFF2D4]/70 flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {meal.time}
                         </p>
                       </div>
                       <div className="text-right">
-                        <Badge className="rounded-full bg-gradient-to-r from-amber-100 to-orange-100 text-slate-700 border-0 mb-1">
+                        <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 mb-1 font-semibold shadow-[0_0_10px_rgba(226,241,99,0.4)]">
                           {meal.calories} kcal
                         </Badge>
-                        <div className="text-sm text-slate-500">{meal.protein}g protein</div>
+                        <div className="text-sm text-[#DFF2D4]/70 font-medium">{meal.protein}g protein</div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       {meal.items.map((item, i) => (
-                        <div key={i} className="flex items-center gap-2 text-slate-600">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-400" />
+                        <div key={i} className="flex items-center gap-2 text-[#DFF2D4]/80">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163]" />
                           <span>{item}</span>
                         </div>
                       ))}
@@ -576,10 +504,12 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
               ))}
             </div>
           ) : (
-            <Card className="p-8 rounded-3xl border-white/20 bg-gradient-to-br from-emerald-50 to-teal-50 backdrop-blur-xl text-center">
-              <div className="text-6xl mb-4">🎉</div>
-              <h4 className="mb-2">Daily Goal Reached!</h4>
-              <p className="text-slate-600">
+            <Card className="modern-card glass-card-intense p-8 rounded-3xl hover-lift overflow-hidden text-center">
+              <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center shadow-[0_0_20px_rgba(107,241,120,0.4)]">
+                <Sparkles className="w-10 h-10 text-[#04101B]" />
+              </div>
+              <h4 className="mb-2 text-[#6BF178] font-bold">Daily Goal Reached!</h4>
+              <p className="text-[#DFF2D4]/80">
                 You've met your calorie target for today. Great job!
               </p>
             </Card>
@@ -593,14 +523,14 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           transition={{ delay: 1 }}
           className="mt-6"
         >
-          <Card className="p-6 rounded-3xl border-white/20 bg-gradient-to-br from-sky-50 to-cyan-50 backdrop-blur-xl">
+          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-sky-400 to-cyan-400 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] flex items-center justify-center flex-shrink-0 glow-effect-green pulse-modern">
+                <TrendingUp className="w-6 h-6 text-[#04101B]" />
               </div>
               <div>
-                <h4 className="mb-2">Nutrition Tip</h4>
-                <p className="text-slate-600">
+                <h4 className="mb-2 text-gradient-modern text-glow font-bold">Nutrition Tip</h4>
+                <p className="text-[#DFF2D4]/80">
                   {remaining.protein > 40
                     ? "You still need more protein today. Try adding lean meats, fish, or a protein shake to your next meal."
                     : remaining.calories > 800

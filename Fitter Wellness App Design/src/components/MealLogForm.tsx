@@ -5,7 +5,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Plus, X, Clock, Utensils } from "lucide-react";
+import { Plus, X, Clock, Utensils, Coffee, Apple, Sandwich, Moon } from "lucide-react";
 
 interface MealLog {
   id: string;
@@ -68,10 +68,10 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
   };
 
   const quickMeals = [
-    { name: "Breakfast", emoji: "🍳", calories: "400-500" },
-    { name: "Lunch", emoji: "🥗", calories: "500-700" },
-    { name: "Snack", emoji: "🍎", calories: "150-250" },
-    { name: "Dinner", emoji: "🍽️", calories: "500-650" },
+    { name: "Breakfast", icon: Coffee, calories: "400-500" },
+    { name: "Lunch", icon: Sandwich, calories: "500-700" },
+    { name: "Snack", icon: Apple, calories: "150-250" },
+    { name: "Dinner", icon: Moon, calories: "500-650" },
   ];
 
   if (!isOpen) {
@@ -82,7 +82,7 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
       >
         <Button
           onClick={() => setIsOpen(true)}
-          className="w-full rounded-3xl bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 shadow-lg h-14"
+          className="w-full rounded-3xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:from-[#6BF178] hover:to-[#E2F163] shadow-[0_0_20px_rgba(107,241,120,0.4)] h-14 text-[#04101B] font-bold"
         >
           <Plus className="w-5 h-5 mr-2" />
           Log a Meal
@@ -96,45 +96,48 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
     >
-      <Card className="p-6 rounded-3xl border-white/20 bg-white/90 backdrop-blur-xl shadow-2xl">
+      <Card className="modern-card glass-card-intense p-6 rounded-3xl overflow-hidden">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 flex items-center justify-center">
-              <Utensils className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green">
+              <Utensils className="w-6 h-6 text-[#04101B]" />
             </div>
             <div>
-              <h4 className="text-slate-900">Log Your Meal</h4>
-              <p className="text-slate-500">What did you eat?</p>
+              <h4 className="text-[#DFF2D4] font-bold">Log Your Meal</h4>
+              <p className="text-[#DFF2D4]/70">What did you eat?</p>
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsOpen(false)}
-            className="rounded-full"
+            className="rounded-full hover:bg-[#FF006E]/20"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-[#DFF2D4]" />
           </Button>
         </div>
 
         {/* Quick meal selection */}
         <div className="mb-6">
-          <Label className="mb-2 block text-slate-700">Quick Select</Label>
+          <Label className="mb-2 block text-[#DFF2D4] font-semibold">Quick Select</Label>
           <div className="grid grid-cols-4 gap-2">
-            {quickMeals.map((meal) => (
-              <button
-                key={meal.name}
-                onClick={() => setMealName(meal.name)}
-                className={`p-3 rounded-2xl transition-all ${
-                  mealName === meal.name
-                    ? "bg-gradient-to-br from-amber-100 to-orange-100 border-2 border-amber-300"
-                    : "bg-slate-50 border border-slate-200 hover:bg-slate-100"
-                }`}
-              >
-                <div className="text-2xl mb-1">{meal.emoji}</div>
-                <div className="text-xs text-slate-700">{meal.name}</div>
-              </button>
-            ))}
+            {quickMeals.map((meal) => {
+              const Icon = meal.icon;
+              return (
+                <button
+                  key={meal.name}
+                  onClick={() => setMealName(meal.name)}
+                  className={`p-3 rounded-2xl transition-all border-2 ${
+                    mealName === meal.name
+                      ? "bg-gradient-to-br from-[#6BF178]/40 to-[#E2F163]/40 border-[#6BF178] shadow-[0_0_15px_rgba(107,241,120,0.4)]"
+                      : "bg-[#0a1f33]/50 border-[#6BF178]/20 hover:bg-[#0a1f33]/80 hover:border-[#6BF178]/40"
+                  }`}
+                >
+                  <Icon className={`w-6 h-6 mx-auto mb-1 ${mealName === meal.name ? 'text-[#6BF178]' : 'text-[#DFF2D4]/60'}`} />
+                  <div className={`text-xs ${mealName === meal.name ? 'text-[#DFF2D4] font-semibold' : 'text-[#DFF2D4]/70'}`}>{meal.name}</div>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -142,7 +145,7 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
           {/* Meal name and time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="mealName" className="mb-2 block text-slate-700">
+              <Label htmlFor="mealName" className="mb-2 block text-[#DFF2D4] font-semibold">
                 Meal Name
               </Label>
               <Input
@@ -150,12 +153,12 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                 value={mealName}
                 onChange={(e) => setMealName(e.target.value)}
                 placeholder="e.g. Lunch"
-                className="rounded-2xl border-slate-200 bg-white/50"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="mealTime" className="mb-2 block text-slate-700">
+              <Label htmlFor="mealTime" className="mb-2 block text-[#DFF2D4] font-semibold">
                 <Clock className="w-3 h-3 inline mr-1" />
                 Time
               </Label>
@@ -164,7 +167,7 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                 type="time"
                 value={mealTime}
                 onChange={(e) => setMealTime(e.target.value)}
-                className="rounded-2xl border-slate-200 bg-white/50"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4]"
                 required
               />
             </div>
@@ -173,7 +176,7 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
           {/* Nutrition info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="calories" className="mb-2 block text-slate-700">
+              <Label htmlFor="calories" className="mb-2 block text-[#DFF2D4] font-semibold">
                 Calories (kcal)
               </Label>
               <Input
@@ -182,12 +185,12 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
                 placeholder="450"
-                className="rounded-2xl border-slate-200 bg-white/50"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50"
                 required
               />
             </div>
             <div>
-              <Label htmlFor="protein" className="mb-2 block text-slate-700">
+              <Label htmlFor="protein" className="mb-2 block text-[#DFF2D4] font-semibold">
                 Protein (g) - Optional
               </Label>
               <Input
@@ -196,14 +199,14 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                 value={protein}
                 onChange={(e) => setProtein(e.target.value)}
                 placeholder="25"
-                className="rounded-2xl border-slate-200 bg-white/50"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50"
               />
             </div>
           </div>
 
           {/* Food items */}
           <div>
-            <Label htmlFor="foodItem" className="mb-2 block text-slate-700">
+            <Label htmlFor="foodItem" className="mb-2 block text-[#DFF2D4] font-semibold">
               Food Items
             </Label>
             <div className="flex gap-2">
@@ -213,15 +216,15 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                 onChange={(e) => setCurrentItem(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleAddItem())}
                 placeholder="e.g. Grilled chicken"
-                className="rounded-2xl border-slate-200 bg-white/50"
+                className="rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50"
               />
               <Button
                 type="button"
                 onClick={handleAddItem}
                 variant="outline"
-                className="rounded-2xl"
+                className="rounded-2xl border-[#6BF178]/30 hover:bg-[#6BF178]/20"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-[#6BF178]" />
               </Button>
             </div>
           </div>
@@ -234,14 +237,14 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-2 p-3 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50"
+                  className="flex items-center gap-2 p-3 rounded-2xl bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/20 border border-[#6BF178]/30"
                 >
-                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-amber-400 to-orange-400" />
-                  <span className="flex-1 text-slate-700">{item}</span>
+                  <div className="w-2 h-2 rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163]" />
+                  <span className="flex-1 text-[#DFF2D4]">{item}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveItem(index)}
-                    className="text-slate-400 hover:text-slate-600"
+                    className="text-[#DFF2D4]/40 hover:text-[#FF006E] transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -256,14 +259,14 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
               type="button"
               variant="outline"
               onClick={() => setIsOpen(false)}
-              className="flex-1 rounded-2xl"
+              className="flex-1 rounded-2xl border-[#6BF178]/30 text-[#DFF2D4] hover:bg-[#FF006E]/20 hover:border-[#FF006E]/50"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={!mealName || !calories || items.length === 0}
-              className="flex-1 rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 hover:from-amber-500 hover:to-orange-500 disabled:opacity-50"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:from-[#6BF178] hover:to-[#E2F163] disabled:opacity-50 text-[#04101B] font-bold shadow-[0_0_20px_rgba(107,241,120,0.4)]"
             >
               Add Meal
             </Button>
