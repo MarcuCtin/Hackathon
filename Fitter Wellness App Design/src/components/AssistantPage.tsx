@@ -30,9 +30,10 @@ interface Message {
 
 interface AssistantPageProps {
   onProfileClick?: () => void;
+  onDataUpdate?: () => void;
 }
 
-export function AssistantPage({ onProfileClick }: AssistantPageProps) {
+export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPageProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
@@ -99,9 +100,98 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
       // Call backend AI endpoint
       const { data } = await api.chat([...conversationHistory, { role: "user", content: textToSend }]);
 
+      // Extract reply message (handle both string and object responses)
+      let replyText: string = "";
+      
+      // Check if data.reply exists and has a message field
+      if (data.reply) {
+        if (typeof data.reply === 'string') {
+          replyText = data.reply;
+        } else if (typeof data.reply === 'object' && data.reply !== null) {
+          const replyObj = data.reply as any;
+          // Try to get the message field
+          replyText = replyObj.message || replyObj.text || JSON.stringify(replyObj);
+        }
+      }
+      
+      // If still no text, try to extract from the data object itself
+      if (!replyText && (data as any).message) {
+        replyText = typeof (data as any).message === 'string' ? (data as any).message : String((data as any).message);
+      }
+      
+      // Fallback to empty string if still no text
+      if (!replyText) {
+        replyText = "I received your message but couldn't generate a response. Please try again.";
+      }
+
+      // Process actions from AI response
+      if (data.actions && data.actions.length > 0) {
+        for (const action of data.actions) {
+          try {
+            switch (action.type) {
+              case "water_log":
+                await api.createLog({
+                  type: "hydration",
+                  value: action.amount || 1,
+                  unit: action.unit || "glasses",
+                  date: new Date().toISOString(),
+                });
+                toast.success(`✅ Logged ${action.amount || 1} ${action.unit || "glasses"} of water`);
+                break;
+              
+              case "sleep_log":
+                await api.createLog({
+                  type: "sleep",
+                  value: action.hours || 0,
+                  unit: "hours",
+                  date: new Date().toISOString(),
+                });
+                toast.success(`✅ Logged ${action.hours || 0} hours of sleep`);
+                break;
+              
+              case "workout_log":
+                await api.createLog({
+                  type: "workout",
+                  value: action.calories || (action.minutes || 0) * 10, // Estimate calories if not provided
+                  unit: action.calories ? "calories" : "minutes",
+                  note: action.category,
+                  date: new Date().toISOString(),
+                });
+                toast.success(`✅ Logged workout`);
+                break;
+              
+              case "meal_log":
+                const mealType = (action.category === "breakfast" || action.category === "lunch" || action.category === "dinner" || action.category === "snack") 
+                  ? action.category 
+                  : "snack";
+                await api.logMeal({
+                  date: new Date().toISOString(),
+                  mealType: mealType as "breakfast" | "lunch" | "dinner" | "snack",
+                  items: [{
+                    name: action.notes || "Meal",
+                    calories: action.calories || 400,
+                    protein: Math.round((action.calories || 400) * 0.15), // Estimate protein
+                    carbs: Math.round((action.calories || 400) * 0.5),
+                    fat: Math.round((action.calories || 400) * 0.35),
+                  }],
+                });
+                toast.success(`✅ Logged ${mealType}`);
+                break;
+            }
+          } catch (error) {
+            console.error(`Failed to process action ${action.type}:`, error);
+          }
+        }
+        
+        // Refresh dashboard data if callback provided
+        if (onDataUpdate) {
+          onDataUpdate();
+        }
+      }
+
       const aiMessage: Message = {
         id: messages.length + 2,
-        text: data.reply,
+        text: replyText,
         sender: "ai",
         timestamp: new Date(),
         suggestions: ["Tell me more", "What else?", "Create a plan"],
@@ -136,69 +226,22 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Glowing Orbs Background - Fixed position */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 0}}>
-        <div className="glowing-orb glowing-orb-green" style={{position: 'absolute'}}></div>
-        <div className="glowing-orb glowing-orb-purple" style={{position: 'absolute', background: 'radial-gradient(circle, #A855F7, transparent)', width: '450px', height: '450px', top: '20%', right: '10%'}}></div>
-        <div className="glowing-orb glowing-orb-cyan" style={{position: 'absolute'}}></div>
-      </div>
-      
       {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
-        <div className="container mx-auto px-6 py-5">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <FitterLogo size={40} />
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
-              </div>
-              <div>
-                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">AI Assistant</h3>
-                <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness companion</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-bold shadow-[0_0_20px_rgba(107,241,120,0.5)] px-4 py-1.5">
-                <Bot className="w-4 h-4 mr-1.5" />
-                Online
-              </Badge>
-              <button 
-                onClick={onProfileClick} 
-                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
-              >
-                <UserAvatar size={40} userName="Alex Thompson" />
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
-              </button>
-            </div>
+            <FitterLogo size={36} />
+            <button 
+              onClick={onProfileClick} 
+              className="focus:outline-none hover:scale-110 transition-transform duration-300"
+            >
+              <UserAvatar size={40} userName="Alex Thompson" />
+            </button>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-6 py-6 relative z-10">
-        {/* Quick Actions */}
-        <div className="mb-6">
-          <p className="text-[#DFF2D4] mb-3 font-semibold">Quick Actions</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {quickActions.map((action) => {
-              const Icon = action.icon;
-              return (
-                <button
-                  key={action.label}
-                  onClick={() => handleQuickAction(action.prompt)}
-                  className="p-4 rounded-2xl bg-[#04101B]/60 backdrop-blur-xl border border-[#6BF178]/30 hover:shadow-[0_0_20px_rgba(107,241,120,0.3)] hover:border-[#6BF178] transition-all group"
-                >
-                  <div
-                    className={`w-12 h-12 mx-auto mb-2 rounded-2xl bg-gradient-to-r ${action.gradient} flex items-center justify-center`}
-                  >
-                    <Icon className="w-6 h-6 text-[#04101B]" />
-                  </div>
-                  <p className="text-[#DFF2D4] font-medium">{action.label}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* Chat Messages */}
         <Card className="modern-card glass-card-intense rounded-3xl overflow-hidden">
           <div className="flex flex-col relative" style={{height: 'calc(100vh - 350px)', minHeight: '500px', maxHeight: 'calc(100vh - 350px)'}}>
@@ -235,7 +278,7 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
                           : "bg-[#0a1f33]/95 text-[#DFF2D4] border-[#6BF178]/40 shadow-[0_0_15px_rgba(107,241,120,0.3)]"
                       }`}
                     >
-                      <p className="break-words text-sm leading-relaxed">{message.text}</p>
+                      <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                     </div>
 
                     {/* Suggestions */}
@@ -297,10 +340,34 @@ export function AssistantPage({ onProfileClick }: AssistantPageProps) {
               >
                 <Send className="w-5 h-5" />
               </Button>
+              </div>
             </div>
           </div>
-          </div>
         </Card>
+
+        {/* Quick Actions - Compact version */}
+        <div className="mt-4">
+          <p className="text-[#DFF2D4]/70 mb-2 text-xs font-medium">Quick Actions</p>
+          <div className="flex flex-wrap gap-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.label}
+                  onClick={() => handleQuickAction(action.prompt)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#04101B]/60 backdrop-blur-xl border border-[#6BF178]/30 hover:shadow-[0_0_15px_rgba(107,241,120,0.3)] hover:border-[#6BF178] transition-all group"
+                >
+                  <div
+                    className={`w-6 h-6 rounded-lg bg-gradient-to-r ${action.gradient} flex items-center justify-center flex-shrink-0`}
+                  >
+                    <Icon className="w-3.5 h-3.5 text-[#04101B]" />
+                  </div>
+                  <p className="text-[#DFF2D4] text-xs font-medium">{action.label}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

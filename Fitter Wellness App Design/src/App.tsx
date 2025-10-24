@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FitterLogo } from "./components/FitterLogo";
 import { LifestyleIcons } from "./components/LifestyleIcons";
 import { OnboardingOrb } from "./components/OnboardingOrb";
@@ -11,17 +11,87 @@ import { NutritionPage } from "./components/NutritionPage";
 import { HistoryPage } from "./components/HistoryPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { DayInfoPage } from "./components/DayInfoPage";
+import { LoginPage } from "./components/LoginPage";
+import { RegisterPage } from "./components/RegisterPage";
 import { BottomNav } from "./components/BottomNav";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
 import { Badge } from "./components/ui/badge";
 import { Sparkles, Heart, Brain, Zap } from "lucide-react";
 import { ActivityProvider } from "./context/ActivityContext";
+import { api } from "./lib/api";
 
-type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
+type AppView = "landing" | "login" | "register" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("landing");
+  const [currentParams, setCurrentParams] = useState<any>({});
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = api.getToken();
+        if (token) {
+          // Try to validate token with backend
+          const response = await api.getMe();
+          if (response.success) {
+            // Token is valid, redirect to dashboard
+            setCurrentView("dashboard");
+          } else {
+            // Token is invalid, clear it
+            api.clearToken();
+            setCurrentView("landing");
+          }
+        } else {
+          // No token, stay on landing
+          setCurrentView("landing");
+        }
+      } catch (error) {
+        // Error validating token, clear it
+        console.error("Auth check failed:", error);
+        api.clearToken();
+        setCurrentView("landing");
+      } finally {
+        setIsCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  // Show loading while checking auth
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-modern flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 animate-spin rounded-full border-4 border-[#6BF178] border-r-transparent mx-auto mb-4"></div>
+          <p className="text-[#DFF2D4]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Login page
+  if (currentView === "login") {
+    return (
+      <LoginPage
+        onLoginSuccess={() => setCurrentView("dashboard")}
+        onRegisterClick={() => setCurrentView("register")}
+      />
+    );
+  }
+
+  // Register page
+  if (currentView === "register") {
+    return (
+      <RegisterPage
+        onRegisterSuccess={() => setCurrentView("dashboard")}
+        onLoginClick={() => setCurrentView("login")}
+      />
+    );
+  }
 
   if (currentView === "onboarding") {
     return (
@@ -71,13 +141,21 @@ export default function App() {
             <a href="#icons" className="text-[#DFF2D4] hover:text-[#6BF178] transition-colors">
               Lifestyle
             </a>
-            <Button 
-              onClick={() => setCurrentView("assistant")}
-              variant="outline"
-              className="rounded-full border-[#6BF178] text-[#6BF178] hover:bg-[#6BF178] hover:text-[#04101B]"
-            >
-              Try App
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => setCurrentView("login")}
+                variant="outline"
+                className="rounded-full border-[#6BF178] text-[#6BF178] hover:bg-[#6BF178] hover:text-[#04101B]"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => setCurrentView("register")}
+                className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50"
+              >
+                Get Started
+              </Button>
+            </div>
             <Button 
               onClick={() => setCurrentView("onboarding")}
               className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_20px_rgba(107,241,120,0.5)] text-[#04101B] font-semibold"

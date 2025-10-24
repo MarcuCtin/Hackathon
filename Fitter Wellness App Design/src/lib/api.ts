@@ -561,6 +561,212 @@ class ApiClient {
       };
     }>(`/workouts/plans/${id}`);
   }
+
+  // Daily Tasks
+  async getDailyTasks(day?: string) {
+    const query = day ? `?day=${day}` : "";
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        userId: string;
+        title: string;
+        scheduledTime: string;
+        date: string;
+        category: "wellness" | "nutrition" | "exercise" | "supplements" | "custom";
+        completed: boolean;
+        completedAt?: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/daily-tasks${query}`);
+  }
+
+  async createDailyTask(task: {
+    title: string;
+    scheduledTime: string;
+    date: string;
+    category?: "wellness" | "nutrition" | "exercise" | "supplements" | "custom";
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/daily-tasks", {
+      method: "POST",
+      body: JSON.stringify(task),
+    });
+  }
+
+  async completeDailyTask(id: string, completed: boolean) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/daily-tasks/${id}/complete`, {
+      method: "PATCH",
+      body: JSON.stringify({ completed }),
+    });
+  }
+
+  async deleteDailyTask(id: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/daily-tasks/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // Achievements
+  async getAchievements(params?: {
+    from?: string;
+    to?: string;
+    category?: string;
+  }) {
+    const query = params ? new URLSearchParams(params as any).toString() : "";
+    const suffix = query ? `?${query}` : "";
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        userId: string;
+        title: string;
+        description: string;
+        category: "nutrition" | "exercise" | "sleep" | "wellness" | "streak" | "milestone";
+        date: string;
+        icon?: string;
+        progress?: number;
+        target?: number;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/achievements${suffix}`);
+  }
+
+  async getWeeklyAchievements() {
+    return this.request<{
+      success: boolean;
+      data: Array<any>;
+    }>("/achievements/weekly-summary");
+  }
+
+  async createAchievement(achievement: {
+    title: string;
+    description: string;
+    category: "nutrition" | "exercise" | "sleep" | "wellness" | "streak" | "milestone";
+    date: string;
+    icon?: string;
+    progress?: number;
+    target?: number;
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/achievements", {
+      method: "POST",
+      body: JSON.stringify(achievement),
+    });
+  }
+
+  // Supplements
+  async getSupplements(params?: {
+    addedToPlan?: boolean;
+    category?: string;
+  }) {
+    const query = params ? new URLSearchParams(params as any).toString() : "";
+    const suffix = query ? `?${query}` : "";
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        userId: string;
+        name: string;
+        benefit: string;
+        description: string;
+        dosage?: string;
+        frequency?: string;
+        icon?: string;
+        category?: "recovery" | "immunity" | "energy" | "focus" | "heart" | "general";
+        addedToPlan: boolean;
+        nutrients?: Record<string, number>;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>(`/supplements${suffix}`);
+  }
+
+  async createSupplement(supplement: {
+    name: string;
+    benefit: string;
+    description: string;
+    dosage?: string;
+    frequency?: string;
+    icon?: string;
+    category?: "recovery" | "immunity" | "energy" | "focus" | "heart" | "general";
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/supplements", {
+      method: "POST",
+      body: JSON.stringify(supplement),
+    });
+  }
+
+  async addSupplementToPlan(id: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/supplements/${id}/add-to-plan`, {
+      method: "PATCH",
+    });
+  }
+
+  async deleteSupplement(id: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/supplements/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async logSupplement(log: {
+    supplementId: string;
+    dosage?: string;
+    notes?: string;
+    date?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/supplements/log", {
+      method: "POST",
+      body: JSON.stringify(log),
+    });
+  }
+
+  async getSupplementNutritionAnalysis() {
+    return this.request<{
+      success: boolean;
+      data: {
+        analysis: Array<{
+          nutrient: string;
+          recommended: number;
+          fromFood: number;
+          fromSupplements: number;
+          total: number;
+          percentage: number;
+          deficient: boolean;
+          deficiencyGap: number;
+        }>;
+        supplementsTaken: Array<{
+          name: string;
+          dosage?: string;
+          timestamp: string;
+        }>;
+      };
+    }>("/supplements/nutrition-analysis");
+  }
 }
 
 export const api = new ApiClient();

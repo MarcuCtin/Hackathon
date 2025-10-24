@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -8,6 +8,8 @@ import { NutritionRecommender } from "./NutritionRecommender";
 import { MealLogForm } from "./MealLogForm";
 import { UserAvatar } from "./UserAvatar";
 import { Utensils, Droplets, Zap, TrendingUp, Apple, Coffee, Clock, ChevronRight, Trash2, Sparkles } from "lucide-react";
+import { api } from "../lib/api";
+import { toast } from "sonner";
 
 interface MealLog {
   id: string;
@@ -33,16 +35,39 @@ interface NutritionPageProps {
 }
 
 export function NutritionPage({ onProfileClick }: NutritionPageProps) {
-  const [loggedMeals, setLoggedMeals] = useState<MealLog[]>([
-    {
-      id: "1",
-      name: "Breakfast",
-      time: "08:30",
-      calories: 450,
-      protein: 28,
-      items: ["Greek yogurt with berries", "Whole grain toast", "Scrambled eggs"],
-    },
-  ]);
+  const [loggedMeals, setLoggedMeals] = useState<MealLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch nutrition logs from backend
+  useEffect(() => {
+    const fetchNutritionLogs = async () => {
+      try {
+        setLoading(true);
+        const today = new Date().toISOString(); // Full ISO datetime format
+        const response = await api.getNutritionLogs(today);
+        
+        if (response.success && response.data) {
+          // Transform backend data to frontend format
+          const meals: MealLog[] = response.data.map((log: any) => ({
+            id: log._id,
+            name: log.mealType.charAt(0).toUpperCase() + log.mealType.slice(1),
+            time: new Date(log.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            calories: log.total.calories,
+            protein: log.total.protein,
+            items: log.items.map((item: any) => item.name),
+          }));
+          setLoggedMeals(meals);
+        }
+      } catch (error) {
+        console.error("Failed to fetch nutrition logs:", error);
+        toast.error("Failed to load nutrition data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNutritionLogs();
+  }, []);
 
   // Daily targets
   const dailyTargets = {
@@ -185,12 +210,72 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
   // Get next meal
   const nextMeal = suggestedMeals[0];
 
-  const handleAddMeal = (meal: MealLog) => {
-    setLoggedMeals([...loggedMeals, meal]);
+  const handleAddMeal = async (meal: MealLog) => {
+    try {
+      // Map meal name to backend mealType
+      const mealTypeMap: Record<string, "breakfast" | "lunch" | "dinner" | "snack"> = {
+        "Breakfast": "breakfast",
+        "Lunch": "lunch",
+        "Dinner": "dinner",
+        "Snack": "snack",
+      };
+      
+      const mealType = mealTypeMap[meal.name] || "snack";
+      
+      // Calculate nutrition values
+      const caloriesPerItem = Math.round(meal.calories / meal.items.length);
+      const proteinPerItem = Math.round(meal.protein / meal.items.length);
+      
+      // Transform to backend format
+      const backendMeal = {
+        date: new Date().toISOString(),
+        mealType,
+        items: meal.items.map(item => ({
+          name: item,
+          calories: caloriesPerItem,
+          protein: proteinPerItem,
+          carbs: Math.round(caloriesPerItem * 0.4 / 4), // Approximate carbs
+          fat: Math.round(caloriesPerItem * 0.2 / 9), // Approximate fat
+        })),
+      };
+      
+      // Save to backend
+      const response = await api.logMeal(backendMeal);
+      
+      if (response.success) {
+        toast.success("Meal logged successfully!");
+        // Refresh nutrition logs
+        const today = new Date().toISOString().split('T')[0];
+        const logsResponse = await api.getNutritionLogs(today);
+        
+        if (logsResponse.success && logsResponse.data) {
+          const meals: MealLog[] = logsResponse.data.map((log: any) => ({
+            id: log._id,
+            name: log.mealType.charAt(0).toUpperCase() + log.mealType.slice(1),
+            time: new Date(log.date).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            calories: log.total.calories,
+            protein: log.total.protein,
+            items: log.items.map((item: any) => item.name),
+          }));
+          setLoggedMeals(meals);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to log meal:", error);
+      toast.error("Failed to log meal");
+    }
   };
 
-  const handleDeleteMeal = (id: string) => {
-    setLoggedMeals(loggedMeals.filter((m) => m.id !== id));
+  const handleDeleteMeal = async (id: string) => {
+    try {
+      // TODO: Add delete endpoint to backend
+      // For now, just remove from local state
+      setLoggedMeals(loggedMeals.filter((m) => m.id !== id));
+      toast.success("Meal removed");
+    } catch (error) {
+      console.error("Failed to delete meal:", error);
+      toast.error("Failed to delete meal");
+    }
   };
 
   const nutritionStats = [
@@ -233,14 +318,7 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
-      {/* Glowing Orbs Background - Fixed position */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 0}}>
-        <div className="glowing-orb glowing-orb-green" style={{position: 'absolute'}}></div>
-        <div className="glowing-orb glowing-orb-purple" style={{position: 'absolute', background: 'radial-gradient(circle, #A855F7, transparent)', width: '450px', height: '450px', top: '20%', right: '10%'}}></div>
-        <div className="glowing-orb glowing-orb-cyan" style={{position: 'absolute'}}></div>
-      </div>
-      
+    <div className="min-h-screen bg-gradient-modern relative pb-24">
       {/* Header with Next Meal */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-5">

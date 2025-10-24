@@ -17,7 +17,8 @@ import {
   Clock,
   MessageSquare,
   Target,
-  Zap
+  Zap,
+  Sparkles
 } from "lucide-react";
 import { api } from "../lib/api";
 import { toast } from "sonner";
@@ -100,19 +101,22 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent"></div>
+      <div className="flex h-full items-center justify-center bg-gradient-modern">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-solid border-[#6BF178] border-r-transparent"></div>
       </div>
     );
   }
 
   if (!data) {
     return (
-      <div className="flex h-full items-center justify-center">
+      <div className="flex h-full items-center justify-center bg-gradient-modern">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">No data found</h2>
-          <p className="text-slate-500 mb-4">No wellness data available for this day.</p>
-          <Button onClick={onBack}>
+          <h2 className="text-xl font-semibold text-[#DFF2D4] mb-2">No data found</h2>
+          <p className="text-[#DFF2D4]/70 mb-4">No wellness data available for this day.</p>
+          <Button 
+            onClick={onBack}
+            className="bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 shadow-[0_0_20px_rgba(107,241,120,0.5)] hover:shadow-[0_0_30px_rgba(107,241,120,0.7)]"
+          >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to History
           </Button>
@@ -125,73 +129,82 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
   const dayName = format(parsedDate, 'EEEE');
   const formattedDate = format(parsedDate, 'MMMM d, yyyy');
 
-  // Calculate wellness color
-  const getWellnessColor = (score: number) => {
-    if (score >= 80) return "text-green-600 bg-green-50";
-    if (score >= 60) return "text-yellow-600 bg-yellow-50";
-    return "text-red-600 bg-red-50";
-  };
-
-  const getWellnessEmoji = (score: number) => {
-    if (score >= 80) return "🌟";
-    if (score >= 60) return "😊";
-    return "😴";
+  const getWellnessIcon = (score: number) => {
+    if (score >= 80) return <Sparkles className="w-6 h-6 text-[#04101B]" />;
+    if (score >= 60) return <TrendingUp className="w-6 h-6 text-[#04101B]" />;
+    return <Moon className="w-6 h-6 text-[#04101B]" />;
   };
 
   return (
-    <div className="flex h-full w-full flex-col bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+    <div className="flex h-full w-full flex-col bg-gradient-modern p-6 overflow-y-auto">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="relative z-10 mb-6 flex items-center justify-between sticky top-0 bg-[#04101B]/80 backdrop-blur-md p-4 rounded-2xl border border-[#6BF178]/30 shadow-[0_8px_32px_rgba(107,241,120,0.2)]">
         <div className="flex items-center gap-4">
           <Button 
             variant="ghost" 
             onClick={onBack}
-            className="text-slate-600 hover:text-slate-800"
+            className="text-[#DFF2D4] hover:text-[#6BF178] hover:bg-[#6BF178]/10 border border-[#6BF178]/30"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-slate-800">{dayName}</h1>
-            <p className="text-slate-500">{formattedDate}</p>
+            <h1 className="text-2xl font-bold text-gradient-modern text-glow">{dayName}</h1>
+            <p className="text-[#DFF2D4]/70">{formattedDate}</p>
           </div>
         </div>
-        <Badge className={`${getWellnessColor(data.wellness.score)} border-0 text-lg px-4 py-2`}>
-          {getWellnessEmoji(data.wellness.score)} {data.wellness.score}% Wellness Score
+        <Badge className={`rounded-full border-0 shadow-[0_0_20px_rgba(107,241,120,0.5)] bg-gradient-to-r text-lg px-4 py-2 ${
+          data.wellness.score >= 80 ? 'from-[#6BF178] to-[#E2F163]' :
+          data.wellness.score >= 60 ? 'from-[#E2F163] to-[#6BF178]' :
+          'from-[#0a1f33] to-[#0a1f33]/80'
+        }`}>
+          <div className="flex items-center gap-2 text-[#04101B]">
+            {getWellnessIcon(data.wellness.score)}
+            <span className="font-semibold">{data.wellness.score}%</span>
+          </div>
         </Badge>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid flex-grow grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="relative z-10 grid flex-grow grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Wellness Overview */}
-        <Card className="bg-white/80 shadow-lg backdrop-blur-sm">
+        <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-yellow-500" />
+            <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+              <Zap className="w-5 h-5 text-[#E2F163]" />
               Wellness Overview
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Energy Level</span>
-                <span className="font-semibold">{data.wellness.energyLevel}%</span>
+                <span className="text-sm text-[#DFF2D4]">Energy Level</span>
+                <span className="font-semibold text-[#6BF178]">{data.wellness.energyLevel}%</span>
               </div>
-              <Progress value={data.wellness.energyLevel} className="h-2" />
+              <div className="relative h-3 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
+                <div
+                  className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${data.wellness.energyLevel}%`,
+                    background: 'linear-gradient(90deg, #6BF178, #E2F163)',
+                    boxShadow: '0 0 15px rgba(107, 241, 120, 0.6)'
+                  }}
+                />
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Droplet className="w-4 h-4 text-blue-500" />
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#0a1f33]/50 border border-[#6BF178]/20">
+                  <Droplet className="w-5 h-5 text-[#6BF178]" />
                   <div>
-                    <div className="text-sm text-slate-600">Hydration</div>
-                    <div className="font-semibold">{data.wellness.hydration} glasses</div>
+                    <div className="text-xs text-[#DFF2D4]/70">Hydration</div>
+                    <div className="font-semibold text-[#DFF2D4]">{data.wellness.hydration} glasses</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Moon className="w-4 h-4 text-purple-500" />
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-[#0a1f33]/50 border border-[#A855F7]/20">
+                  <Moon className="w-5 h-5 text-[#A855F7]" />
                   <div>
-                    <div className="text-sm text-slate-600">Sleep</div>
-                    <div className="font-semibold">{data.wellness.sleepHours}h</div>
+                    <div className="text-xs text-[#DFF2D4]/70">Sleep</div>
+                    <div className="font-semibold text-[#DFF2D4]">{data.wellness.sleepHours}h</div>
                   </div>
                 </div>
               </div>
@@ -200,61 +213,61 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
         </Card>
 
         {/* Movement & Activity */}
-        <Card className="bg-white/80 shadow-lg backdrop-blur-sm">
+        <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="w-5 h-5 text-green-500" />
+            <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+              <Activity className="w-5 h-5 text-[#6BF178]" />
               Movement & Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Calories Burned</span>
-                <span className="font-semibold text-green-600">{data.movement.workoutCalories} kcal</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a1f33]/50 border border-[#E2F163]/20">
+                <span className="text-sm text-[#DFF2D4]">Calories Burned</span>
+                <span className="font-semibold text-[#E2F163]">{data.movement.workoutCalories} kcal</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Steps</span>
-                <span className="font-semibold">{data.movement.steps.toLocaleString()}</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a1f33]/50 border border-[#6BF178]/20">
+                <span className="text-sm text-[#DFF2D4]">Steps</span>
+                <span className="font-semibold text-[#6BF178]">{data.movement.steps.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Active Minutes</span>
-                <span className="font-semibold">{data.movement.activeMinutes} min</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a1f33]/50 border border-[#FF006E]/20">
+                <span className="text-sm text-[#DFF2D4]">Active Minutes</span>
+                <span className="font-semibold text-[#FF006E]">{data.movement.activeMinutes} min</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Nutrition Summary */}
-        <Card className="bg-white/80 shadow-lg backdrop-blur-sm">
+        <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-orange-500" />
+            <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+              <Utensils className="w-5 h-5 text-[#FF006E]" />
               Nutrition Summary
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-600">Total Calories</span>
-                <span className="font-semibold text-orange-600">{data.nutrition.totalCalories} kcal</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#0a1f33]/50 border border-[#FF006E]/20">
+                <span className="text-sm text-[#DFF2D4]">Total Calories</span>
+                <span className="font-semibold text-[#FF006E]">{data.nutrition.totalCalories} kcal</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div>
-                  <div className="text-slate-500">Protein</div>
-                  <div className="font-semibold">{data.nutrition.totalProtein}g</div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="p-2 rounded-lg bg-[#0a1f33]/50 border border-[#6BF178]/20">
+                  <div className="text-xs text-[#DFF2D4]/70">Protein</div>
+                  <div className="font-semibold text-[#DFF2D4]">{data.nutrition.totalProtein}g</div>
                 </div>
-                <div>
-                  <div className="text-slate-500">Carbs</div>
-                  <div className="font-semibold">{data.nutrition.totalCarbs}g</div>
+                <div className="p-2 rounded-lg bg-[#0a1f33]/50 border border-[#E2F163]/20">
+                  <div className="text-xs text-[#DFF2D4]/70">Carbs</div>
+                  <div className="font-semibold text-[#DFF2D4]">{data.nutrition.totalCarbs}g</div>
                 </div>
-                <div>
-                  <div className="text-slate-500">Fat</div>
-                  <div className="font-semibold">{data.nutrition.totalFat}g</div>
+                <div className="p-2 rounded-lg bg-[#0a1f33]/50 border border-[#A855F7]/20">
+                  <div className="text-xs text-[#DFF2D4]/70">Fat</div>
+                  <div className="font-semibold text-[#DFF2D4]">{data.nutrition.totalFat}g</div>
                 </div>
-                <div>
-                  <div className="text-slate-500">Meals</div>
-                  <div className="font-semibold">{data.nutrition.mealCount}</div>
+                <div className="p-2 rounded-lg bg-[#0a1f33]/50 border border-[#6BF178]/20">
+                  <div className="text-xs text-[#DFF2D4]/70">Meals</div>
+                  <div className="font-semibold text-[#DFF2D4]">{data.nutrition.mealCount}</div>
                 </div>
               </div>
             </div>
@@ -262,10 +275,10 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
         </Card>
 
         {/* Meals by Type */}
-        <Card className="lg:col-span-2 bg-white/80 shadow-lg backdrop-blur-sm">
+        <Card className="lg:col-span-2 modern-card glass-card-intense hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-500" />
+            <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+              <Target className="w-5 h-5 text-[#6BF178]" />
               Meals by Type
             </CardTitle>
           </CardHeader>
@@ -273,15 +286,15 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
             <div className="grid grid-cols-2 gap-4">
               {Object.entries(data.nutrition.mealsByType).map(([mealType, meals]) => (
                 <div key={mealType} className="space-y-2">
-                  <h4 className="font-semibold text-slate-700 capitalize">{mealType}</h4>
+                  <h4 className="font-semibold text-[#DFF2D4] capitalize">{mealType}</h4>
                   {meals.length === 0 ? (
-                    <p className="text-sm text-slate-500">No {mealType} logged</p>
+                    <p className="text-sm text-[#DFF2D4]/50">No {mealType} logged</p>
                   ) : (
                     <div className="space-y-1">
                       {meals.map((meal, index) => (
-                        <div key={index} className="text-sm bg-slate-50 p-2 rounded">
-                          <div className="font-medium">{meal.items?.map((item: any) => item.name).join(", ") || "Meal"}</div>
-                          <div className="text-slate-500">{meal.total?.calories || 0} kcal</div>
+                        <div key={index} className="text-sm bg-[#0a1f33]/50 p-2 rounded border border-[#6BF178]/20">
+                          <div className="font-medium text-[#DFF2D4]">{meal.items?.map((item: any) => item.name).join(", ") || "Meal"}</div>
+                          <div className="text-[#DFF2D4]/70">{meal.total?.calories || 0} kcal</div>
                         </div>
                       ))}
                     </div>
@@ -293,17 +306,17 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
         </Card>
 
         {/* Activities Timeline */}
-        <Card className="bg-white/80 shadow-lg backdrop-blur-sm">
+        <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-purple-500" />
+            <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+              <Clock className="w-5 h-5 text-[#A855F7]" />
               Activities Timeline
             </CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[300px]">
               {data.activities.length === 0 ? (
-                <p className="text-center text-slate-500">No activities logged</p>
+                <p className="text-center text-[#DFF2D4]/50">No activities logged</p>
               ) : (
                 <div className="space-y-3">
                   {data.activities.map((activity) => (
@@ -311,20 +324,20 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
                       key={activity.id}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-3 p-2 bg-slate-50 rounded-lg"
+                      className="flex items-center gap-3 p-3 bg-[#0a1f33]/50 rounded-xl border border-[#6BF178]/20"
                     >
-                      {activity.type === "hydration" && <Droplet className="w-4 h-4 text-blue-500" />}
-                      {activity.type === "sleep" && <Moon className="w-4 h-4 text-purple-500" />}
-                      {activity.type === "workout" && <Dumbbell className="w-4 h-4 text-green-500" />}
-                      {activity.type === "steps" && <Activity className="w-4 h-4 text-orange-500" />}
+                      {activity.type === "hydration" && <Droplet className="w-4 h-4 text-[#6BF178]" />}
+                      {activity.type === "sleep" && <Moon className="w-4 h-4 text-[#A855F7]" />}
+                      {activity.type === "workout" && <Dumbbell className="w-4 h-4 text-[#E2F163]" />}
+                      {activity.type === "steps" && <Activity className="w-4 h-4 text-[#FF006E]" />}
                       <div className="flex-1">
-                        <div className="text-sm font-medium">
+                        <div className="text-sm font-medium text-[#DFF2D4]">
                           {activity.type === "hydration" && `Drank ${activity.value} ${activity.unit}`}
                           {activity.type === "sleep" && `Slept ${activity.value} hours`}
                           {activity.type === "workout" && `Worked out for ${activity.value} ${activity.unit || "kcal"}`}
                           {activity.type === "steps" && `Walked ${activity.value.toLocaleString()} steps`}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-[#DFF2D4]/50">
                           {format(parseISO(activity.timestamp), "h:mm a")}
                         </div>
                       </div>
@@ -338,10 +351,10 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
 
         {/* Chat Messages */}
         {data.chatMessages.length > 0 && (
-          <Card className="lg:col-span-3 bg-white/80 shadow-lg backdrop-blur-sm">
+          <Card className="lg:col-span-3 modern-card glass-card-intense hover-lift">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-indigo-500" />
+              <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
+                <MessageSquare className="w-5 h-5 text-[#6BF178]" />
                 AI Chat History
               </CardTitle>
             </CardHeader>
@@ -358,10 +371,10 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
                       }`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-3 ${
+                        className={`max-w-[70%] rounded-xl p-3 ${
                           message.role === "user"
-                            ? "bg-blue-500 text-white"
-                            : "bg-slate-200 text-slate-800"
+                            ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] shadow-[0_0_15px_rgba(107,241,120,0.4)]"
+                            : "bg-[#0a1f33]/50 text-[#DFF2D4] border border-[#6BF178]/20"
                         }`}
                       >
                         <p className="text-sm">{message.content}</p>
