@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from '@google/generative-ai';
 import { loadEnv } from '../config/env.js';
 
 const env = loadEnv();
@@ -28,6 +28,24 @@ export async function chatWithAi(
       temperature: 0.7,
       maxOutputTokens: 800, // Increased for structured JSON responses
     },
+    safetySettings: [
+      {
+        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+      {
+        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+        threshold: HarmBlockThreshold.BLOCK_NONE,
+      },
+    ],
   });
 
   try {
@@ -47,9 +65,13 @@ export async function chatWithAi(
       // Check if response was blocked
       const blocked =
         response.promptFeedback?.blockReason || response.candidates?.[0]?.finishReason;
-      return blocked
-        ? 'I could not answer that safely. Please rephrase.'
-        : "I couldn't generate a response. Please try again.";
+
+      // Return a valid JSON response instead of plain text error
+      if (blocked) {
+        console.error('Gemini blocked response:', blocked);
+        return '{"message":"I apologize, but I need more information to help you safely. Could you please provide more details about what you would like to do?","actions":[]}';
+      }
+      return '{"message":"I had trouble processing that. Could you rephrase your request?","actions":[]}';
     }
 
     return text;
