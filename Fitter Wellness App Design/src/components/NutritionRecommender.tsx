@@ -17,7 +17,9 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { api } from "../lib/api";
+import { toast } from "sonner";
 
 interface Supplement {
   id: string;
@@ -30,6 +32,29 @@ interface Supplement {
 
 export function NutritionRecommender() {
   const [addedSupplements, setAddedSupplements] = useState<string[]>([]);
+  const [userSupplements, setUserSupplements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user's supplements from backend
+  useEffect(() => {
+    const fetchSupplements = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getSupplements({ addedToPlan: true });
+        
+        if (response.success && response.data) {
+          setUserSupplements(response.data);
+          setAddedSupplements(response.data.map((s: any) => s._id));
+        }
+      } catch (error) {
+        console.error("Failed to fetch supplements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSupplements();
+  }, []);
 
   const supplements: Supplement[] = [
     {
@@ -144,11 +169,22 @@ export function NutritionRecommender() {
     }
   };
 
-  const handleAddSupplement = (id: string) => {
-    if (addedSupplements.includes(id)) {
-      setAddedSupplements(addedSupplements.filter((s) => s !== id));
-    } else {
-      setAddedSupplements([...addedSupplements, id]);
+  const handleAddSupplement = async (id: string) => {
+    try {
+      if (addedSupplements.includes(id)) {
+        // Remove from plan
+        await api.deleteSupplement(id);
+        setAddedSupplements(addedSupplements.filter((s) => s !== id));
+        toast.success("Removed from plan");
+      } else {
+        // Add to plan
+        await api.addSupplementToPlan(id);
+        setAddedSupplements([...addedSupplements, id]);
+        toast.success("Added to plan");
+      }
+    } catch (error) {
+      console.error("Failed to update supplement:", error);
+      toast.error("Failed to update supplement");
     }
   };
 

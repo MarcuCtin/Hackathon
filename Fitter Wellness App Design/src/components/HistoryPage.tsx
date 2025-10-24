@@ -350,15 +350,15 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   const getMoodIcon = (mood: string) => {
     switch (mood) {
       case "calm":
-        return <Smile className="w-5 h-5" />;
+        return <Smile className="w-5 h-5 text-[#04101B]" />;
       case "stressed":
-        return <Frown className="w-5 h-5" />;
+        return <Frown className="w-5 h-5 text-[#04101B]" />;
       case "focused":
-        return <Target className="w-5 h-5" />;
+        return <Target className="w-5 h-5 text-[#04101B]" />;
       case "energized":
-        return <Zap className="w-5 h-5" />;
+        return <Zap className="w-5 h-5 text-[#04101B]" />;
       default:
-        return <Meh className="w-5 h-5" />;
+        return <Meh className="w-5 h-5 text-[#04101B]" />;
     }
   };
 
@@ -391,13 +391,7 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
-      {/* Glowing Orbs Background - Fixed position */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden" style={{zIndex: 0}}>
-        <div className="glowing-orb glowing-orb-green" style={{position: 'absolute'}}></div>
-        <div className="glowing-orb glowing-orb-purple" style={{position: 'absolute', background: 'radial-gradient(circle, #A855F7, transparent)', width: '450px', height: '450px', top: '20%', right: '10%'}}></div>
-        <div className="glowing-orb glowing-orb-cyan" style={{position: 'absolute'}}></div>
-      </div>
+    <div className="min-h-screen bg-gradient-modern relative pb-24">
       
       {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
@@ -706,7 +700,7 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Istoric Zilnic</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Daily History</h3>
           <div className="space-y-3">
             {historyData.map((day, index) => {
               const date = new Date(day.date);

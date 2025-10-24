@@ -10,8 +10,9 @@ import { ScrollArea } from "./ui/scroll-area";
 import { FitterLogo } from "./FitterLogo";
 import { DailyRecommendations } from "./DailyRecommendations";
 import { ProgressInsights } from "./ProgressInsights";
+import { DailyTaskForm } from "./DailyTaskForm";
 import { api } from "../lib/api";
-import { useAuth } from "../hooks/useAuth";
+import { toast } from "sonner";
 import {
   Sun,
   Moon,
@@ -71,16 +72,91 @@ interface DashboardProps {
 export function Dashboard({ onProfileClick }: DashboardProps) {
   const { isAuthenticated } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [dashboardData, setDashboardData] = useState<any>(null);
-  const [activePlan, setActivePlan] = useState<any>(null);
-  const [tasks, setTasks] = useState<Task[]>([
-    { id: 1, title: "Morning meditation", completed: true, time: "7:00 AM" },
-    { id: 2, title: "Drink water (500ml)", completed: true, time: "7:30 AM" },
-    { id: 3, title: "Healthy breakfast", completed: true, time: "8:00 AM" },
-    { id: 4, title: "Take supplements", completed: false, time: "8:30 AM" },
-    { id: 5, title: "Gym workout", completed: false, time: "6:00 PM" },
-    { id: 6, title: "Evening walk", completed: false, time: "7:30 PM" },
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+  const [energyData, setEnergyData] = useState([
+    { day: "Mon", energy: 75, sleep: 7.5 },
+    { day: "Tue", energy: 82, sleep: 8.0 },
+    { day: "Wed", energy: 70, sleep: 6.5 },
+    { day: "Thu", energy: 85, sleep: 8.5 },
+    { day: "Fri", energy: 78, sleep: 7.0 },
+    { day: "Sat", energy: 88, sleep: 9.0 },
+    { day: "Sun", energy: 80, sleep: 8.0 },
   ]);
+
+  // Dashboard state
+  const [dailyData, setDailyData] = useState<any>(null);
+  const [nutritionProgress, setNutritionProgress] = useState<any>(null);
+  const [loadingDashboard, setLoadingDashboard] = useState(true);
+
+  // Fetch dashboard data from backend
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoadingDashboard(true);
+        const response = await api.getDashboardData();
+        
+        if (response.success && response.data) {
+          // Set energy data
+          if (response.data.analytics?.weeklyEnergy) {
+            setEnergyData(response.data.analytics.weeklyEnergy);
+          }
+          
+          // Set daily data
+          if (response.data.daily) {
+            setDailyData(response.data.daily);
+          }
+          
+          // Set nutrition progress
+          if (response.data.analytics?.nutritionProgress) {
+            setNutritionProgress(response.data.analytics.nutritionProgress);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoadingDashboard(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Fetch daily tasks from backend
+  const fetchTasks = async () => {
+    try {
+      setLoadingTasks(true);
+      const today = new Date().toISOString();
+      const response = await api.getDailyTasks(today);
+      
+      if (response.success && response.data) {
+        const transformedTasks: Task[] = response.data.map((task: any) => ({
+          id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
+          title: task.title,
+          completed: task.completed,
+          time: task.scheduledTime,
+        }));
+        setTasks(transformedTasks);
+      }
+    } catch (error) {
+      console.error("Failed to fetch tasks:", error);
+      // Fallback to mock data if API fails
+      setTasks([
+        { id: 1, title: "Morning meditation", completed: true, time: "7:00 AM" },
+        { id: 2, title: "Drink water (500ml)", completed: true, time: "7:30 AM" },
+        { id: 3, title: "Healthy breakfast", completed: true, time: "8:00 AM" },
+        { id: 4, title: "Take supplements", completed: false, time: "8:30 AM" },
+        { id: 5, title: "Gym workout", completed: false, time: "6:00 PM" },
+        { id: 6, title: "Evening walk", completed: false, time: "7:30 PM" },
+      ]);
+    } finally {
+      setLoadingTasks(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -92,40 +168,24 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   ]);
   const [chatInput, setChatInput] = useState("");
 
-  // Use real energy data or fallback to mock data
-  const energyData = dashboardData?.analytics?.weeklyEnergy || [
-    { day: "Mon", energy: 75, sleep: 7.5 },
-    { day: "Tue", energy: 82, sleep: 8.0 },
-    { day: "Wed", energy: 70, sleep: 6.5 },
-    { day: "Thu", energy: 85, sleep: 8.5 },
-    { day: "Fri", energy: 78, sleep: 7.0 },
-    { day: "Sat", energy: 88, sleep: 9.0 },
-    { day: "Sun", energy: 80, sleep: 8.0 },
-  ];
-
-  // Nutrition tracking with real data
-  const nutritionData = dashboardData?.analytics?.nutritionProgress ? [
-    { name: "Protein", value: dashboardData.analytics.nutritionProgress.protein, target: dashboardData.analytics.nutritionTargets.protein, color: "#6BF178" },
-    { name: "Carbs", value: dashboardData.analytics.nutritionProgress.carbs, target: dashboardData.analytics.nutritionTargets.carbs, color: "#E2F163" },
-    { name: "Fats", value: dashboardData.analytics.nutritionProgress.fats, target: dashboardData.analytics.nutritionTargets.fats, color: "#DFF2D4" },
-    { name: "Water", value: dashboardData.analytics.nutritionProgress.water, target: dashboardData.analytics.nutritionTargets.water, color: "#6BF178", unit: "L" },
+  // Nutrition tracking with real data from backend
+  const nutritionData = dailyData ? [
+    { name: "Protein", value: Math.round(dailyData.totalProtein || 0), target: 100, color: "#6BF178" },
+    { name: "Carbs", value: Math.round(dailyData.totalCarbs || 0), target: 150, color: "#E2F163" },
+    { name: "Fats", value: Math.round(dailyData.totalFat || 0), target: 70, color: "#DFF2D4" },
+    { name: "Water", value: Math.round((dailyData.hydration || 0) * 10) / 10, target: 3, color: "#6BF178", unit: "L" },
   ] : [
-    { name: "Protein", value: 85, target: 100, color: "#6BF178" },
-    { name: "Carbs", value: 120, target: 150, color: "#E2F163" },
-    { name: "Fats", value: 60, target: 70, color: "#DFF2D4" },
-    { name: "Water", value: 2.5, target: 3, color: "#6BF178", unit: "L" },
+    { name: "Protein", value: 0, target: 100, color: "#6BF178" },
+    { name: "Carbs", value: 0, target: 150, color: "#E2F163" },
+    { name: "Fats", value: 0, target: 70, color: "#DFF2D4" },
+    { name: "Water", value: 0, target: 3, color: "#6BF178", unit: "L" },
   ];
 
-  // Weekly progress
-  const weeklyProgress = [
-    { day: "M", value: 75 },
-    { day: "T", value: 82 },
-    { day: "W", value: 70 },
-    { day: "T", value: 85 },
-    { day: "F", value: 78 },
-    { day: "S", value: 88 },
-    { day: "S", value: 80 },
-  ];
+  // Weekly progress from energy data
+  const weeklyProgress = energyData.map(item => ({
+    day: item.day.substring(0, 1),
+    value: item.energy
+  }));
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -185,8 +245,32 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
     return "Good evening";
   };
 
-  const toggleTask = (id: number) => {
-    setTasks(tasks.map((task) => (task.id === id ? { ...task, completed: !task.completed } : task)));
+  const toggleTask = async (id: number) => {
+    const task = tasks.find(t => t.id === id);
+    if (!task) return;
+    
+    const newCompleted = !task.completed;
+    
+    // Optimistically update UI
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: newCompleted } : t)));
+    
+    try {
+      // Find the MongoDB ID from backend task data
+      const today = new Date().toISOString();
+      const response = await api.getDailyTasks(today);
+      
+      if (response.success && response.data) {
+        const backendTask = response.data.find((t: any) => parseInt(t._id.slice(-6), 16) === id);
+        if (backendTask) {
+          await api.completeDailyTask(backendTask._id, newCompleted);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to update task:", error);
+      // Revert on error
+      setTasks(tasks.map((t) => (t.id === id ? { ...t, completed: !newCompleted } : t)));
+      toast.error("Failed to update task");
+    }
   };
 
   const handleSendMessage = () => {
@@ -218,12 +302,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   const completionPercentage = (completedTasks / tasks.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-modern particles-bg glowing-bg relative pb-24">
-      {/* Glowing Orbs Background */}
-      <div className="glowing-orb glowing-orb-green"></div>
-      <div className="glowing-orb glowing-orb-lime"></div>
-      <div className="glowing-orb glowing-orb-cyan"></div>
-      
+    <div className="min-h-screen bg-gradient-modern relative pb-24">
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-[#6BF178]/20 bg-[#04101B]/95 backdrop-blur-2xl">
         <div className="container mx-auto px-6 py-4">
@@ -338,6 +417,11 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                       )}
                     </motion.div>
                   ))}
+                  
+                  {/* Add Task Form */}
+                  <div className="mt-4">
+                    <DailyTaskForm onTaskAdded={fetchTasks} />
+                  </div>
                 </div>
               </Card>
             </motion.div>

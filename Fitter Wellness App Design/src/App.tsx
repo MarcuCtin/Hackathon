@@ -11,6 +11,8 @@ import { NutritionPage } from "./components/NutritionPage";
 import { HistoryPage } from "./components/HistoryPage";
 import { ProfilePage } from "./components/ProfilePage";
 import { DayInfoPage } from "./components/DayInfoPage";
+import { LoginPage } from "./components/LoginPage";
+import { RegisterPage } from "./components/RegisterPage";
 import { BottomNav } from "./components/BottomNav";
 import { Button } from "./components/ui/button";
 import { Card } from "./components/ui/card";
@@ -19,7 +21,7 @@ import { Sparkles, Heart, Brain, Zap } from "lucide-react";
 import { ActivityProvider } from "./context/ActivityContext";
 import { useAuth } from "./hooks/useAuth";
 
-type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
+type AppView = "landing" | "login" | "register" | "onboarding" | "assistant" | "dashboard" | "history" | "nutrition" | "profile" | "dayinfo";
 
 export default function App() {
   const { isAuthenticated, user, loading } = useAuth();
@@ -107,13 +109,21 @@ export default function App() {
             <a href="#icons" className="text-[#DFF2D4] hover:text-[#6BF178] transition-colors">
               Lifestyle
             </a>
-            <Button 
-              onClick={() => setCurrentView("assistant")}
-              variant="outline"
-              className="rounded-full border-[#6BF178] text-[#6BF178] hover:bg-[#6BF178] hover:text-[#04101B]"
-            >
-              Try App
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button 
+                onClick={() => setCurrentView("login")}
+                variant="outline"
+                className="rounded-full border-[#6BF178] text-[#6BF178] hover:bg-[#6BF178] hover:text-[#04101B]"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => setCurrentView("register")}
+                className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50"
+              >
+                Get Started
+              </Button>
+            </div>
             <Button 
               onClick={() => setCurrentView("onboarding")}
               className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_20px_rgba(107,241,120,0.5)] text-[#04101B] font-semibold"

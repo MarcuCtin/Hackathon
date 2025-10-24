@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Card } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
@@ -18,6 +18,8 @@ import {
   Cell,
 } from "recharts";
 import { TrendingUp, TrendingDown, Moon, Droplet, Zap, Smile, Activity } from "lucide-react";
+import { api } from "../lib/api";
+import { toast } from "sonner";
 
 interface MetricData {
   name: string;
@@ -31,9 +33,7 @@ interface MetricData {
 
 export function ProgressInsights() {
   const [activeTab, setActiveTab] = useState("overview");
-
-  // Weekly data
-  const weeklyData = [
+  const [weeklyData, setWeeklyData] = useState([
     { day: "Mon", sleep: 7.5, hydration: 2.8, energy: 75, mood: 7 },
     { day: "Tue", sleep: 8.0, hydration: 3.2, energy: 82, mood: 8 },
     { day: "Wed", sleep: 6.5, hydration: 2.4, energy: 70, mood: 6 },
@@ -41,17 +41,16 @@ export function ProgressInsights() {
     { day: "Fri", sleep: 7.0, hydration: 2.9, energy: 78, mood: 7 },
     { day: "Sat", sleep: 9.0, hydration: 3.8, energy: 88, mood: 9 },
     { day: "Sun", sleep: 8.0, hydration: 3.1, energy: 80, mood: 8 },
-  ];
-
-  // Metrics overview
-  const metrics: MetricData[] = [
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState([
     {
       name: "Sleep",
       value: 7.8,
       target: 8.0,
       color: "#6366f1",
       icon: <Moon className="w-5 h-5" />,
-      trend: "up",
+      trend: "up" as const,
       trendValue: 5,
     },
     {
@@ -60,7 +59,7 @@ export function ProgressInsights() {
       target: 3.5,
       color: "#3b82f6",
       icon: <Droplet className="w-5 h-5" />,
-      trend: "up",
+      trend: "up" as const,
       trendValue: 12,
     },
     {
@@ -69,7 +68,7 @@ export function ProgressInsights() {
       target: 85,
       color: "#f59e0b",
       icon: <Zap className="w-5 h-5" />,
-      trend: "up",
+      trend: "up" as const,
       trendValue: 8,
     },
     {
@@ -78,10 +77,100 @@ export function ProgressInsights() {
       target: 8.5,
       color: "#10b981",
       icon: <Smile className="w-5 h-5" />,
-      trend: "stable",
+      trend: "stable" as const,
       trendValue: 0,
     },
-  ];
+  ]);
+
+  // Fetch insights from backend
+  useEffect(() => {
+    const fetchInsights = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch dashboard data which includes weekly energy data
+        const dashboardResponse = await api.getDashboardData();
+        
+        if (dashboardResponse.success && dashboardResponse.data) {
+          // Get weekly energy data from dashboard
+          if (dashboardResponse.data.analytics?.weeklyEnergy) {
+            const energyData = dashboardResponse.data.analytics.weeklyEnergy;
+            
+            // Transform to weekly chart format
+            const transformedData = energyData.map((item: any) => ({
+              day: item.day || "Mon",
+              sleep: item.sleep || 7.5,
+              hydration: 2.8, // Approximate
+              energy: item.energy || 75,
+              mood: item.mood || 7,
+            }));
+            
+            setWeeklyData(transformedData);
+            
+            // Calculate averages
+            const avgSleep = transformedData.reduce((sum, d) => sum + d.sleep, 0) / transformedData.length;
+            const avgEnergy = transformedData.reduce((sum, d) => sum + d.energy, 0) / transformedData.length;
+            const bestSleep = Math.max(...transformedData.map(d => d.sleep));
+            const bestEnergy = Math.max(...transformedData.map(d => d.energy));
+            
+            // Get today's sleep data
+            const today = new Date();
+            const todayDayName = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][today.getDay()];
+            const todayData = transformedData.find(d => d.day === todayDayName);
+            const todaySleep = todayData?.sleep || 0;
+            
+            // Update metrics with real data
+            setMetrics([
+              {
+                name: "Sleep",
+                value: todaySleep, // Show today's sleep hours instead of average
+                target: 8.0,
+                color: "#6366f1",
+                icon: <Moon className="w-5 h-5" />,
+                trend: todaySleep >= 7.5 ? "up" : "down",
+                trendValue: Math.abs(((todaySleep - 7.5) / 7.5) * 100),
+              },
+              {
+                name: "Hydration",
+                value: 3.1,
+                target: 3.5,
+                color: "#3b82f6",
+                icon: <Droplet className="w-5 h-5" />,
+                trend: "up",
+                trendValue: 12,
+              },
+              {
+                name: "Energy",
+                value: avgEnergy,
+                target: 85,
+                color: "#f59e0b",
+                icon: <Zap className="w-5 h-5" />,
+                trend: avgEnergy > 75 ? "up" : "down",
+                trendValue: Math.abs(((avgEnergy - 75) / 75) * 100),
+              },
+              {
+                name: "Mood",
+                value: 7.7,
+                target: 8.5,
+                color: "#10b981",
+                icon: <Smile className="w-5 h-5" />,
+                trend: "stable",
+                trendValue: 0,
+              },
+            ]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch insights:", error);
+        toast.error("Failed to load insights");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInsights();
+  }, []);
+
 
   // Donut chart data
   const DonutProgress = ({ value, target, color, size = 120 }: any) => {
@@ -113,8 +202,11 @@ export function ProgressInsights() {
           className="absolute inset-0 flex items-center justify-center flex-col"
           style={{ top: 0, left: 0, right: 0, bottom: 0 }}
         >
-          <div className="text-2xl text-[#DFF2D4] font-bold text-glow">
+          <div className="text-xl text-[#DFF2D4] font-bold text-glow">
             {Math.round(percentage)}%
+          </div>
+          <div className="text-xs text-[#DFF2D4]/70">
+            {value.toFixed(1)}h / {target.toFixed(1)}h
           </div>
         </div>
       </div>
@@ -244,7 +336,7 @@ export function ProgressInsights() {
                               : "text-[#DFF2D4]/70"
                           }`}
                         >
-                          {metric.trend === "stable" ? "Stable" : `${metric.trendValue}%`}
+                          {metric.trend === "stable" ? "Stable" : `${metric.trendValue.toFixed(1)}%`}
                         </span>
                       </div>
                     </div>
@@ -279,13 +371,13 @@ export function ProgressInsights() {
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#A855F7]/20 to-[#6BF178]/20 border border-[#A855F7]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Weekly Average</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      7.8h
+                      {loading ? "..." : `${weeklyData.reduce((sum, d) => sum + d.sleep, 0) / weeklyData.length || 0}H`}
                     </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/20 border border-[#6BF178]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Best Night</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      9.0h
+                      {loading ? "..." : `${Math.max(...weeklyData.map(d => d.sleep), 0)}H`}
                     </div>
                   </div>
                 </div>
@@ -348,13 +440,13 @@ export function ProgressInsights() {
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#F7B801]/20 to-[#FF6B35]/20 border border-[#F7B801]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Average Energy</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      80%
+                      {loading ? "..." : `${Math.round(weeklyData.reduce((sum, d) => sum + d.energy, 0) / weeklyData.length || 0)}%`}
                     </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FF6B35]/20 to-[#FF006E]/20 border border-[#FF6B35]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Peak Day</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      88%
+                      {loading ? "..." : `${Math.round(Math.max(...weeklyData.map(d => d.energy), 0))}%`}
                     </div>
                   </div>
                 </div>
@@ -416,13 +508,13 @@ export function ProgressInsights() {
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#6BF178]/20 to-[#00F5FF]/20 border border-[#6BF178]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Average Mood</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      7.7/10
+                      {loading ? "..." : `${(weeklyData.reduce((sum, d) => sum + d.mood, 0) / weeklyData.length || 0).toFixed(1)}/10`}
                     </div>
                   </div>
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#00F5FF]/20 to-[#A855F7]/20 border border-[#00F5FF]/30 backdrop-blur-sm modern-card">
                     <p className="text-[#DFF2D4] mb-1 font-semibold">Best Day</p>
                     <div className="text-3xl text-gradient-modern font-bold">
-                      9/10
+                      {loading ? "..." : `${Math.max(...weeklyData.map(d => d.mood), 0).toFixed(1)}/10`}
                     </div>
                   </div>
                 </div>
