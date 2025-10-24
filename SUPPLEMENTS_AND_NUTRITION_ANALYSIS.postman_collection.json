@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Supplements & Nutrition Analysis API",
+    "description": "Complete API for supplement logging and nutrition analysis",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "🚀 Setup",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('token', jsonData.data.token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "💊 Supplements",
+      "item": [
+        {
+          "name": "Create Supplement with Nutrients",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Omega-3\",\n  \"benefit\": \"for heart health\",\n  \"description\": \"Essential fatty acids for cardiovascular wellness\",\n  \"category\": \"heart\",\n  \"icon\": \"❤️\",\n  \"nutrients\": {\n    \"omega3\": 1000,\n    \"vitaminD\": 5\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/supplements",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements"]
+            },
+            "description": "Create a supplement with nutrient information (omega3 in mg, vitaminD in mcg)"
+          }
+        },
+        {
+          "name": "Log Supplement Taken",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"supplementId\": \"supplement_id_here\",\n  \"dosage\": \"1 capsule\",\n  \"notes\": \"Taken with breakfast\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/supplements/log",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements", "log"]
+            },
+            "description": "Log when a supplement was taken"
+          }
+        },
+        {
+          "name": "Get Nutrition Analysis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/supplements/nutrition-analysis",
+              "host": ["{{base_url}}"],
+              "path": ["api", "supplements", "nutrition-analysis"]
+            },
+            "description": "Get analysis of nutrients from food vs supplements, with deficiencies"
+          }
+        }
+      ]
+    },
+    {
+      "name": "🤖 AI Chat with Supplement Correlation",
+      "item": [
+        {
+          "name": "Chat with Nutrition Logging",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"I had salmon with quinoa and broccoli for dinner\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat"]
+            },
+            "description": "AI will estimate micronutrients (omega3, iron, folate, etc.) and correlate with supplements taken today"
+          }
+        }
+      ]
+    }
+  ]
+}

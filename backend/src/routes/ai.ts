@@ -10,10 +10,159 @@ import { NutritionLog } from '../models/NutritionLog.js';
 import { DailyTask } from '../models/DailyTask.js';
 import { Achievement } from '../models/Achievement.js';
 import { SupplementLog } from '../models/SupplementLog.js';
+import { Supplement } from '../models/Supplement.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Types } from 'mongoose';
 
 const router = Router();
+
+// Helper function to estimate micronutrients from food description
+function estimateMicronutrients(foodNotes: string): Record<string, number> {
+  const notes = foodNotes.toLowerCase();
+  const micros: Record<string, number> = {};
+
+  // Fish (omega3, vitaminD)
+  if (notes.includes('salmon') || notes.includes('tuna') || notes.includes('fish')) {
+    micros.omega3 = 500 + Math.random() * 500; // 500-1000mg
+    micros.vitaminD = 5 + Math.random() * 5; // 5-10mcg
+  }
+
+  // Dairy (calcium, vitaminD)
+  if (notes.includes('milk') || notes.includes('yogurt') || notes.includes('cheese')) {
+    micros.calcium = 200 + Math.random() * 100; // 200-300mg
+    micros.vitaminD = 1 + Math.random(); // 1-2mcg
+  }
+
+  // Leafy greens (iron, folate, calcium)
+  if (
+    notes.includes('spinach') ||
+    notes.includes('kale') ||
+    notes.includes('lettuce') ||
+    notes.includes('salad')
+  ) {
+    micros.iron = 2 + Math.random() * 2; // 2-4mg
+    micros.folate = 100 + Math.random() * 100; // 100-200mcg
+    micros.calcium = 50 + Math.random() * 50; // 50-100mg
+  }
+
+  // Nuts (magnesium, iron)
+  if (notes.includes('almond') || notes.includes('walnut') || notes.includes('nut')) {
+    micros.magnesium = 50 + Math.random() * 50; // 50-100mg
+    micros.iron = 1 + Math.random(); // 1-2mg
+  }
+
+  // Whole grains (iron, folate, zinc)
+  if (
+    notes.includes('quinoa') ||
+    notes.includes('rice') ||
+    notes.includes('pasta') ||
+    notes.includes('bread')
+  ) {
+    micros.iron = 1 + Math.random(); // 1-2mg
+    micros.folate = 50 + Math.random() * 50; // 50-100mcg
+    micros.zinc = 1 + Math.random(); // 1-2mg
+  }
+
+  // Eggs (vitaminD, B12, folate)
+  if (notes.includes('egg')) {
+    micros.vitaminD = 1;
+    micros.b12 = 0.5;
+    micros.folate = 30;
+  }
+
+  // Red meat (iron, B12, zinc)
+  if (notes.includes('beef') || notes.includes('steak') || notes.includes('meat')) {
+    micros.iron = 2 + Math.random(); // 2-3mg
+    micros.b12 = 1 + Math.random(); // 1-2mcg
+    micros.zinc = 2 + Math.random(); // 2-3mg
+  }
+
+  // Legumes (iron, folate, magnesium)
+  if (notes.includes('bean') || notes.includes('lentil') || notes.includes('chickpea')) {
+    micros.iron = 2 + Math.random(); // 2-3mg
+    micros.folate = 100 + Math.random() * 50; // 100-150mcg
+    micros.magnesium = 50 + Math.random() * 30; // 50-80mg
+  }
+
+  return micros;
+}
+
+// Helper function to suggest supplements based on nutrition gaps
+async function suggestSupplementsNeeded(
+  userId: string,
+  todayNutrition: unknown[],
+  todaySupplements: unknown[],
+): Promise<string[]> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  // Calculate total micronutrients from food today
+  const foodMicros: Record<string, number> = {};
+  for (const meal of todayNutrition) {
+    const m = meal as { micronutrients?: Record<string, number> };
+    if (m.micronutrients) {
+      for (const [key, value] of Object.entries(m.micronutrients)) {
+        if (typeof value === 'number') {
+          foodMicros[key] = (foodMicros[key] || 0) + value;
+        }
+      }
+    }
+  }
+
+  // Get supplements in plan
+  const supplementsInPlan = await Supplement.find({
+    userId: new Types.ObjectId(userId),
+    addedToPlan: true,
+  }).lean();
+
+  // RDA values
+  const rda = {
+    vitaminD: 15,
+    calcium: 1000,
+    magnesium: 400,
+    iron: 18,
+    zinc: 11,
+    omega3: 1000,
+    b12: 2.4,
+    folate: 400,
+  };
+
+  const suggestions: string[] = [];
+
+  // Check deficiencies
+  for (const [nutrient, recommended] of Object.entries(rda)) {
+    const fromFood = foodMicros[nutrient] || 0;
+    const hasSupplement = supplementsInPlan.some((s) => s.nutrients?.[nutrient]);
+
+    if (fromFood < recommended * 0.5 && !hasSupplement) {
+      // Less than 50% of RDA and no supplement in plan
+      switch (nutrient) {
+        case 'omega3':
+          suggestions.push('Consider adding an Omega-3 supplement for heart health');
+          break;
+        case 'calcium':
+          suggestions.push('Consider adding a Calcium supplement for bone health');
+          break;
+        case 'magnesium':
+          suggestions.push('Consider adding a Magnesium supplement for muscle function');
+          break;
+        case 'iron':
+          suggestions.push('Consider adding an Iron supplement for energy');
+          break;
+        case 'b12':
+          suggestions.push('Consider adding a B12 supplement for nerve function');
+          break;
+        case 'folate':
+          suggestions.push('Consider adding a Folate supplement for cell growth');
+          break;
+      }
+    }
+  }
+
+  return suggestions;
+}
 
 const chatBody = z.object({
   messages: z.array(
@@ -128,6 +277,15 @@ router.post(
     const supplementsTakenToday =
       todaySupplements.map((s) => s.supplementName).join(', ') || 'None';
 
+    // Get supplements in plan
+    const supplementsInPlan = await Supplement.find({
+      userId: new Types.ObjectId(req.userId),
+      addedToPlan: true,
+    }).lean();
+
+    const supplementsInPlanList =
+      supplementsInPlan.map((s) => `${s.name} (${s.benefit})`).join(', ') || 'None';
+
     // Build historical context
     const historicalContext = `
 TODAY'S PROGRESS (${now.toLocaleDateString('en-US')}):
@@ -137,7 +295,8 @@ TODAY'S PROGRESS (${now.toLocaleDateString('en-US')}):
 - Calories: ${caloriesToday} kcal
 - Protein: ${proteinToday}g
 - Daily tasks: ${completedTasks}/${totalTasks} completed
-- Supplements taken: ${supplementsTakenToday}
+- Supplements taken today: ${supplementsTakenToday}
+- Supplements in plan: ${supplementsInPlanList}
 
 LAST 7 DAYS AVERAGE:
 - Sleep: ${sleepThisWeek.toFixed(1)} hours/day
@@ -237,13 +396,13 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
         - Always acknowledge supplements taken and correlate with food intake for optimal nutrition
 
         SUPPLEMENT RECOMMENDATIONS:
-        When user logs meals, analyze for deficiencies:
-        - Low fish/omega-3 → suggest omega-3 supplement if not already taken
-        - Low dairy/calcium → suggest calcium+vitamin D supplement
-        - Low leafy greens/iron → suggest iron supplement
-        - Low nuts/magnesium → suggest magnesium supplement
-        - Low meat/B12 → suggest B12 supplement
-        - Low legumes/folate → suggest folate supplement
+        Based on what they're eating and what supplements they have in their plan, suggest specific actions:
+        - If they ate salmon but have Omega-3 in plan: "Great! You got omega-3 from salmon today. Don't forget to take your Omega-3 supplement with your next meal."
+        - If they ate no fish and have Omega-3 in plan: "I noticed you haven't had fish today. Make sure to take your Omega-3 supplement."
+        - If they ate no dairy and have Calcium in plan: "You haven't had dairy today. Take your Calcium supplement."
+        - If they have deficiencies but NO supplement in plan: Mention what's missing and suggest adding it to their plan.
+        
+        When suggesting supplements, reference their actual intake and what they have available.
 
         If multiple actions mentioned, return multiple objects in "actions". If no action detected, "actions" should be empty array. No extra text outside JSON.`,
     };
@@ -270,6 +429,51 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
       dataOut = ResponseSchema.parse(JSON.parse(raw));
     } catch {
       dataOut = { message: raw, actions: [] };
+    }
+
+    // Process actions and save logs with micronutrients
+    const processedActions = [];
+    for (const action of dataOut.actions) {
+      if (action.type === 'meal_log' && action.notes && action.calories && action.category) {
+        // Estimate micronutrients from food description
+        const micronutrients = estimateMicronutrients(action.notes);
+
+        // Estimate macros from calories
+        const protein = Math.round(action.calories * 0.2); // ~20% protein
+        const carbs = Math.round(action.calories * 0.5); // ~50% carbs
+        const fat = Math.round(action.calories * 0.3); // ~30% fat
+
+        try {
+          await NutritionLog.create({
+            userId: new Types.ObjectId(req.userId),
+            date: new Date(),
+            mealType: action.category as 'breakfast' | 'lunch' | 'dinner' | 'snack',
+            items: [
+              {
+                name: action.notes,
+                calories: action.calories,
+                protein,
+                carbs,
+                fat,
+              },
+            ],
+            total: {
+              calories: action.calories,
+              protein,
+              carbs,
+              fat,
+            },
+            micronutrients,
+          });
+
+          processedActions.push({ ...action, micronutrients });
+        } catch (error) {
+          console.error('Failed to save nutrition log:', error);
+          processedActions.push(action);
+        }
+      } else {
+        processedActions.push(action);
+      }
     }
 
     // Save messages to database
@@ -299,9 +503,21 @@ ${recentAchievements.length > 0 ? recentAchievements.map((a) => `- ${a.title}: $
       // Continue without failing the request
     }
 
+    // Get supplement suggestions based on today's nutrition
+    const supplementSuggestions = await suggestSupplementsNeeded(
+      req.userId!,
+      todayNutrition,
+      todaySupplements,
+    );
+
     void res.json({
       success: true,
-      data: { reply: dataOut.message, actions: dataOut.actions, provider: 'gemini' },
+      data: {
+        reply: dataOut.message,
+        actions: processedActions,
+        provider: 'gemini',
+        supplementSuggestions,
+      },
     });
   }),
 );

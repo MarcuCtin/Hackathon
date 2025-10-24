@@ -22,6 +22,7 @@ type AppView = "landing" | "onboarding" | "assistant" | "dashboard" | "history" 
 
 export default function App() {
   const [currentView, setCurrentView] = useState<AppView>("landing");
+  const [currentParams, setCurrentParams] = useState<{ date?: string }>({});
 
   if (currentView === "onboarding") {
     return (
