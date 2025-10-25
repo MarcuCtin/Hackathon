@@ -376,3 +376,4 @@ MONGODB_URI=your_mongodb_uri
 - Backend: `Suggestion.ts`, `suggestions.ts`, `dashboard.ts`, `daily.ts`, `suggestions.ts` (cron)
 - Frontend: `api.ts`, `Dashboard.tsx`
 
+

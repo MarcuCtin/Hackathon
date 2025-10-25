@@ -60,3 +60,4 @@ SuggestionSchema.index({ generatedAt: 1 });
 
 export const Suggestion = model<SuggestionDoc>('Suggestion', SuggestionSchema);
 
+
