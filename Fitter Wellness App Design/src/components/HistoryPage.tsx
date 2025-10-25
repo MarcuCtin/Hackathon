@@ -417,7 +417,7 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {activePlan ? (
                 <>
-                  <Badge className=" md:flex rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap px-3 py-1 text-xs">
+                  <Badge className="sm:flex md:hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap px-3 py-1 text-xs">
                     {activePlan.planType === 'cutting' && '🔥'}
                     {activePlan.planType === 'bulking' && '💪'}
                     {activePlan.planType === 'maintenance' && '⚖️'}
@@ -425,13 +425,7 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                     {activePlan.planType === 'custom' && '✨'}
                     {' '}{activePlan.planName}
                   </Badge>
-                  <Badge className="md:hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-2 py-1 text-[10px]">
-                    {activePlan.planType === 'cutting' && '🔥'}
-                    {activePlan.planType === 'bulking' && '💪'}
-                    {activePlan.planType === 'maintenance' && '⚖️'}
-                    {activePlan.planType === 'healing' && '💚'}
-                    {activePlan.planType === 'custom' && '✨'}
-                  </Badge>
+                 
                 </>
               ) : (
                 <Badge className="hidden sm:flex rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1 text-xs">
