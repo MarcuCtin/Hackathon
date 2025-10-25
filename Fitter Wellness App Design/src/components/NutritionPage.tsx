@@ -408,6 +408,10 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
             </div>
           </div>
 
+        </div>
+      </header>
+
+      <div className="container mx-auto px-6 py-6 relative z-10">
         {/* Next Meal Card */}
         {nextMeal && (
           <motion.div
