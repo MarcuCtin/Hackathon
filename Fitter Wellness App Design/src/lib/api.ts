@@ -910,6 +910,67 @@ class ApiClient {
       }>;
     }>("/chat/messages/by-day");
   }
+
+  // Reflection
+  async getTodayReflection() {
+    return this.request<{
+      success: boolean;
+      data: {
+        mood:
+          | "calm"
+          | "stressed"
+          | "focused"
+          | "energized"
+          | "tired"
+          | "motivated"
+          | "anxious"
+          | "content";
+        energyLevel: number;
+        stressLevel: number;
+        sleepQuality: "excellent" | "good" | "fair" | "poor";
+        notes?: string;
+        date: string;
+      } | null;
+    }>("/reflect/today");
+  }
+
+  async saveReflection(reflection: {
+    mood:
+      | "calm"
+      | "stressed"
+      | "focused"
+      | "energized"
+      | "tired"
+      | "motivated"
+      | "anxious"
+      | "content";
+    energyLevel: number;
+    stressLevel: number;
+    sleepQuality: "excellent" | "good" | "fair" | "poor";
+    notes?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/reflect", {
+      method: "POST",
+      body: JSON.stringify(reflection),
+    });
+  }
+
+  async getReflectionByDate(date: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/reflect/${date}`);
+  }
+
+  async getRecentReflections() {
+    return this.request<{
+      success: boolean;
+      data: any[];
+    }>("/reflect/recent/last-week");
+  }
 }
 
 export const api = new ApiClient();

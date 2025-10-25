@@ -1,20 +1,15 @@
 import React from "react";
 import { motion } from "motion/react";
-import { MessageCircle, LayoutDashboard, History, Utensils } from "lucide-react";
+import { MessageCircle, LayoutDashboard, History, Utensils, Heart } from "lucide-react";
 
 interface BottomNavProps {
   currentPage: "assistant" | "dashboard" | "history" | "nutrition";
-  onNavigate: (page: "assistant" | "dashboard" | "history" | "nutrition") => void;
+  onNavigate: (page: "assistant" | "dashboard" | "history" | "nutrition" | "reflection") => void;
 }
 
 export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
   const navItems = [
-    {
-      id: "assistant" as const,
-      label: "Assistant",
-      icon: MessageCircle,
-      gradient: "from-[#6BF178] to-[#E2F163]",
-    },
+    
     {
       id: "dashboard" as const,
       label: "Dashboard",
@@ -28,22 +23,34 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
       gradient: "from-[#6BF178] to-[#DFF2D4]",
     },
     {
+      id: "assistant" as const,
+      label: "Assistant",
+      icon: MessageCircle,
+      gradient: "from-[#6BF178] to-[#E2F163]",
+    },
+    {
       id: "nutrition" as const,
       label: "Nutrition",
       icon: Utensils,
       gradient: "from-[#E2F163] to-[#DFF2D4]",
     },
+    {
+      id: "reflection" as const,
+      label: "Reflection",
+      icon: Heart,
+      gradient: "from-purple-500 to-pink-500",
+    }
   ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50">
       {/* Enhanced Glass morphism background */}
-      <div className="relative bg-[#04101B]/85 backdrop-blur-3xl border-t-2 border-[#6BF178]/40 shadow-[0_-12px_40px_rgba(107,241,120,0.2)]">
+      <div className="relative py-10 h-50 bg-[#04101B]/85 backdrop-blur-3xl border-t-2 border-[#6BF178]/40 shadow-[0_-12px_40px_rgba(107,241,120,0.2)]">
         {/* Glass overlay for extra depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#04101B]/90 via-[#04101B]/60 to-[#04101B]/30 backdrop-blur-xl pointer-events-none"></div>
         
-        <div className="container mx-auto px-3 sm:px-6 max-w-screen-xl relative z-10">
-          <div className="grid grid-cols-4 gap-2 py-3">
+        <div className="container mx-auto px-3 sm:px-6 max-w-screen-xl relative z-10 ">
+          <div className="flex row justify-between items-center w-full py-4 h-20">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.id;
@@ -52,7 +59,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.id)}
-                  className={`relative flex flex-col items-center gap-1.5 py-2 px-1 transition-all duration-300 rounded-2xl group ${
+                  className={`relative flex flex-col items-center gap-1.5 py-10 px-1 transition-all duration-300 rounded-2xl group ${
                     isActive ? 'transform -translate-y-1' : ''
                   }`}
                 >
@@ -75,7 +82,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                       }`}
                     >
                       <Icon
-                        className={`w-5 h-5 sm:w-6 sm:h-6 transition-all duration-300 ${
+                        className={`w-8 h-8 sm:w-6 sm:h-6 transition-all duration-300 ${
                           isActive ? "text-[#04101B] drop-shadow-sm" : "text-[#DFF2D4]/90 group-hover:text-[#DFF2D4]"
                         }`}
                         strokeWidth={isActive ? 3 : 2}
@@ -95,7 +102,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
 
                   {/* Enhanced label with strong contrast */}
                   <span
-                    className={`text-[11px] sm:text-xs transition-all duration-300 font-medium leading-tight relative z-20 ${
+                    className={`text-[15px] md:flex hidden transition-all duration-300 font-medium leading-tight relative z-20 ${
                       isActive
                         ? "text-[#04101B] font-bold drop-shadow-md text-shadow-sm scale-105"
                         : "text-[#DFF2D4]/90 hover:text-[#DFF2D4] group-hover:drop-shadow-sm"

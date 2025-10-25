@@ -409,7 +409,7 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
       <div className="container mx-auto px-6 py-6 relative z-10">
         {/* Chat Messages */}
         <Card className="modern-card glass-card-intense rounded-3xl overflow-hidden">
-          <div className="flex flex-col relative" style={{height: 'calc(100vh - 350px)', minHeight: '500px', maxHeight: 'calc(100vh - 350px)'}}>
+          <div className="flex flex-col relative" style={{height: 'calc(100vh - 200px)', minHeight: '600px', maxHeight: 'calc(100vh - 200px)'}}>
             {/* Day Tabs */}
             {messagesByDay.length > 0 && (
               <div className="border-b border-[#6BF178]/20 px-6 py-4 bg-[#04101B]/40 backdrop-blur-sm">

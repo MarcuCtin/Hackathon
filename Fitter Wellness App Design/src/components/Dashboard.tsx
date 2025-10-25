@@ -326,15 +326,12 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-[#6BF178]/20 bg-[#04101B]/95 backdrop-blur-2xl">
+      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <FitterLogo size={36} />
             <div className="flex items-center gap-4">
-              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Premium
-              </Badge>
+             
               {activePlan ? (
                 <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap">
                   {activePlan.planType === 'cutting' && '🔥'}

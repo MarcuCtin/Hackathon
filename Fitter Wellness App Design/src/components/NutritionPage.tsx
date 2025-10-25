@@ -369,7 +369,7 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
       {/* Header with Next Meal */}
-      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+      <header className=" top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-4">
@@ -377,10 +377,7 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                 <FitterLogo size={40} />
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
               </div>
-              <div>
-                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">Nutrition</h3>
-                <p className="text-[#DFF2D4]/80 text-sm font-medium">Smart meal & supplement guidance</p>
-              </div>
+              
             </div>
             <div className="flex items-center gap-3">
               <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-3 py-1">
