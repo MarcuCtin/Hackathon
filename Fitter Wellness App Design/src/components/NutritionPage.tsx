@@ -368,23 +368,45 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      <div className="container mx-auto px-6 py-6 relative z-10">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <FitterLogo size={36} />
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+      {/* Header with Next Meal */}
+      <header className=" top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+        <div className="container mx-auto px-6 py-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <FitterLogo size={40} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+              </div>
+              
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-3 py-1">
+                <Utensils className="w-3 h-3 mr-1" />
+                Today
+              </Badge>
+          {activePlan ? (
+            <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-3 py-1 whitespace-nowrap">
+              {activePlan.planType === 'cutting' && '🔥'}
+              {activePlan.planType === 'bulking' && '💪'}
+              {activePlan.planType === 'maintenance' && '⚖️'}
+              {activePlan.planType === 'healing' && '💚'}
+              {activePlan.planType === 'custom' && '✨'}
+              {' '}{activePlan.planName}
+            </Badge>
+          ) : (
+            <Badge className="rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1">
+              📋 Currently no plan set
+            </Badge>
+          )}
+              <button 
+                onClick={onProfileClick} 
+                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
+              >
+                <UserAvatar size={40} userName="Alex Thompson" />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
+              </button>
+            </div>
           </div>
-        </div>
-        <button 
-          onClick={onProfileClick} 
-          className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
-        >
-          <UserAvatar size={40} userName="Alex Thompson" />
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
-        </button>
-      </div>
 
         {/* Next Meal Card */}
         {nextMeal && (

@@ -198,8 +198,8 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
-        <div className="container mx-auto px-6 py-4">
+      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30  backdrop-blur-2xl bg-[#04101B]/98 shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+        <div className="container mx-auto px-6 py-4  backdrop-blur-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               {onBack && (
@@ -218,7 +218,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
               </div>
               <div>
                 <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">Profile</h3>
-                <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness journey</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -254,7 +253,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 className="rounded-2xl border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50 px-6 py-2.5 transition-all"
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Logout
               </Button>
             </div>
           </div>

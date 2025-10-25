@@ -391,73 +391,129 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-modern relative pb-24">
-      <div className="container mx-auto px-6 py-6 relative z-10">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <FitterLogo size={36} />
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+    <div className="min-h-screen bg-gradient-modern relative pb-24 md:pb-28">
+      
+      {/* Header */}
+      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
+        <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+              <div className="relative hidden sm:block">
+                <FitterLogo size={40} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+              </div>
+              <div className="relative sm:hidden">
+                <FitterLogo size={32} />
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
+              </div>
+              <div className="hidden md:block">
+                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">History</h3>
+                <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness journey</p>
+              </div>
+              <div className="md:hidden">
+                <h3 className="text-[#6BF178] font-bold text-base bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">History</h3>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {activePlan ? (
+                <>
+                  <Badge className=" md:flex rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap px-3 py-1 text-xs">
+                    {activePlan.planType === 'cutting' && '🔥'}
+                    {activePlan.planType === 'bulking' && '💪'}
+                    {activePlan.planType === 'maintenance' && '⚖️'}
+                    {activePlan.planType === 'healing' && '💚'}
+                    {activePlan.planType === 'custom' && '✨'}
+                    {' '}{activePlan.planName}
+                  </Badge>
+                  <Badge className="md:hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-2 py-1 text-[10px]">
+                    {activePlan.planType === 'cutting' && '🔥'}
+                    {activePlan.planType === 'bulking' && '💪'}
+                    {activePlan.planType === 'maintenance' && '⚖️'}
+                    {activePlan.planType === 'healing' && '💚'}
+                    {activePlan.planType === 'custom' && '✨'}
+                  </Badge>
+                </>
+              ) : (
+                <Badge className="hidden sm:flex rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1 text-xs">
+                  📋 No plan
+                </Badge>
+              )}
+              <div className="hidden lg:flex items-center gap-1">
+                <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(226,241,99,0.4)] px-2 py-1 text-xs">
+                  <Zap className="w-2.5 h-2.5 mr-0.5" />
+                  {workoutCaloriesToday} kcal
+                </Badge>
+                <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#DFF2D4] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-2 py-1 text-xs">
+                  <Droplet className="w-2.5 h-2.5 mr-0.5" />
+                  {hydrationToday}
+                </Badge>
+                <Badge className="rounded-full bg-gradient-to-r from-[#A855F7] to-[#6BF178] text-[#DFF2D4] border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-2 py-1 text-xs">
+                  <BedDouble className="w-2.5 h-2.5 mr-0.5" />
+                  {sleepHoursToday ?? "-"} h
+                </Badge>
+                <Badge className="rounded-full bg-gradient-to-r from-[#FF006E] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(255,0,110,0.4)] px-2 py-1 text-xs">
+                  <Utensils className="w-2.5 h-2.5 mr-0.5" />
+                  {mealCountToday}
+                </Badge>
+              </div>
+              <div className="hidden sm:flex items-center gap-1">
+                <Button
+                  variant={viewMode === "week" ? "default" : "outline"}
+                  onClick={() => setViewMode("week")}
+                  className="rounded-xl sm:rounded-2xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] hover:shadow-[0_0_20px_rgba(107,241,120,0.5)] text-[#04101B] font-semibold border-0 text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 h-7 sm:h-8"
+                >
+                  Week
+                </Button>
+                <Button
+                  variant={viewMode === "month" ? "default" : "outline"}
+                  onClick={() => setViewMode("month")}
+                  className="rounded-xl sm:rounded-2xl border-[#6BF178]/30 bg-[#0a1f33]/50 hover:bg-[#6BF178]/20 hover:border-[#6BF178] text-[#DFF2D4] text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-1.5 h-7 sm:h-8"
+                >
+                  Month
+                </Button>
+              </div>
+              <button 
+                onClick={onProfileClick} 
+                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group flex-shrink-0"
+              >
+                <div className="hidden sm:block">
+                  <UserAvatar size={40} userName="Alex Thompson" />
+                </div>
+                <div className="sm:hidden">
+                  <UserAvatar size={36} userName="Alex Thompson" />
+                </div>
+                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
+              </button>
             </div>
           </div>
-          <button 
-            onClick={onProfileClick} 
-            className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
-          >
-            <UserAvatar size={40} userName="Alex Thompson" />
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
-          </button>
         </div>
+      </header>
 
-        {/* View Mode Toggle */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={() => setViewMode("week")}
-            className={`px-6 py-3 rounded-2xl font-semibold text-base transition-all duration-300 ${
-              viewMode === "week" 
-                ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] shadow-[0_0_20px_rgba(107,241,120,0.5)]"
-                : "bg-[#0a1f33]/50 border-2 border-[#6BF178]/30 text-[#DFF2D4] hover:bg-[#6BF178]/20 hover:border-[#6BF178]"
-            }`}
-          >
-            Week
-          </button>
-          <button
-            onClick={() => setViewMode("month")}
-            className={`px-6 py-3 rounded-2xl font-semibold text-base transition-all duration-300 ${
-              viewMode === "month"
-                ? "bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] shadow-[0_0_20px_rgba(107,241,120,0.5)]"
-                : "bg-[#0a1f33]/50 border-2 border-[#6BF178]/30 text-[#DFF2D4] hover:bg-[#6BF178]/20 hover:border-[#6BF178]"
-            }`}
-          >
-            Month
-          </button>
-        </div>
-
+      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
-          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern">
-                  <Sparkles className="w-6 h-6 text-[#04101B]" />
+          <Card className="modern-card glass-card-intense p-4 sm:p-6 rounded-2xl sm:rounded-3xl hover-lift overflow-hidden">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green pulse-modern flex-shrink-0">
+                  <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#04101B]" />
                 </div>
-                <div>
-                  <h3 className="text-gradient-modern text-glow text-lg font-bold">Assistant Timeline</h3>
-                  <p className="text-[#DFF2D4]/70 text-sm">Latest AI-driven entries</p>
+                <div className="min-w-0">
+                  <h3 className="text-gradient-modern text-glow text-base sm:text-lg font-bold">Assistant Timeline</h3>
+                  <p className="text-[#DFF2D4]/70 text-xs sm:text-sm">Latest AI-driven entries</p>
                 </div>
               </div>
-              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
+              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 flex-shrink-0">
                 {activityTimeline.length ? `${activityTimeline.length} updates` : "No data yet"}
               </Badge>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               {activityTimeline.length === 0 && (
-                <div className="rounded-2xl border border-dashed border-[#6BF178]/30 p-6 text-center text-[#DFF2D4]/70 bg-[#0a1f33]/30">
+                <div className="rounded-xl sm:rounded-2xl border border-dashed border-[#6BF178]/30 p-4 sm:p-6 text-center text-[#DFF2D4]/70 bg-[#0a1f33]/30 text-xs sm:text-sm">
                   Start a conversation with the assistant to populate your history with real actions.
                 </div>
               )}
@@ -481,20 +537,20 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                 return (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl bg-[#0a1f33]/50 backdrop-blur-sm border border-[#6BF178]/20 p-4 hover:bg-[#0a1f33]/70 hover:border-[#6BF178]/40 transition-all"
+                    className="flex items-center justify-between gap-2 sm:gap-3 rounded-xl sm:rounded-2xl bg-[#0a1f33]/50 backdrop-blur-sm border border-[#6BF178]/20 p-3 sm:p-4 hover:bg-[#0a1f33]/70 hover:border-[#6BF178]/40 transition-all"
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                       <div
-                        className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${background} flex items-center justify-center glow-effect-green`}
+                        className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br ${background} flex items-center justify-center glow-effect-green flex-shrink-0`}
                       >
-                        <Icon className="w-5 h-5 text-[#04101B]" />
+                        <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#04101B]" />
                       </div>
-                      <div>
-                        <p className="text-[#DFF2D4] font-medium">{entry.title}</p>
-                        <p className="text-[#DFF2D4]/70 text-sm">{entry.subtitle}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[#DFF2D4] font-medium text-xs sm:text-sm truncate">{entry.title}</p>
+                        <p className="text-[#DFF2D4]/70 text-[10px] sm:text-sm truncate">{entry.subtitle}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-[#DFF2D4]/50">
+                    <span className="text-[10px] sm:text-xs text-[#DFF2D4]/50 flex-shrink-0 whitespace-nowrap">
                       {new Date(entry.timestamp).toLocaleString([], {
                         month: "short",
                         day: "numeric",
@@ -513,67 +569,67 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
-          <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h3 className="mb-2 text-gradient-modern text-glow text-lg font-bold">Weekly Overview</h3>
-                <p className="text-[#DFF2D4]/80 text-sm">Last 7 days performance</p>
+          <Card className="modern-card glass-card-intense p-4 sm:p-6 rounded-2xl sm:rounded-3xl hover-lift overflow-hidden">
+            <div className="flex items-start justify-between mb-4 sm:mb-6 gap-2">
+              <div className="min-w-0 flex-1">
+                <h3 className="mb-1 sm:mb-2 text-gradient-modern text-glow text-base sm:text-lg font-bold">Weekly Overview</h3>
+                <p className="text-[#DFF2D4]/80 text-xs sm:text-sm">Last 7 days performance</p>
               </div>
-              <div className="flex items-center gap-2 bg-gradient-to-r from-[#6BF178]/20 to-[#E2F163]/20 rounded-2xl px-4 py-2 backdrop-blur-sm border border-[#6BF178]/30">
-                <Award className="w-5 h-5 text-[#6BF178]" />
-                <span className="text-[#DFF2D4] font-semibold">{weeklyStats.totalAchievements} achievements</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#6BF178]/20 to-[#E2F163]/20 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-1.5 sm:py-2 backdrop-blur-sm border border-[#6BF178]/30 flex-shrink-0">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
+                <span className="text-[#DFF2D4] font-semibold text-xs sm:text-sm">{weeklyStats.totalAchievements} achievements</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Apple className="w-5 h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4]">Avg Calories</span>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Apple className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Calories</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgCalories}</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgCalories}</div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#E2F163]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Zap className="w-5 h-5 text-[#E2F163]" />
-                  <span className="text-[#DFF2D4]">Avg Protein</span>
+              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#E2F163]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#E2F163]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Protein</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgProtein}g</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgProtein}g</div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#A855F7]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#A855F7]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Moon className="w-5 h-5 text-[#A855F7]" />
-                  <span className="text-[#DFF2D4]">Avg Sleep</span>
+              <div className="bg-gradient-to-br from-[#A855F7]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#A855F7]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-[#A855F7]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Sleep</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.avgSleep}h</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgSleep}h</div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#DFF2D4]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Activity className="w-5 h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4]">Workouts</span>
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#DFF2D4]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Workouts</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.totalWorkouts}</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.totalWorkouts}</div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#A855F7]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#E2F163]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Target className="w-5 h-5 text-[#E2F163]" />
-                  <span className="text-[#DFF2D4]">Goals Hit</span>
+              <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#A855F7]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#E2F163]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#E2F163]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Goals Hit</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">{weeklyStats.goalsHit}/7</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.goalsHit}/7</div>
               </div>
 
-              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-2xl p-4 border border-[#6BF178]/30">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4]">Streak</span>
+              <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Streak</span>
                 </div>
-                <div className="text-2xl text-gradient-modern font-bold">7 days</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">7 days</div>
               </div>
             </div>
           </Card>
