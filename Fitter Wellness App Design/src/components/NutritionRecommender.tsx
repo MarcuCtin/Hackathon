@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -17,7 +18,7 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+// React hooks imported above
 import { api } from "../lib/api";
 import { toast } from "sonner";
 
@@ -40,11 +41,15 @@ export function NutritionRecommender() {
     const fetchSupplements = async () => {
       try {
         setLoading(true);
-        const response = await api.getSupplements({ addedToPlan: true });
+        const response = await api.getSupplements();
         
         if (response.success && response.data) {
           setUserSupplements(response.data);
-          setAddedSupplements(response.data.map((s: any) => s._id));
+          setAddedSupplements(
+            response.data
+              .filter((s: any) => s.addedToPlan === true)
+              .map((s: any) => s._id)
+          );
         }
       } catch (error) {
         console.error("Failed to fetch supplements:", error);
@@ -204,7 +209,7 @@ export function NutritionRecommender() {
 
       <div className="relative">
         <ScrollArea className="w-full">
-          <div className="flex gap-4 pb-4">
+          <div className="flex gap-4 pb-4" style={{ overflowX: 'auto', width: '400px' }}>
             {supplements.map((supplement, index) => {
               const Icon = supplement.icon;
               const isAdded = addedSupplements.includes(supplement.id);

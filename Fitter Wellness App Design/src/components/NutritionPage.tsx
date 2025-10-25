@@ -368,188 +368,159 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Header with Next Meal */}
-      <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
-        <div className="container mx-auto px-6 py-5">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <FitterLogo size={40} />
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
-              </div>
-              <div>
-                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">Nutrition</h3>
-                <p className="text-[#DFF2D4]/80 text-sm font-medium">Smart meal & supplement guidance</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] px-3 py-1">
-                <Utensils className="w-3 h-3 mr-1" />
-                Today
-              </Badge>
-          {activePlan ? (
-            <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] px-3 py-1 whitespace-nowrap">
-              {activePlan.planType === 'cutting' && '🔥'}
-              {activePlan.planType === 'bulking' && '💪'}
-              {activePlan.planType === 'maintenance' && '⚖️'}
-              {activePlan.planType === 'healing' && '💚'}
-              {activePlan.planType === 'custom' && '✨'}
-              {' '}{activePlan.planName}
-            </Badge>
-          ) : (
-            <Badge className="rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1">
-              📋 Currently no plan set
-            </Badge>
-          )}
-              <button 
-                onClick={onProfileClick} 
-                className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
-              >
-                <UserAvatar size={40} userName="Alex Thompson" />
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
-              </button>
-            </div>
+      <div className="container mx-auto px-6 py-6 relative z-10">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <FitterLogo size={36} />
+            <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
           </div>
+        </div>
+        <button 
+          onClick={onProfileClick} 
+          className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group"
+        >
+          <UserAvatar size={40} userName="Alex Thompson" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-0 group-hover:opacity-30 blur-md transition-opacity"></div>
+        </button>
+      </div>
 
-          {/* Next Meal Card */}
-          {nextMeal && (
+        {/* Next Meal Card */}
+        {nextMeal && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <Card className="modern-card glass-card-intense p-4 rounded-2xl hover-lift overflow-hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green">
+                    <Utensils className="w-6 h-6 text-[#04101B]" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-[#DFF2D4]">Next: {nextMeal.name}</span>
+                      <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(226,241,99,0.4)]">
+                        <Clock className="w-3 h-3 mr-1" />
+                        {nextMeal.time}
+                      </Badge>
+                    </div>
+                    <p className="text-[#DFF2D4]/80 text-sm">
+                      {nextMeal.calories} kcal · {nextMeal.protein}g protein
+                    </p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-[#6BF178]" />
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Current Plan Card */}
+        {activePlan && (() => {
+          const currentWeek = Math.floor((new Date().getTime() - new Date(activePlan.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1;
+          const weeksRemaining = Math.max(0, activePlan.durationWeeks - currentWeek + 1);
+          const progressPercentage = Math.min(100, (currentWeek / activePlan.durationWeeks) * 100);
+          
+          return (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3"
+              className="mb-6"
             >
-              <Card className="modern-card glass-card-intense p-4 rounded-2xl hover-lift overflow-hidden">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center glow-effect-green">
-                      <Utensils className="w-6 h-6 text-[#04101B]" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-[#DFF2D4]">Next: {nextMeal.name}</span>
-                        <Badge className="rounded-full bg-gradient-to-r from-[#E2F163] to-[#6BF178] text-[#04101B] border-0 font-semibold shadow-[0_0_10px_rgba(226,241,99,0.4)]">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {nextMeal.time}
+              <Card className="modern-card glass-card-intense p-4 rounded-2xl hover-lift overflow-hidden border-purple-500/30">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                        {activePlan.planType === 'cutting' && '🔥 Cutting'}
+                        {activePlan.planType === 'bulking' && '💪 Bulking'}
+                        {activePlan.planType === 'maintenance' && '⚖️ Maintenance'}
+                        {activePlan.planType === 'healing' && '💚 Healing'}
+                        {activePlan.planType === 'custom' && '✨ Custom'}
+                      </Badge>
+                      <span className="text-[#DFF2D4] font-semibold">{activePlan.planName}</span>
+                      {activePlan.status === 'paused' && (
+                        <Badge className="rounded-full bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+                          ⏸️ Paused
                         </Badge>
-                      </div>
-                      <p className="text-[#DFF2D4]/80 text-sm">
-                        {nextMeal.calories} kcal · {nextMeal.protein}g protein
+                      )}
+                    </div>
+                    {activePlan.description && (
+                      <p className="text-[#DFF2D4]/80 text-sm mb-2">{activePlan.description}</p>
+                    )}
+                    <div className="flex items-center gap-4 text-xs text-[#DFF2D4]/70 mb-2">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Week {currentWeek} / {activePlan.durationWeeks}
+                      </span>
+                      <span>·</span>
+                      <span>{activePlan.targetCalories} kcal/day</span>
+                      <span>·</span>
+                      <span>{activePlan.targetProtein}g protein</span>
+                    </div>
+                    {activePlan.primaryGoal && (
+                      <p className="text-[#DFF2D4]/60 text-xs mb-2">
+                        🎯 {activePlan.primaryGoal}
                       </p>
+                    )}
+                    {/* Progress bar */}
+                    <div className="relative h-2 bg-[#DFF2D4]/20 rounded-full border border-purple-500/30 mt-2">
+                      <motion.div
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${progressPercentage}%`,
+                          background: 'linear-gradient(90deg, #a855f7, #ec4899)',
+                          boxShadow: '0 0 10px rgba(168, 85, 247, 0.5)'
+                        }}
+                        initial={{ width: 0 }}
+                        animate={{ width: `${progressPercentage}%` }}
+                        transition={{ duration: 1 }}
+                      />
                     </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-[#6BF178]" />
-                </div>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Current Plan Card */}
-          {activePlan && (() => {
-            const currentWeek = Math.floor((new Date().getTime() - new Date(activePlan.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1;
-            const weeksRemaining = Math.max(0, activePlan.durationWeeks - currentWeek + 1);
-            const progressPercentage = Math.min(100, (currentWeek / activePlan.durationWeeks) * 100);
-            
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-3"
-              >
-                <Card className="modern-card glass-card-intense p-4 rounded-2xl hover-lift overflow-hidden border-purple-500/30">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className="rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_10px_rgba(168,85,247,0.4)]">
-                          {activePlan.planType === 'cutting' && '🔥 Cutting'}
-                          {activePlan.planType === 'bulking' && '💪 Bulking'}
-                          {activePlan.planType === 'maintenance' && '⚖️ Maintenance'}
-                          {activePlan.planType === 'healing' && '💚 Healing'}
-                          {activePlan.planType === 'custom' && '✨ Custom'}
-                        </Badge>
-                        <span className="text-[#DFF2D4] font-semibold">{activePlan.planName}</span>
-                        {activePlan.status === 'paused' && (
-                          <Badge className="rounded-full bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
-                            ⏸️ Paused
-                          </Badge>
-                        )}
-                      </div>
-                      {activePlan.description && (
-                        <p className="text-[#DFF2D4]/80 text-sm mb-2">{activePlan.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-[#DFF2D4]/70 mb-2">
-                        <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
-                          Week {currentWeek} / {activePlan.durationWeeks}
-                        </span>
-                        <span>·</span>
-                        <span>{activePlan.targetCalories} kcal/day</span>
-                        <span>·</span>
-                        <span>{activePlan.targetProtein}g protein</span>
-                      </div>
-                      {activePlan.primaryGoal && (
-                        <p className="text-[#DFF2D4]/60 text-xs mb-2">
-                          🎯 {activePlan.primaryGoal}
-                        </p>
-                      )}
-                      {/* Progress bar */}
-                      <div className="relative h-2 bg-[#DFF2D4]/20 rounded-full border border-purple-500/30 mt-2">
-                        <motion.div
-                          className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${progressPercentage}%`,
-                            background: 'linear-gradient(90deg, #a855f7, #ec4899)',
-                            boxShadow: '0 0 10px rgba(168, 85, 247, 0.5)'
-                          }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progressPercentage}%` }}
-                          transition={{ duration: 1 }}
-                        />
-                      </div>
-                      <p className="text-[#DFF2D4]/50 text-xs mt-1">{weeksRemaining} weeks remaining</p>
-                      
-                      {/* Action buttons */}
-                      <div className="flex gap-2 mt-3">
-                        {activePlan.status === 'active' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handlePausePlan}
-                            className="rounded-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 text-xs h-7"
-                          >
-                            <Pause className="w-3 h-3 mr-1" />
-                            Pause
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={handleResumePlan}
-                            className="rounded-full border-green-500/30 text-green-400 hover:bg-green-500/10 text-xs h-7"
-                          >
-                            <Play className="w-3 h-3 mr-1" />
-                            Resume
-                          </Button>
-                        )}
+                    <p className="text-[#DFF2D4]/50 text-xs mt-1">{weeksRemaining} weeks remaining</p>
+                    
+                    {/* Action buttons */}
+                    <div className="flex gap-2 mt-3">
+                      {activePlan.status === 'active' ? (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={handleCancelPlan}
-                          className="rounded-full border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-7"
+                          onClick={handlePausePlan}
+                          className="rounded-full border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 text-xs h-7"
                         >
-                          <X className="w-3 h-3 mr-1" />
-                          Cancel
+                          <Pause className="w-3 h-3 mr-1" />
+                          Pause
                         </Button>
-                      </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleResumePlan}
+                          className="rounded-full border-green-500/30 text-green-400 hover:bg-green-500/10 text-xs h-7"
+                        >
+                          <Play className="w-3 h-3 mr-1" />
+                          Resume
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleCancelPlan}
+                        className="rounded-full border-red-500/30 text-red-400 hover:bg-red-500/10 text-xs h-7"
+                      >
+                        <X className="w-3 h-3 mr-1" />
+                        Cancel
+                      </Button>
                     </div>
                   </div>
-                </Card>
-              </motion.div>
-            );
-          })()}
-        </div>
-      </header>
-
-      <div className="container mx-auto px-6 py-6 relative z-10">
+                </div>
+              </Card>
+            </motion.div>
+          );
+        })()}
         {/* Nutrition Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

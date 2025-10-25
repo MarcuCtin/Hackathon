@@ -1,9 +1,9 @@
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Droplet, Moon, Heart, Apple, Zap, BedDouble, X, Check, Loader2, Dumbbell, Utensils, Activity } from "lucide-react";
-import { useState, useEffect } from "react";
 import { api } from "../lib/api";
 import { toast } from "sonner";
 

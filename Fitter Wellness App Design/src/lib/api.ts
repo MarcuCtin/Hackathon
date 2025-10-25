@@ -8,6 +8,7 @@ export interface User {
   age?: number;
   heightCm?: number;
   weightKg?: number;
+  gender?: "male" | "female" | "other";
   goals?: string[];
   activityLevel?: "beginner" | "intermediate" | "advanced";
   completedOnboarding?: boolean;
@@ -821,6 +822,15 @@ class ApiClient {
       `/supplements/${id}/add-to-plan`,
       {
         method: "PATCH",
+      }
+    );
+  }
+
+  async deleteSupplement(id: string) {
+    return this.request<{ success: boolean; data: any }>(
+      `/supplements/${id}`,
+      {
+        method: "DELETE",
       }
     );
   }

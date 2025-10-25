@@ -126,7 +126,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
   const handleLogout = () => {
     logout();
     toast.success("Logged out successfully");
-    // Redirect to landing page will happen automatically via App.tsx useEffect
   };
 
   const stats = [

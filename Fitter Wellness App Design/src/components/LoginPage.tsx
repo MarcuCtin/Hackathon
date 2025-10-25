@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -7,6 +7,7 @@ import { Card } from "./ui/card";
 import { FitterLogo } from "./FitterLogo";
 import { Mail, Lock, Eye, EyeOff, Sparkles } from "lucide-react";
 import { api } from "../lib/api";
+import { useAuth } from "../hooks/useAuth";
 import { toast } from "sonner";
 
 interface LoginPageProps {
@@ -15,6 +16,7 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onLoginSuccess, onRegisterClick }: LoginPageProps) {
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,13 +32,10 @@ export function LoginPage({ onLoginSuccess, onRegisterClick }: LoginPageProps) {
 
     try {
       setLoading(true);
-      const response = await api.login(email, password);
-      
-      if (response.success) {
-        toast.success("Welcome back!");
-        if (onLoginSuccess) {
-          onLoginSuccess();
-        }
+      await login(email, password);
+      toast.success("Welcome back!");
+      if (onLoginSuccess) {
+        onLoginSuccess();
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -47,89 +46,82 @@ export function LoginPage({ onLoginSuccess, onRegisterClick }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-modern relative flex items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <Card className="modern-card glass-card-intense p-8 border-2 border-[#6BF178]/40 shadow-lg shadow-[#6BF178]/20">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <FitterLogo size={64} />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent mt-4 flex items-center gap-2">
-              Welcome Back
-              <Sparkles className="w-6 h-6 text-[#6BF178]" />
-            </h1>
-            <p className="text-[#DFF2D4]/70 mt-2">Sign in to continue your wellness journey</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#04101B] via-[#0a1f33] to-[#04101B] flex">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12">
+        <FitterLogo size={80} />
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent mt-8 mb-4">
+          Welcome Back
+        </h1>
+        <p className="text-[#DFF2D4]/80 text-lg text-center max-w-md">
+          Continue your wellness journey with AI-powered insights
+        </p>
+      </div>
+
+      {/* Right side - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-8 lg:hidden">
+            <FitterLogo size={48} />
           </div>
+          
+          <h2 className="text-3xl font-bold text-[#DFF2D4] mb-2 text-center">Sign In</h2>
+          <p className="text-[#DFF2D4]/60 mb-8 text-center">Enter your credentials to continue</p>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="pl-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-              </div>
+              <Input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email address"
+                className="h-12 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178] rounded-xl"
+              />
             </div>
 
-            <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="pl-10 pr-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6BF178] hover:text-[#E2F163]"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="h-12 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178] rounded-xl pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 bottom-0 my-auto flex items-center justify-center h-6 text-[#6BF178] hover:text-[#E2F163] transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
-            <Button
+            <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50 font-semibold h-12 text-lg disabled:opacity-50"
+              className="w-full h-12 bg-[#6BF178] hover:bg-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50 font-bold rounded-xl disabled:opacity-50 transition-all border-2 border-[#6BF178]"
             >
               {loading ? "Signing in..." : "Sign In"}
-            </Button>
+            </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#6BF178]/30 to-transparent"></div>
-            <span className="px-4 text-[#DFF2D4]/50 text-sm">OR</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#6BF178]/30 to-transparent"></div>
+          <div className="mt-6 text-center">
+            <p className="text-[#DFF2D4]/60">
+              Don't have an account?{" "}
+              <button
+                onClick={onRegisterClick}
+                className="text-[#6BF178] hover:text-[#E2F163] font-semibold transition-colors"
+              >
+                Sign up
+              </button>
+            </p>
           </div>
-
-          {/* Register Link */}
-          <div className="text-center">
-            <p className="text-[#DFF2D4]/70 mb-2">Don't have an account?</p>
-            <Button
-              variant="outline"
-              onClick={onRegisterClick}
-              className="w-full bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] hover:border-[#6BF178] hover:bg-[#6BF178]/10"
-            >
-              Create Account
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }

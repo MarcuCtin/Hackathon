@@ -132,34 +132,15 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
       const today = new Date().toISOString();
       const response = await api.getDailyTasks(today);
       
-      if (response.success && response.data) {
-        // If no tasks exist, try to generate from active plan
-        if (response.data.length === 0) {
-          try {
-            const generateResponse = await api.generateDailyTasksFromPlan();
-            if (generateResponse.success && generateResponse.data) {
-              const transformedTasks: Task[] = generateResponse.data.map((task: any) => ({
-                id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
-                title: task.title,
-                completed: task.completed,
-                time: task.scheduledTime,
-              }));
-              setTasks(transformedTasks);
-              return;
-            }
-          } catch (error) {
-            console.error("Failed to generate tasks from plan:", error);
-          }
+        if (response.success && response.data) {
+          const transformedTasks: Task[] = response.data.map((task: any) => ({
+            id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
+            title: task.title,
+            completed: task.completed,
+            time: task.scheduledTime,
+          }));
+          setTasks(transformedTasks);
         }
-        
-        const transformedTasks: Task[] = response.data.map((task: any) => ({
-          id: parseInt(task._id.slice(-6), 16), // Convert MongoDB ID to number
-          title: task.title,
-          completed: task.completed,
-          time: task.scheduledTime,
-        }));
-        setTasks(transformedTasks);
-      }
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
       // Fallback to mock data if API fails

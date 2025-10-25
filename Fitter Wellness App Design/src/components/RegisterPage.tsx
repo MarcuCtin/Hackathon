@@ -60,124 +60,105 @@ export function RegisterPage({ onRegisterSuccess, onLoginClick }: RegisterPagePr
   };
 
   return (
-    <div className="min-h-screen bg-gradient-modern relative flex items-center justify-center p-6">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10"
-      >
-        <Card className="modern-card glass-card-intense p-8 border-2 border-[#6BF178]/40 shadow-lg shadow-[#6BF178]/20">
-          {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <FitterLogo size={64} />
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent mt-4 flex items-center gap-2">
-              Join Fitter
-              <Sparkles className="w-6 h-6 text-[#6BF178]" />
-            </h1>
-            <p className="text-[#DFF2D4]/70 mt-2">Start your wellness journey today</p>
+    <div className="min-h-screen bg-gradient-to-br from-[#04101B] via-[#0a1f33] to-[#04101B] flex">
+      {/* Left side - Branding */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12">
+        <FitterLogo size={80} />
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent mt-8 mb-4">
+          Join Fitter
+        </h1>
+        <p className="text-[#DFF2D4]/80 text-lg text-center max-w-md">
+          Start your wellness journey with AI-powered lifestyle guidance
+        </p>
+      </div>
+
+      {/* Right side - Register Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="w-full max-w-md"
+        >
+          <div className="mb-8 lg:hidden">
+            <FitterLogo size={48} />
           </div>
+          
+          <h2 className="text-3xl font-bold text-[#DFF2D4] mb-2">Create Account</h2>
+          <p className="text-[#DFF2D4]/60 mb-8">Sign up to get started</p>
 
-          {/* Register Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
-                  className="pl-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-              </div>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Full name"
+              className="h-12 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178] rounded-xl"
+            />
+
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              className="h-12 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178] rounded-xl"
+            />
+
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Password"
+                className="h-12 bg-[#0a1f33]/50 border-[#6BF178]/20 text-[#DFF2D4] placeholder:text-[#DFF2D4]/40 focus:border-[#6BF178] pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6BF178] hover:text-[#E2F163] transition-colors"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
-            <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  className="pl-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Create a password"
-                  className="pl-10 pr-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6BF178] hover:text-[#E2F163]"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <Label className="text-[#DFF2D4] mb-2 block font-semibold">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6BF178]" />
-                <Input
-                  type={showConfirmPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  className="pl-10 pr-10 bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] placeholder:text-[#DFF2D4]/50 focus:border-[#6BF178]"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6BF178] hover:text-[#E2F163]"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
+            <div className="relative">
+              <Input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm password"
+                className="h-12 bg-[#0a1f33]/50 border-[#6BF178]/20 text-[#DFF2D4] placeholder:text-[#DFF2D4]/40 focus:border-[#6BF178] pr-12"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#6BF178] hover:text-[#E2F163] transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50 font-semibold h-12 text-lg disabled:opacity-50"
+              className="w-full h-12 bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] hover:shadow-lg hover:shadow-[#6BF178]/50 font-semibold disabled:opacity-50"
             >
               {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#6BF178]/30 to-transparent"></div>
-            <span className="px-4 text-[#DFF2D4]/50 text-sm">OR</span>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#6BF178]/30 to-transparent"></div>
+          <div className="mt-6 text-center">
+            <p className="text-[#DFF2D4]/60">
+              Already have an account?{" "}
+              <button
+                onClick={onLoginClick}
+                className="text-[#6BF178] hover:text-[#E2F163] font-semibold transition-colors"
+              >
+                Sign in
+              </button>
+            </p>
           </div>
-
-          {/* Login Link */}
-          <div className="text-center">
-            <p className="text-[#DFF2D4]/70 mb-2">Already have an account?</p>
-            <Button
-              variant="outline"
-              onClick={onLoginClick}
-              className="w-full bg-[#0a1f33]/80 border-2 border-[#6BF178]/30 text-[#DFF2D4] hover:border-[#6BF178] hover:bg-[#6BF178]/10"
-            >
-              Sign In
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
+        </motion.div>
+      </div>
     </div>
   );
 }
