@@ -42,7 +42,9 @@ router.get(
     const totalProtein = nutritionLogs.reduce((sum, n) => sum + (n.total?.protein || 0), 0);
     const totalCarbs = nutritionLogs.reduce((sum, n) => sum + (n.total?.carbs || 0), 0);
     const totalFat = nutritionLogs.reduce((sum, n) => sum + (n.total?.fat || 0), 0);
-    const water = hydrationLogs.reduce((sum, l) => sum + (l.value || 0), 0);
+    // Convert water from glasses to liters (1 glass = 200ml = 0.2L)
+    const waterInGlasses = hydrationLogs.reduce((sum, l) => sum + (l.value || 0), 0);
+    const water = waterInGlasses * 0.2; // Convert glasses to liters
     const caffeine = caffeineLogs.reduce((sum, l) => sum + (l.value || 0), 0);
 
     // Calculate micronutrients from food
