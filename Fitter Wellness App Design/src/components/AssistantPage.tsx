@@ -211,13 +211,27 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
           try {
             switch (action.type) {
               case "water_log":
+                // Convert to glasses if needed (1 glass = 200ml)
+                const waterAmount = action.amount || 1;
+                const waterUnit = action.unit || "glasses";
+                let waterValue = waterAmount;
+                
+                // If the unit is ml, convert to glasses (200ml = 1 glass)
+                if (waterUnit === "ml" || waterUnit === "milliliters") {
+                  waterValue = waterAmount / 200;
+                }
+                // If the unit is liters, convert to glasses (1L = 5 glasses)
+                else if (waterUnit === "l" || waterUnit === "liters") {
+                  waterValue = waterAmount * 5;
+                }
+                
                 await api.createLog({
                   type: "hydration",
-                  value: action.amount || 1,
-                  unit: action.unit || "glasses",
+                  value: waterValue,
+                  unit: "glasses",
                   date: new Date().toISOString(),
                 });
-                toast.success(`✅ Logged ${action.amount || 1} ${action.unit || "glasses"} of water`);
+                toast.success(`✅ Logged ${waterAmount} ${waterUnit} of water (${waterValue.toFixed(1)} glasses)`);
                 break;
               
               case "sleep_log":

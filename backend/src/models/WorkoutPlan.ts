@@ -63,3 +63,5 @@ WorkoutPlanSchema.index({ userId: 1, level: 1 });
 export const WorkoutPlan = model<WorkoutPlanDoc>('WorkoutPlan', WorkoutPlanSchema);
 
 
+
+
