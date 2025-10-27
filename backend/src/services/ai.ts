@@ -20,7 +20,6 @@ function toContents(messages: Array<{ role: Role; content: string }>): {
   const systemMsg = messages.find((m) => m.role === 'system')?.content;
   const rest = messages.filter((m) => m.role !== 'system');
 
-  // Keep the last ~12 turns or limit to ~8000 chars to stay within context
   const MAX_CHARS = 8000;
   const MAX_TURNS = 12;
   let accLen = 0;
@@ -92,7 +91,6 @@ export async function chatWithAi(
       lastErr = new Error('Empty response');
     } catch (err) {
       lastErr = err;
-      // brief backoff before retrying with next model
       if (i < models.length - 1) await new Promise((r) => setTimeout(r, 150 * (i + 1)));
     }
   }

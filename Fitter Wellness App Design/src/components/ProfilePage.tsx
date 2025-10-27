@@ -197,7 +197,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30  backdrop-blur-2xl bg-[#04101B]/98 shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4  backdrop-blur-2xl">
           <div className="flex items-center justify-between">
@@ -260,7 +259,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
       </header>
 
       <div className="container mx-auto px-6 py-6 relative z-10">
-        {/* Profile Header Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -268,7 +266,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
         >
           <Card className="modern-card glass-card-intense p-8 rounded-3xl hover-lift overflow-hidden">
             <div className="flex flex-col lg:flex-row items-center lg:items-start gap-8">
-              {/* Avatar Section */}
               <div className="flex-shrink-0">
                 <div className="relative group">
                   <UserAvatar
@@ -282,7 +279,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 </div>
               </div>
 
-              {/* Profile Info */}
               <div className="flex-1 text-center lg:text-left space-y-4">
                 <div>
                   <h2 className="mb-1 text-[#DFF2D4] font-bold text-3xl">{profile.name || "Your Name"}</h2>
@@ -317,7 +313,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 </div>
               </div>
 
-              {/* Quick Stats */}
               <div className="grid grid-cols-2 gap-3 lg:w-auto w-full max-w-xs lg:max-w-none">
                 {stats.map((stat) => {
                   const Icon = stat.icon;
@@ -339,7 +334,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           </Card>
         </motion.div>
 
-        {/* Health Metrics */}
         {!isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -404,7 +398,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           </motion.div>
         )}
 
-        {/* Edit Form */}
         {isEditing && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -415,7 +408,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
               <h3 className="mb-6 text-gradient-modern text-glow text-lg font-bold">Personal Information</h3>
               
               <div className="grid md:grid-cols-2 gap-6">
-                {/* Name */}
                 <div>
                   <Label htmlFor="name" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <User className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -429,7 +421,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Email */}
                 <div>
                   <Label htmlFor="email" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Mail className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -444,7 +435,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Age */}
                 <div>
                   <Label htmlFor="age" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Calendar className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -459,7 +449,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Gender */}
                 <div>
                   <Label htmlFor="gender" className="mb-2 block text-[#DFF2D4] font-semibold">
                     Gender
@@ -476,7 +465,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   </Select>
                 </div>
 
-                {/* Height */}
                 <div>
                   <Label htmlFor="height" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Ruler className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -491,7 +479,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Weight */}
                 <div>
                   <Label htmlFor="weight" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Weight className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -506,7 +493,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Target Weight */}
                 <div>
                   <Label htmlFor="targetWeight" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Target className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -521,7 +507,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                   />
                 </div>
 
-                {/* Activity Level */}
                 <div>
                   <Label htmlFor="activityLevel" className="mb-2 block text-[#DFF2D4] font-semibold">
                     <Activity className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -545,7 +530,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 </div>
               </div>
 
-              {/* Goals */}
               <div className="mt-6">
                 <Label className="mb-3 block text-slate-700">
                   <Target className="w-4 h-4 inline mr-2 text-[#6BF178]" />
@@ -583,7 +567,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
                 </div>
               </div>
 
-              {/* Bio */}
               <div className="mt-6">
                 <Label htmlFor="bio" className="mb-2 block text-[#DFF2D4] font-semibold">
                   About You
@@ -600,7 +583,6 @@ export function ProfilePage({ onBack }: ProfilePageProps) {
           </motion.div>
         )}
 
-        {/* Insights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

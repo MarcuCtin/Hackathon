@@ -264,7 +264,6 @@ export function DailyRecommendations() {
                 borderRadius: "24px",
               }}
             >
-              {/* Animated gradient background */}
               <motion.div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
                 style={{
@@ -274,7 +273,6 @@ export function DailyRecommendations() {
 
               <div className="relative p-5">
                 <div className="flex items-start gap-4">
-                  {/* Animated SVG icon */}
                   <motion.div
                     className="flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center border-2 backdrop-blur-md"
                     style={{
@@ -297,7 +295,6 @@ export function DailyRecommendations() {
                   </motion.div>
 
                   <div className="flex-1 min-w-0">
-                    {/* Category badge */}
                     <Badge
                       className="mb-2 rounded-full border-2 font-extrabold backdrop-blur-md px-3 py-1.5 text-white"
                       style={{
@@ -325,7 +322,6 @@ export function DailyRecommendations() {
                     <h4 className="mb-1 text-[#DFF2D4] font-semibold">{rec.title}</h4>
                     <p className="text-[#DFF2D4]/80">{rec.description}</p>
 
-                    {/* Action buttons */}
                     <div className="flex items-center gap-2 mt-4">
                       <Button
                         size="sm"
@@ -338,7 +334,6 @@ export function DailyRecommendations() {
                           textShadow: '0 2px 4px rgba(0,0,0,0.5)',
                         }}
                       >
-                        {/* Glow effect overlay */}
                         <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                         
                         <Check className="w-4 h-4 mr-1.5 relative z-10" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.9)) drop-shadow(0 0 8px rgba(255,255,255,0.8))' }} />
@@ -361,7 +356,6 @@ export function DailyRecommendations() {
                   </div>
                 </div>
 
-                {/* Priority indicator */}
                 {rec.priority === "high" && (
                   <motion.div
                     className="absolute top-3 right-3"

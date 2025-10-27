@@ -137,7 +137,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
 
   return (
     <div className="flex h-full w-full flex-col bg-gradient-modern p-6 overflow-y-auto">
-      {/* Header */}
       <div className="relative z-10 mb-6 flex items-center justify-between sticky top-0 bg-[#04101B]/80 backdrop-blur-md p-4 rounded-2xl border border-[#6BF178]/30 shadow-[0_8px_32px_rgba(107,241,120,0.2)]">
         <div className="flex items-center gap-4">
           <Button 
@@ -165,9 +164,7 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
         </Badge>
       </div>
 
-      {/* Main Content Grid */}
       <div className="relative z-10 grid flex-grow grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Wellness Overview */}
         <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
@@ -212,7 +209,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
           </CardContent>
         </Card>
 
-        {/* Movement & Activity */}
         <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
@@ -238,7 +234,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
           </CardContent>
         </Card>
 
-        {/* Nutrition Summary */}
         <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
@@ -274,7 +269,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
           </CardContent>
         </Card>
 
-        {/* Meals by Type */}
         <Card className="lg:col-span-2 modern-card glass-card-intense hover-lift">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
@@ -305,7 +299,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
           </CardContent>
         </Card>
 
-        {/* Activities Timeline */}
         <Card className="modern-card glass-card-intense hover-lift">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-[#DFF2D4]">
@@ -349,7 +342,6 @@ export function DayInfoPage({ date: propDate, onBack }: DayInfoPageProps) {
           </CardContent>
         </Card>
 
-        {/* Chat Messages */}
         {data.chatMessages.length > 0 && (
           <Card className="lg:col-span-3 modern-card glass-card-intense hover-lift">
             <CardHeader>

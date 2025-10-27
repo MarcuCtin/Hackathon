@@ -13,25 +13,21 @@ export interface UserPlanDoc extends Document {
   endDate: Date;
   status: PlanStatus;
 
-  // AI generated configuration
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;
   targetFat: number;
 
-  // Goals and focus areas
   primaryGoal: string; // e.g., "lose 10kg"
   secondaryGoals?: string[];
   focusAreas?: string[]; // e.g., ["muscle preservation", "strength"]
 
-  // AI conversation context
   aiConversationHistory?: Array<{
     question: string;
     answer: string;
     timestamp: Date;
   }>;
 
-  // Progress tracking
   weeklyProgress?: Array<{
     week: number;
     actualCalories: number;
@@ -63,18 +59,15 @@ const UserPlanSchema = new Schema<UserPlanDoc>(
       default: 'active',
     },
 
-    // AI generated configuration
     targetCalories: { type: Number, required: true },
     targetProtein: { type: Number, required: true },
     targetCarbs: { type: Number, required: true },
     targetFat: { type: Number, required: true },
 
-    // Goals
     primaryGoal: { type: String, required: true },
     secondaryGoals: [{ type: String }],
     focusAreas: [{ type: String }],
 
-    // AI conversation history
     aiConversationHistory: [
       {
         question: { type: String, required: true },
@@ -83,7 +76,6 @@ const UserPlanSchema = new Schema<UserPlanDoc>(
       },
     ],
 
-    // Progress tracking
     weeklyProgress: [
       {
         week: { type: Number, required: true },

@@ -7,7 +7,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Get active plan
 router.get(
   '/active',
   requireAuth,
@@ -26,7 +25,6 @@ router.get(
   }),
 );
 
-// Get all plans (history)
 router.get(
   '/',
   requireAuth,
@@ -44,7 +42,6 @@ router.get(
   }),
 );
 
-// Get plan by ID
 router.get(
   '/:id',
   requireAuth,
@@ -68,7 +65,6 @@ router.get(
   }),
 );
 
-// Create new plan
 router.post(
   '/',
   requireAuth,
@@ -92,7 +88,6 @@ router.post(
     const endDate = new Date();
     endDate.setDate(endDate.getDate() + durationWeeks * 7);
 
-    // Deactivate any existing active plans
     await UserPlan.updateMany(
       {
         userId: new Types.ObjectId(req.userId),
@@ -122,7 +117,6 @@ router.post(
       aiConversationHistory,
     });
 
-    // Update UserTargets with plan targets
     await UserTargets.findOneAndUpdate(
       { userId: new Types.ObjectId(req.userId) },
       {
@@ -145,7 +139,6 @@ router.post(
   }),
 );
 
-// Update plan status
 router.patch(
   '/:id/status',
   requireAuth,
@@ -177,7 +170,6 @@ router.patch(
   }),
 );
 
-// Delete plan
 router.delete(
   '/:id',
   requireAuth,

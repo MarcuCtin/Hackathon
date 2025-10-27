@@ -49,7 +49,6 @@ router.get(
       query.sessionId = sessionId;
     }
 
-    // Filter by day if provided
     if (day) {
       const dayDate = new Date(day);
       const startOfDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
@@ -89,14 +88,12 @@ router.get(
   }),
 );
 
-// Get messages grouped by day
 router.get(
   '/messages/by-day',
   requireAuth,
   asyncHandler(async (req, res) => {
     const messages = await ChatMessage.find({ userId: req.userId }).sort({ timestamp: -1 }).lean();
 
-    // Group messages by day
     const messagesByDay: Record<string, unknown[]> = {};
 
     for (const message of messages) {
@@ -112,7 +109,6 @@ router.get(
       }
     }
 
-    // Convert to array format sorted by date (newest first)
     const result = Object.entries(messagesByDay)
       .map(([day, msgs]) => ({
         day,

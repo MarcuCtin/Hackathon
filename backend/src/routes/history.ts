@@ -10,7 +10,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Get weekly overview
 router.get(
   '/weekly-overview',
   requireAuth,
@@ -33,7 +32,6 @@ router.get(
       }).lean(),
     ]);
 
-    // Calculate averages
     const avgCalories = nutrition.reduce((sum, n) => sum + (n.total?.calories || 0), 0) / 7;
     const avgProtein = nutrition.reduce((sum, n) => sum + (n.total?.protein || 0), 0) / 7;
     const avgSleep =
@@ -57,7 +55,6 @@ router.get(
   }),
 );
 
-// Get assistant timeline
 router.get(
   '/assistant-timeline',
   requireAuth,
@@ -74,7 +71,6 @@ router.get(
   }),
 );
 
-// Get daily history with progress scores
 router.get(
   '/daily-cards',
   requireAuth,
@@ -99,7 +95,6 @@ router.get(
       }).lean(),
     ]);
 
-    // Calculate wellness score for each day
     const calculateWellnessScore = (
       hydration: number,
       sleep: number,
@@ -188,7 +183,6 @@ router.get(
   }),
 );
 
-// Get insights - progress comparisons
 router.get(
   '/insights',
   requireAuth,

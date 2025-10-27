@@ -11,7 +11,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Get today's nutrition summary
 router.get(
   '/today',
   requireAuth,
@@ -42,12 +41,10 @@ router.get(
     const totalProtein = nutritionLogs.reduce((sum, n) => sum + (n.total?.protein || 0), 0);
     const totalCarbs = nutritionLogs.reduce((sum, n) => sum + (n.total?.carbs || 0), 0);
     const totalFat = nutritionLogs.reduce((sum, n) => sum + (n.total?.fat || 0), 0);
-    // Convert water from glasses to liters (1 glass = 200ml = 0.2L)
     const waterInGlasses = hydrationLogs.reduce((sum, l) => sum + (l.value || 0), 0);
     const water = waterInGlasses * 0.2; // Convert glasses to liters
     const caffeine = caffeineLogs.reduce((sum, l) => sum + (l.value || 0), 0);
 
-    // Calculate micronutrients from food
     const foodMicronutrients = {
       vitaminD: 0,
       calcium: 0,
@@ -72,7 +69,6 @@ router.get(
       }
     }
 
-    // Get micronutrients from supplements taken today
     const supplementLogs = await SupplementLog.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
@@ -103,7 +99,6 @@ router.get(
       }
     }
 
-    // Total micronutrients (food + supplements)
     const totalMicronutrients = {
       vitaminD: foodMicronutrients.vitaminD + supplementMicronutrients.vitaminD,
       calcium: foodMicronutrients.calcium + supplementMicronutrients.calcium,
@@ -115,12 +110,10 @@ router.get(
       folate: foodMicronutrients.folate + supplementMicronutrients.folate,
     };
 
-    // Get or create UserTargets
     let userTargets = await UserTargets.findOne({
       userId: new Types.ObjectId(req.userId),
     }).lean();
 
-    // If no targets exist, create defaults
     if (!userTargets) {
       const newTargets = await UserTargets.create({
         userId: new Types.ObjectId(req.userId),
@@ -142,7 +135,6 @@ router.get(
       });
       userTargets = newTargets.toObject() as typeof userTargets & { __v: number };
     } else {
-      // Update current values in UserTargets
       await UserTargets.findOneAndUpdate(
         { userId: new Types.ObjectId(req.userId) },
         {
@@ -166,18 +158,15 @@ router.get(
         },
       );
 
-      // Fetch updated document
       userTargets = await UserTargets.findOne({
         userId: new Types.ObjectId(req.userId),
       }).lean();
     }
 
-    // Ensure userTargets is not null
     if (!userTargets) {
       throw new Error('Failed to get or create user targets');
     }
 
-    // Group meals by type
     const mealsByType = {
       breakfast: nutritionLogs.filter((m) => m.mealType === 'breakfast'),
       lunch: nutritionLogs.filter((m) => m.mealType === 'lunch'),
@@ -255,7 +244,6 @@ router.get(
   }),
 );
 
-// Get recommended supplements
 router.get(
   '/supplements',
   requireAuth,
@@ -270,7 +258,6 @@ router.get(
   }),
 );
 
-// Get nutrition tips
 router.get(
   '/tips',
   requireAuth,

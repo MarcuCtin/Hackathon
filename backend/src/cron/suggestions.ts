@@ -8,7 +8,6 @@ export async function generateDailySuggestions() {
   console.log('Starting daily suggestions generation...');
 
   try {
-    // Get all active users
     const users = await User.find({
       completedOnboarding: true,
     }).lean();
@@ -17,7 +16,6 @@ export async function generateDailySuggestions() {
 
     for (const user of users) {
       try {
-        // Check if user already has active suggestions for today
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
@@ -32,7 +30,6 @@ export async function generateDailySuggestions() {
           continue;
         }
 
-        // Get user's recent activity
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
 
@@ -47,7 +44,6 @@ export async function generateDailySuggestions() {
           }).lean(),
         ]);
 
-        // Calculate stats
         const todayLogs = recentLogs.filter(
           (log) => new Date(log.date).getTime() >= today.getTime(),
         );
@@ -68,7 +64,6 @@ export async function generateDailySuggestions() {
           .filter((meal) => new Date(meal.date).getTime() >= today.getTime())
           .reduce((sum, meal) => sum + (meal.total?.calories || 0), 0);
 
-        // Generate AI suggestions
         const systemPrompt = `You are Fitter AI, a wellness coach. Generate 3-5 personalized daily suggestions based on user data.
 
 User Profile:
@@ -107,7 +102,6 @@ Return ONLY a JSON array with this exact format:
           { role: 'user', content: 'Generate personalized wellness suggestions for today.' },
         ]);
 
-        // Parse and save suggestions
         const suggestions = JSON.parse(aiResponse) as Array<{
           title: string;
           description: string;
@@ -144,7 +138,6 @@ Return ONLY a JSON array with this exact format:
         console.log(`Generated ${suggestions.length} suggestions for user ${user._id}`);
       } catch (userError) {
         console.error(`Error generating suggestions for user ${user._id}:`, userError);
-        // Continue with other users
       }
     }
 
@@ -154,7 +147,6 @@ Return ONLY a JSON array with this exact format:
   }
 }
 
-// Clean up expired suggestions
 export async function cleanupExpiredSuggestions() {
   console.log('Cleaning up expired suggestions...');
 

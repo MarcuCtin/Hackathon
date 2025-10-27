@@ -47,7 +47,6 @@ export function LoginPage({ onLoginSuccess, onRegisterClick }: LoginPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#04101B] via-[#0a1f33] to-[#04101B] flex">
-      {/* Left side - Branding */}
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12">
         <FitterLogo size={80} />
         <h1 className="text-4xl font-bold bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent mt-8 mb-4">
@@ -58,7 +57,6 @@ export function LoginPage({ onLoginSuccess, onRegisterClick }: LoginPageProps) {
         </p>
       </div>
 
-      {/* Right side - Login Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6">
         <motion.div
           initial={{ opacity: 0, x: 20 }}

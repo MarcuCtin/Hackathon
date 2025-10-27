@@ -7,7 +7,6 @@ export const notFoundHandler: RequestHandler = (_req, res) => {
   res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: 'Not found' } });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   let status = 500;
   let code = 'INTERNAL_ERROR';

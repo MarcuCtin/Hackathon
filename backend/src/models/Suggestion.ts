@@ -53,7 +53,6 @@ const SuggestionSchema = new Schema<SuggestionDoc>(
   { timestamps: true },
 );
 
-// Indexes for performance
 SuggestionSchema.index({ userId: 1, status: 1, createdAt: -1 });
 SuggestionSchema.index({ userId: 1, category: 1, status: 1 });
 SuggestionSchema.index({ generatedAt: 1 });

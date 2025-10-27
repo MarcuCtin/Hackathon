@@ -51,7 +51,6 @@ router.get(
     const endOfDay = new Date(startOfDay);
     endOfDay.setDate(endOfDay.getDate() + 1);
 
-    // Get user's tasks for the day
     const tasks = await DailyTask.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: startOfDay, $lt: endOfDay },
@@ -59,16 +58,13 @@ router.get(
       .sort({ scheduledTime: 1 })
       .lean();
 
-    // Get active plan
     const activePlan = await UserPlan.findOne({
       userId: new Types.ObjectId(req.userId),
       status: 'active',
     }).lean();
 
-    // Generate default tasks from plan if user has tasks
     const planTasks = [];
     if (activePlan && tasks.length === 0) {
-      // Generate tasks based on plan type
       planTasks.push(
         {
           _id: new Types.ObjectId(),
@@ -179,7 +175,6 @@ router.delete(
   }),
 );
 
-// Generate and save default tasks from active plan
 router.post(
   '/generate-from-plan',
   requireAuth,
@@ -187,7 +182,6 @@ router.post(
     const today = new Date();
     const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
 
-    // Check if tasks already exist for today
     const existingTasks = await DailyTask.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: startOfDay, $lt: new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000) },
@@ -201,7 +195,6 @@ router.post(
       });
     }
 
-    // Get active plan
     const activePlan = await UserPlan.findOne({
       userId: new Types.ObjectId(req.userId),
       status: 'active',
@@ -214,7 +207,6 @@ router.post(
       });
     }
 
-    // Generate tasks based on plan type
     const tasksToCreate = [
       {
         userId: new Types.ObjectId(req.userId),

@@ -117,7 +117,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
           </Button>
         </div>
 
-        {/* Quick meal selection */}
         <div className="mb-6">
           <Label className="mb-2 block text-[#DFF2D4] font-semibold">Quick Select</Label>
           <div className="grid grid-cols-4 gap-2">
@@ -142,7 +141,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Meal name and time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="mealName" className="mb-2 block text-[#DFF2D4] font-semibold">
@@ -173,7 +171,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
             </div>
           </div>
 
-          {/* Nutrition info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="calories" className="mb-2 block text-[#DFF2D4] font-semibold">
@@ -204,7 +201,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
             </div>
           </div>
 
-          {/* Food items */}
           <div>
             <Label htmlFor="foodItem" className="mb-2 block text-[#DFF2D4] font-semibold">
               Food Items
@@ -229,7 +225,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
             </div>
           </div>
 
-          {/* Items list */}
           {items.length > 0 && (
             <div className="space-y-2">
               {items.map((item, index) => (
@@ -253,7 +248,6 @@ export function MealLogForm({ onAddMeal }: MealLogFormProps) {
             </div>
           )}
 
-          {/* Submit button */}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"

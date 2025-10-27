@@ -382,7 +382,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -421,10 +420,8 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
       </header>
 
       <div className="container mx-auto px-6 py-6 relative z-10">
-        {/* Chat Messages */}
         <Card className="modern-card glass-card-intense rounded-3xl overflow-hidden">
           <div className="flex flex-col relative" style={{height: 'calc(100vh - 200px)', minHeight: '600px', maxHeight: 'calc(100vh - 200px)'}}>
-            {/* Day Tabs */}
             {messagesByDay.length > 0 && (
               <div className="border-b border-[#6BF178]/20 px-6 py-4 bg-[#04101B]/40 backdrop-blur-sm">
                 <div className="flex items-center gap-2 overflow-x-auto pb-2" style={{scrollbarWidth: 'thin', scrollbarColor: 'rgba(107, 241, 120, 0.3) transparent'}}>
@@ -464,7 +461,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
               </div>
             )}
             
-            {/* Messages Container */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4 relative z-10" style={{scrollBehavior: 'smooth', scrollbarWidth: 'thin', scrollbarColor: 'rgba(107, 241, 120, 0.5) transparent'}}>
               {messages.map((message) => (
                 <div
@@ -473,7 +469,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
                     message.sender === "user" ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  {/* Avatar */}
                   <div
                     className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center border-2 ${
                       message.sender === "user"
@@ -488,7 +483,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
                     )}
                   </div>
 
-                  {/* Message */}
                   <div className="flex-1 max-w-[75%] min-w-0">
                     <div
                       className={`p-4 rounded-2xl backdrop-blur-md border-2 ${
@@ -500,7 +494,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
                       <p className="break-words text-sm leading-relaxed whitespace-pre-wrap">{message.text}</p>
                     </div>
 
-                    {/* Suggestions */}
                     {message.suggestions && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {message.suggestions.map((suggestion) => (
@@ -518,7 +511,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
                 </div>
               ))}
 
-              {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3 animate-fade-in">
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-[#6BF178] to-[#E2F163] flex items-center justify-center border-2 border-[#6BF178] shadow-[0_0_20px_rgba(107,241,120,0.5)] animate-pulse-slow">
@@ -539,7 +531,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
               <div ref={scrollRef} />
             </div>
 
-            {/* Input - Fixed at bottom */}
             <div className="p-4 border-t border-[#6BF178]/20 bg-[#04101B]/60 backdrop-blur-xl flex-shrink-0">
             <div className="flex gap-2">
               <Input
@@ -564,7 +555,6 @@ export function AssistantPage({ onProfileClick, onDataUpdate }: AssistantPagePro
           </div>
         </Card>
 
-        {/* Quick Actions - Compact version */}
         <div className="mt-4">
           <p className="text-[#DFF2D4]/70 mb-2 text-xs font-medium">Quick Actions</p>
           <div className="flex flex-wrap gap-2">

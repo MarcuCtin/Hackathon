@@ -102,7 +102,6 @@ router.delete(
   }),
 );
 
-// Log a supplement taken
 const logSupplementSchema = z.object({
   supplementId: z.string(),
   dosage: z.string().optional(),
@@ -144,7 +143,6 @@ router.post(
   }),
 );
 
-// Get today's nutrition vs supplements analysis
 router.get(
   '/nutrition-analysis',
   requireAuth,
@@ -154,25 +152,21 @@ router.get(
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get today's nutrition logs
     const nutritionLogs = await NutritionLog.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
     }).lean();
 
-    // Get today's supplement logs
     const supplementLogs = await SupplementLog.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
     }).lean();
 
-    // Get supplement details
     const supplementIds = supplementLogs.map((log) => log.supplementId);
     const supplements = await Supplement.find({
       _id: { $in: supplementIds },
     }).lean();
 
-    // Calculate total micronutrients from supplements
     const supplementMicros: Record<string, number> = {};
     for (const sup of supplements) {
       if (sup.nutrients) {
@@ -184,7 +178,6 @@ router.get(
       }
     }
 
-    // Calculate total micronutrients from food
     const foodMicros: Record<string, number> = {};
     for (const meal of nutritionLogs) {
       if (meal.micronutrients) {
@@ -196,7 +189,6 @@ router.get(
       }
     }
 
-    // Recommended daily values (RDA for average adult)
     const rda = {
       vitaminD: 15, // mcg
       calcium: 1000, // mg
@@ -208,7 +200,6 @@ router.get(
       folate: 400, // mcg
     };
 
-    // Calculate deficiencies
     const analysis = [];
     for (const [nutrient, recommended] of Object.entries(rda)) {
       const fromFood = foodMicros[nutrient] || 0;

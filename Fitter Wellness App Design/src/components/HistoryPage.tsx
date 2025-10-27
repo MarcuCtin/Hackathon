@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
@@ -84,21 +83,24 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
         setActivePlan(null);
       }
     };
-    
+
     fetchActivePlan();
-    
+
     // Refresh plan every 5 seconds to catch new plans
     const interval = setInterval(fetchActivePlan, 5000);
-    
+
     // Listen for plan changes from other pages
     const handlePlanChange = (event: CustomEvent) => {
       setActivePlan(event.detail.plan);
     };
-    window.addEventListener('planChanged', handlePlanChange as EventListener);
-    
+    window.addEventListener("planChanged", handlePlanChange as EventListener);
+
     return () => {
       clearInterval(interval);
-      window.removeEventListener('planChanged', handlePlanChange as EventListener);
+      window.removeEventListener(
+        "planChanged",
+        handlePlanChange as EventListener
+      );
     };
   }, []);
 
@@ -109,12 +111,12 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
         setLoading(true);
         const today = new Date();
         const historyPromises = [];
-        
+
         for (let i = 6; i >= 0; i--) {
           const date = new Date(today);
           date.setDate(date.getDate() - i);
-          const dateStr = date.toISOString().split('T')[0];
-          
+          const dateStr = date.toISOString().split("T")[0];
+
           try {
             const response = await api.getDailyWellness(dateStr);
             historyPromises.push(response.data);
@@ -122,13 +124,18 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
             // If no data for this day, create empty data
             historyPromises.push({
               date: dateStr,
-              wellness: { score: 0, energyLevel: 0, hydration: 0, sleepHours: 0 },
+              wellness: {
+                score: 0,
+                energyLevel: 0,
+                hydration: 0,
+                sleepHours: 0,
+              },
               movement: { workoutCalories: 0, steps: 0, activeMinutes: 0 },
-              nutrition: { totalCalories: 0, totalProtein: 0, mealCount: 0 }
+              nutrition: { totalCalories: 0, totalProtein: 0, mealCount: 0 },
             });
           }
         }
-        
+
         const history = await Promise.all(historyPromises);
         setWellnessHistory(history);
       } catch (error) {
@@ -145,12 +152,12 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   const handleViewDayDetails = (date: string) => {
     // Navigate to day details page
     if (onNavigate) {
-      onNavigate('dayinfo', { date });
+      onNavigate("dayinfo", { date });
     } else {
       // Fallback to URL navigation
       const dayInfoUrl = `/dayinfo/${date}`;
-      window.history.pushState({}, '', dayInfoUrl);
-      window.dispatchEvent(new PopStateEvent('popstate'));
+      window.history.pushState({}, "", dayInfoUrl);
+      window.dispatchEvent(new PopStateEvent("popstate"));
     }
   };
 
@@ -207,7 +214,8 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
     });
 
     return entries.sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
   }, [logs, nutritionLogs]);
 
@@ -295,13 +303,16 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
   // Calculate weekly stats
   const weeklyStats = {
     avgCalories: Math.round(
-      historyData.reduce((sum, d) => sum + d.calories.consumed, 0) / historyData.length
+      historyData.reduce((sum, d) => sum + d.calories.consumed, 0) /
+        historyData.length
     ),
     avgProtein: Math.round(
-      historyData.reduce((sum, d) => sum + d.protein.consumed, 0) / historyData.length
+      historyData.reduce((sum, d) => sum + d.protein.consumed, 0) /
+        historyData.length
     ),
     avgSleep: (
-      historyData.reduce((sum, d) => sum + d.sleep.hours, 0) / historyData.length
+      historyData.reduce((sum, d) => sum + d.sleep.hours, 0) /
+      historyData.length
     ).toFixed(1),
     totalWorkouts: historyData.reduce((sum, d) => sum + d.workouts, 0),
     goalsHit: historyData.filter(
@@ -309,7 +320,10 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
         d.calories.consumed >= d.calories.target * 0.95 &&
         d.protein.consumed >= d.protein.target * 0.95
     ).length,
-    totalAchievements: historyData.reduce((sum, d) => sum + d.achievements.length, 0),
+    totalAchievements: historyData.reduce(
+      (sum, d) => sum + d.achievements.length,
+      0
+    ),
   };
 
   const improvements = [
@@ -392,8 +406,6 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24 md:pb-28">
-      
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-3 sm:px-6 py-3 sm:py-5">
           <div className="flex items-center justify-between gap-2">
@@ -407,25 +419,30 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                 <div className="absolute -inset-1 bg-gradient-to-r from-[#6BF178] to-[#E2F163] rounded-full opacity-20 blur-md"></div>
               </div>
               <div className="hidden md:block">
-                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">History</h3>
-                <p className="text-[#DFF2D4]/80 text-sm font-medium">Your wellness journey</p>
+                <h3 className="text-[#6BF178] font-bold text-xl bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">
+                  History
+                </h3>
+                <p className="text-[#DFF2D4]/80 text-sm font-medium">
+                  Your wellness journey
+                </p>
               </div>
               <div className="md:hidden">
-                <h3 className="text-[#6BF178] font-bold text-base bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">History</h3>
+                <h3 className="text-[#6BF178] font-bold text-base bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent">
+                  History
+                </h3>
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               {activePlan ? (
                 <>
                   <Badge className="sm:flex md:hidden rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white border-0 font-semibold shadow-[0_0_15px_rgba(168,85,247,0.4)] whitespace-nowrap px-3 py-1 text-xs">
-                    {activePlan.planType === 'cutting' && '🔥'}
-                    {activePlan.planType === 'bulking' && '💪'}
-                    {activePlan.planType === 'maintenance' && '⚖️'}
-                    {activePlan.planType === 'healing' && '💚'}
-                    {activePlan.planType === 'custom' && '✨'}
-                    {' '}{activePlan.planName}
+                    {activePlan.planType === "cutting" && "🔥"}
+                    {activePlan.planType === "bulking" && "💪"}
+                    {activePlan.planType === "maintenance" && "⚖️"}
+                    {activePlan.planType === "healing" && "💚"}
+                    {activePlan.planType === "custom" && "✨"}{" "}
+                    {activePlan.planName}
                   </Badge>
-                 
                 </>
               ) : (
                 <Badge className="hidden sm:flex rounded-full bg-slate-700/50 text-slate-300 border border-slate-600/50 font-medium whitespace-nowrap px-3 py-1 text-xs">
@@ -466,8 +483,8 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                   Month
                 </Button>
               </div>
-              <button 
-                onClick={onProfileClick} 
+              <button
+                onClick={onProfileClick}
                 className="focus:outline-none hover:scale-110 transition-transform duration-300 relative group flex-shrink-0"
               >
                 <div className="hidden sm:block">
@@ -496,19 +513,26 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                   <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#04101B]" />
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-gradient-modern text-glow text-base sm:text-lg font-bold">Assistant Timeline</h3>
-                  <p className="text-[#DFF2D4]/70 text-xs sm:text-sm">Latest AI-driven entries</p>
+                  <h3 className="text-gradient-modern text-glow text-base sm:text-lg font-bold">
+                    Assistant Timeline
+                  </h3>
+                  <p className="text-[#DFF2D4]/70 text-xs sm:text-sm">
+                    Latest AI-driven entries
+                  </p>
                 </div>
               </div>
               <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)] text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 flex-shrink-0">
-                {activityTimeline.length ? `${activityTimeline.length} updates` : "No data yet"}
+                {activityTimeline.length
+                  ? `${activityTimeline.length} updates`
+                  : "No data yet"}
               </Badge>
             </div>
 
             <div className="space-y-2 sm:space-y-4">
               {activityTimeline.length === 0 && (
                 <div className="rounded-xl sm:rounded-2xl border border-dashed border-[#6BF178]/30 p-4 sm:p-6 text-center text-[#DFF2D4]/70 bg-[#0a1f33]/30 text-xs sm:text-sm">
-                  Start a conversation with the assistant to populate your history with real actions.
+                  Start a conversation with the assistant to populate your
+                  history with real actions.
                 </div>
               )}
 
@@ -525,8 +549,10 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                   workout: "from-[#E2F163] to-[#6BF178]",
                   meal: "from-[#FF006E] to-[#E2F163]",
                 };
-                const Icon = iconMap[entry.type as keyof typeof iconMap] || Sparkles;
-                const background = backgroundMap[entry.type] || "from-[#6BF178] to-[#E2F163]";
+                const Icon =
+                  iconMap[entry.type as keyof typeof iconMap] || Sparkles;
+                const background =
+                  backgroundMap[entry.type] || "from-[#6BF178] to-[#E2F163]";
 
                 return (
                   <div
@@ -540,8 +566,12 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                         <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-[#04101B]" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-[#DFF2D4] font-medium text-xs sm:text-sm truncate">{entry.title}</p>
-                        <p className="text-[#DFF2D4]/70 text-[10px] sm:text-sm truncate">{entry.subtitle}</p>
+                        <p className="text-[#DFF2D4] font-medium text-xs sm:text-sm truncate">
+                          {entry.title}
+                        </p>
+                        <p className="text-[#DFF2D4]/70 text-[10px] sm:text-sm truncate">
+                          {entry.subtitle}
+                        </p>
                       </div>
                     </div>
                     <span className="text-[10px] sm:text-xs text-[#DFF2D4]/50 flex-shrink-0 whitespace-nowrap">
@@ -559,7 +589,6 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           </Card>
         </motion.div>
 
-        {/* Weekly Summary */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -568,12 +597,18 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           <Card className="modern-card glass-card-intense p-4 sm:p-6 rounded-2xl sm:rounded-3xl hover-lift overflow-hidden">
             <div className="flex items-start justify-between mb-4 sm:mb-6 gap-2">
               <div className="min-w-0 flex-1">
-                <h3 className="mb-1 sm:mb-2 text-gradient-modern text-glow text-base sm:text-lg font-bold">Weekly Overview</h3>
-                <p className="text-[#DFF2D4]/80 text-xs sm:text-sm">Last 7 days performance</p>
+                <h3 className="mb-1 sm:mb-2 text-gradient-modern text-glow text-base sm:text-lg font-bold">
+                  Weekly Overview
+                </h3>
+                <p className="text-[#DFF2D4]/80 text-xs sm:text-sm">
+                  Last 7 days performance
+                </p>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-[#6BF178]/20 to-[#E2F163]/20 rounded-xl sm:rounded-2xl px-2 sm:px-4 py-1.5 sm:py-2 backdrop-blur-sm border border-[#6BF178]/30 flex-shrink-0">
                 <Award className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
-                <span className="text-[#DFF2D4] font-semibold text-xs sm:text-sm">{weeklyStats.totalAchievements} achievements</span>
+                <span className="text-[#DFF2D4] font-semibold text-xs sm:text-sm">
+                  {weeklyStats.totalAchievements} achievements
+                </span>
               </div>
             </div>
 
@@ -581,67 +616,96 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
               <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Apple className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Calories</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Avg Calories
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgCalories}</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  {weeklyStats.avgCalories}
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#E2F163]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-[#E2F163]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Protein</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Avg Protein
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgProtein}g</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  {weeklyStats.avgProtein}g
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-[#A855F7]/20 to-[#6BF178]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#A855F7]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Moon className="w-4 h-4 sm:w-5 sm:h-5 text-[#A855F7]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Avg Sleep</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Avg Sleep
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.avgSleep}h</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  {weeklyStats.avgSleep}h
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#DFF2D4]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Workouts</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Workouts
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.totalWorkouts}</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  {weeklyStats.totalWorkouts}
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-[#E2F163]/20 to-[#A855F7]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#E2F163]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Target className="w-4 h-4 sm:w-5 sm:h-5 text-[#E2F163]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Goals Hit</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Goals Hit
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">{weeklyStats.goalsHit}/7</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  {weeklyStats.goalsHit}/7
+                </div>
               </div>
 
               <div className="bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-[#6BF178]/30">
                 <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                   <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#6BF178]" />
-                  <span className="text-[#DFF2D4] text-xs sm:text-sm">Streak</span>
+                  <span className="text-[#DFF2D4] text-xs sm:text-sm">
+                    Streak
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">7 days</div>
+                <div className="text-xl sm:text-2xl text-gradient-modern font-bold">
+                  7 days
+                </div>
               </div>
             </div>
           </Card>
         </motion.div>
 
-        {/* How the App Helped */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           className="mb-6"
         >
-          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Cum te-a ajutat Fitter</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">
+            Cum te-a ajutat Fitter
+          </h3>
           <div className="grid md:grid-cols-2 gap-4">
             {improvements.map((improvement, index) => {
               const Icon = improvement.icon;
-              const isPositive = improvement.trend === "up" && !improvement.metric.includes("Stress");
-              const isImprovement = improvement.trend === "down" && improvement.metric.includes("Stress");
+              const isPositive =
+                improvement.trend === "up" &&
+                !improvement.metric.includes("Stress");
+              const isImprovement =
+                improvement.trend === "down" &&
+                improvement.metric.includes("Stress");
               const showPositive = isPositive || isImprovement;
 
               return (
@@ -660,7 +724,9 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h4 className="text-[#DFF2D4] font-semibold">{improvement.metric}</h4>
+                          <h4 className="text-[#DFF2D4] font-semibold">
+                            {improvement.metric}
+                          </h4>
                           <Badge
                             className={`rounded-full border-0 ${
                               showPositive
@@ -676,7 +742,9 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                             {improvement.change}
                           </Badge>
                         </div>
-                        <p className="text-[#DFF2D4]/70">{improvement.description}</p>
+                        <p className="text-[#DFF2D4]/70">
+                          {improvement.description}
+                        </p>
                       </div>
                     </div>
                   </Card>
@@ -686,7 +754,6 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           </div>
         </motion.div>
 
-        {/* Wellness History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -713,25 +780,31 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           )}
         </motion.div>
 
-        {/* Daily History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">Daily History</h3>
+          <h3 className="mb-4 text-gradient-modern text-glow text-lg font-bold">
+            Daily History
+          </h3>
           <div className="space-y-3">
             {historyData.map((day, index) => {
               const date = new Date(day.date);
-              const dayName = date.toLocaleDateString("ro-RO", { weekday: "long" });
+              const dayName = date.toLocaleDateString("ro-RO", {
+                weekday: "long",
+              });
               const dateStr = date.toLocaleDateString("ro-RO", {
                 day: "numeric",
                 month: "long",
               });
 
-              const calorieProgress = (day.calories.consumed / day.calories.target) * 100;
-              const proteinProgress = (day.protein.consumed / day.protein.target) * 100;
-              const waterProgress = (day.water.consumed / day.water.target) * 100;
+              const calorieProgress =
+                (day.calories.consumed / day.calories.target) * 100;
+              const proteinProgress =
+                (day.protein.consumed / day.protein.target) * 100;
+              const waterProgress =
+                (day.water.consumed / day.water.target) * 100;
 
               return (
                 <motion.div
@@ -741,11 +814,14 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                   transition={{ delay: 0.6 + index * 0.05 }}
                 >
                   <Card className="modern-card glass-card-intense p-6 rounded-3xl hover-lift overflow-hidden">
-                    {/* Date Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <h4 className="capitalize mb-1 text-[#DFF2D4] font-semibold">{dayName}</h4>
-                        <p className="text-[#DFF2D4]/70 capitalize text-sm">{dateStr}</p>
+                        <h4 className="capitalize mb-1 text-[#DFF2D4] font-semibold">
+                          {dayName}
+                        </h4>
+                        <p className="text-[#DFF2D4]/70 capitalize text-sm">
+                          {dateStr}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <div
@@ -766,7 +842,6 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                       </div>
                     </div>
 
-                    {/* Progress Bars */}
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
                       <div>
                         <div className="flex items-center justify-between mb-2">
@@ -778,10 +853,11 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                         <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
                           <div
                             className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-                            style={{ 
+                            style={{
                               width: `${Math.min(calorieProgress, 100)}%`,
-                              background: 'linear-gradient(90deg, #FF006E, #E2F163)',
-                              boxShadow: '0 0 15px rgba(255, 0, 110, 0.6)'
+                              background:
+                                "linear-gradient(90deg, #FF006E, #E2F163)",
+                              boxShadow: "0 0 15px rgba(255, 0, 110, 0.6)",
                             }}
                           />
                         </div>
@@ -797,10 +873,11 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                         <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#E2F163]/30">
                           <div
                             className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-                            style={{ 
+                            style={{
                               width: `${Math.min(proteinProgress, 100)}%`,
-                              background: 'linear-gradient(90deg, #E2F163, #6BF178)',
-                              boxShadow: '0 0 15px rgba(226, 241, 99, 0.6)'
+                              background:
+                                "linear-gradient(90deg, #E2F163, #6BF178)",
+                              boxShadow: "0 0 15px rgba(226, 241, 99, 0.6)",
                             }}
                           />
                         </div>
@@ -816,17 +893,17 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                         <div className="relative h-4 bg-[#DFF2D4]/20 rounded-full border border-[#6BF178]/30">
                           <div
                             className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
-                            style={{ 
+                            style={{
                               width: `${Math.min(waterProgress, 100)}%`,
-                              background: 'linear-gradient(90deg, #6BF178, #DFF2D4)',
-                              boxShadow: '0 0 15px rgba(107, 241, 120, 0.6)'
+                              background:
+                                "linear-gradient(90deg, #6BF178, #DFF2D4)",
+                              boxShadow: "0 0 15px rgba(107, 241, 120, 0.6)",
                             }}
                           />
                         </div>
                       </div>
                     </div>
 
-                    {/* Stats */}
                     <div className="flex items-center gap-4 mb-4">
                       <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
                         <Activity className="w-3 h-3 mr-1" />
@@ -837,12 +914,13 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                       </Badge>
                     </div>
 
-                    {/* Achievements */}
                     {day.achievements.length > 0 && (
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <Award className="w-4 h-4 text-[#E2F163]" />
-                          <span className="text-[#DFF2D4] font-semibold">Achievements</span>
+                          <span className="text-[#DFF2D4] font-semibold">
+                            Achievements
+                          </span>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           {day.achievements.map((achievement, i) => (
@@ -864,7 +942,6 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
           </div>
         </motion.div>
 
-        {/* Insights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -877,11 +954,14 @@ export function HistoryPage({ onProfileClick, onNavigate }: HistoryPageProps) {
                 <Brain className="w-6 h-6 text-[#04101B]" />
               </div>
               <div>
-                <h4 className="mb-2 text-gradient-modern text-glow font-bold">AI Insight</h4>
+                <h4 className="mb-2 text-gradient-modern text-glow font-bold">
+                  AI Insight
+                </h4>
                 <p className="text-[#DFF2D4]/80 mb-3">
-                  Based on your data, you're making excellent progress! Your consistency in tracking meals
-                  has led to a 15% improvement in sleep quality. Keep maintaining your protein intake and
-                  aim for 10k steps daily for optimal results.
+                  Based on your data, you're making excellent progress! Your
+                  consistency in tracking meals has led to a 15% improvement in
+                  sleep quality. Keep maintaining your protein intake and aim
+                  for 10k steps daily for optimal results.
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">

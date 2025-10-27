@@ -2,13 +2,11 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 
 export interface UserTargetsDoc extends Document {
   userId: Types.ObjectId;
-  // Macronutrients
   calories: { target: number; current: number };
   protein: { target: number; current: number };
   carbs: { target: number; current: number };
   fat: { target: number; current: number };
 
-  // Micronutrients
   vitaminD: { target: number; current: number };
   calcium: { target: number; current: number };
   magnesium: { target: number; current: number };
@@ -18,11 +16,9 @@ export interface UserTargetsDoc extends Document {
   b12: { target: number; current: number };
   folate: { target: number; current: number };
 
-  // Other metrics
   water: { target: number; current: number };
   caffeine: { target: number; current: number };
 
-  // AI suggestions
   suggestedByAi: boolean;
   aiReason?: string; // Why AI suggested these targets
 
@@ -34,7 +30,6 @@ const UserTargetsSchema = new Schema<UserTargetsDoc>(
   {
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
 
-    // Macronutrients
     calories: {
       target: { type: Number, default: 2000 },
       current: { type: Number, default: 0 },
@@ -52,7 +47,6 @@ const UserTargetsSchema = new Schema<UserTargetsDoc>(
       current: { type: Number, default: 0 },
     },
 
-    // Micronutrients
     vitaminD: {
       target: { type: Number, default: 15 },
       current: { type: Number, default: 0 },
@@ -86,7 +80,6 @@ const UserTargetsSchema = new Schema<UserTargetsDoc>(
       current: { type: Number, default: 0 },
     },
 
-    // Other metrics
     water: {
       target: { type: Number, default: 3 },
       current: { type: Number, default: 0 },
@@ -96,7 +89,6 @@ const UserTargetsSchema = new Schema<UserTargetsDoc>(
       current: { type: Number, default: 0 },
     },
 
-    // AI suggestions
     suggestedByAi: { type: Boolean, default: false },
     aiReason: { type: String },
   },

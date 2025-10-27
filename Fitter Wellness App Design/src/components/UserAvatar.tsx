@@ -45,7 +45,6 @@ export function UserAvatar({
       whileHover={{ scale: editable ? 1.05 : 1 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Avatar Circle */}
       <div
         className="rounded-full overflow-hidden bg-gradient-to-br from-sky-400 via-cyan-400 to-emerald-400 p-1 shadow-xl"
         style={{ width: size, height: size }}
@@ -70,7 +69,6 @@ export function UserAvatar({
         </div>
       </div>
 
-      {/* Edit Overlay */}
       {editable && (
         <>
           <input
@@ -93,7 +91,6 @@ export function UserAvatar({
             </motion.div>
           </label>
 
-          {/* Edit Badge */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -104,7 +101,6 @@ export function UserAvatar({
         </>
       )}
 
-      {/* Status Indicator */}
       {!editable && (
         <motion.div
           initial={{ scale: 0 }}

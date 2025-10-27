@@ -306,7 +306,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -335,9 +334,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
         </div>
       </header>
 
-      {/* Main Content */}
       <div className="container mx-auto px-6 py-8">
-        {/* Greeting */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -355,11 +352,8 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
           </p>
         </motion.div>
 
-        {/* Dashboard Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Daily Routine */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -418,7 +412,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
                     </motion.div>
                   ))}
                   
-                  {/* Add Task Form */}
                   <div className="mt-4">
                     <DailyTaskForm onTaskAdded={fetchTasks} />
                   </div>
@@ -426,7 +419,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Energy & Sleep */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -500,7 +492,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Nutrition & Supplements */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -564,7 +555,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Daily Suggestions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -576,9 +566,7 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
             </motion.div>
           </div>
 
-          {/* Right Column */}
           <div className="space-y-6">
-            {/* Old Progress Card - Hidden, replaced by full-width version below */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -639,7 +627,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* AI Coach Chatbot */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -697,7 +684,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
               </Card>
             </motion.div>
 
-            {/* Quick Actions */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -740,7 +726,6 @@ export function Dashboard({ onProfileClick }: DashboardProps) {
           </div>
         </div>
 
-        {/* Full Width Analytics Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

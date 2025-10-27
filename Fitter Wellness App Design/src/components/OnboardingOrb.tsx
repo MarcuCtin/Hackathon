@@ -3,7 +3,6 @@ import { motion } from "motion/react";
 export function OnboardingOrb() {
   return (
     <div className="relative w-full h-[500px] flex items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-sky-50 via-white to-emerald-50">
-      {/* Ambient glow rings */}
       <motion.div
         className="absolute w-[400px] h-[400px] rounded-full"
         style={{
@@ -36,7 +35,6 @@ export function OnboardingOrb() {
         }}
       />
 
-      {/* Main orb */}
       <motion.div
         className="relative w-48 h-48 rounded-full"
         style={{
@@ -52,7 +50,6 @@ export function OnboardingOrb() {
           ease: "easeInOut",
         }}
       >
-        {/* Orb highlight */}
         <div
           className="absolute top-8 left-8 w-16 h-16 rounded-full"
           style={{
@@ -60,7 +57,6 @@ export function OnboardingOrb() {
           }}
         />
         
-        {/* Inner pulse */}
         <motion.div
           className="absolute inset-4 rounded-full"
           style={{
@@ -78,7 +74,6 @@ export function OnboardingOrb() {
         />
       </motion.div>
 
-      {/* Floating particles */}
       {[...Array(8)].map((_, i) => (
         <motion.div
           key={i}

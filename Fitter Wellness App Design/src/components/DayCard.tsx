@@ -74,7 +74,6 @@ export function DayCard({
         onClick={() => onViewDetails(date)}
       >
         <CardContent className="p-6">
-          {/* Header with date and wellness score */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <div className="text-center">
@@ -102,7 +101,6 @@ export function DayCard({
             </div>
           </div>
 
-          {/* Wellness Overview */}
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div className="flex items-center gap-2 p-2 rounded-xl bg-[#0a1f33]/50 border border-[#6BF178]/20">
               <Droplet className="w-4 h-4 text-[#6BF178]" />
@@ -122,7 +120,6 @@ export function DayCard({
             </div>
           </div>
 
-          {/* Energy Level Progress */}
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-[#DFF2D4]">Energy Level</span>
@@ -140,7 +137,6 @@ export function DayCard({
             </div>
           </div>
 
-          {/* Quick Stats */}
           <div className="flex items-center justify-between text-xs text-[#DFF2D4]/70 mb-3">
             <div className="flex items-center gap-1">
               <Activity className="w-3 h-3 text-[#6BF178]" />
@@ -152,7 +148,6 @@ export function DayCard({
             </div>
           </div>
 
-          {/* View Details Button */}
           <Button 
             variant="outline" 
             size="sm" 
