@@ -92,7 +92,6 @@ export function OfMindPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-violet-50 to-purple-50 pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/20 bg-white/40 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -112,7 +111,6 @@ export function OfMindPage() {
       </header>
 
       <div className="container mx-auto px-6 py-6">
-        {/* Mood Tracker */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,7 +163,6 @@ export function OfMindPage() {
           </Card>
         </motion.div>
 
-        {/* Mindfulness Activities */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -212,7 +209,6 @@ export function OfMindPage() {
           </div>
         </motion.div>
 
-        {/* Player */}
         {currentActivity && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -271,7 +267,6 @@ export function OfMindPage() {
           </motion.div>
         )}
 
-        {/* Insights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

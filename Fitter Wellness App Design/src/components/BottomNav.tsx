@@ -44,9 +44,7 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50">
-      {/* Enhanced Glass morphism background */}
       <div className="relative py-10 h-50 bg-[#04101B]/85 backdrop-blur-3xl border-t-2 border-[#6BF178]/40 shadow-[0_-12px_40px_rgba(107,241,120,0.2)]">
-        {/* Glass overlay for extra depth */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#04101B]/90 via-[#04101B]/60 to-[#04101B]/30 backdrop-blur-xl pointer-events-none"></div>
         
         <div className="container mx-auto px-3 sm:px-6 max-w-screen-xl relative z-10 ">
@@ -63,7 +61,6 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                     isActive ? 'transform -translate-y-1' : ''
                   }`}
                 >
-                  {/* Active background with strong visibility */}
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
@@ -72,7 +69,6 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                     />
                   )}
 
-                  {/* Icon container with enhanced effects */}
                   <div className="relative z-20">
                     <div
                       className={`w-11 h-11 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${
@@ -89,7 +85,6 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                       />
                     </div>
 
-                    {/* Enhanced active dot indicator */}
                     {isActive && (
                       <motion.div
                         initial={{ scale: 0, opacity: 0 }}
@@ -100,7 +95,6 @@ export function BottomNav({ currentPage, onNavigate }: BottomNavProps) {
                     )}
                   </div>
 
-                  {/* Enhanced label with strong contrast */}
                   <span
                     className={`text-[15px] md:flex hidden transition-all duration-300 font-medium leading-tight relative z-20 ${
                       isActive

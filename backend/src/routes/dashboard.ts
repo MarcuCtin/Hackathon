@@ -22,7 +22,6 @@ router.get(
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get today's logs
     const logs = await Log.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
@@ -40,7 +39,6 @@ router.get(
       .limit(10)
       .lean();
 
-    // Get active suggestions
     const suggestions = await Suggestion.find({
       userId: req.userId,
       status: 'active',
@@ -49,7 +47,6 @@ router.get(
       .limit(5)
       .lean();
 
-    // Get daily tasks
     let dailyTasks = await DailyTask.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
@@ -57,7 +54,6 @@ router.get(
       .sort({ scheduledTime: 1 })
       .lean();
 
-    // If no tasks exist, generate default tasks from active plan
     if (dailyTasks.length === 0) {
       const activePlan = await UserPlan.findOne({
         userId: new Types.ObjectId(req.userId),
@@ -126,7 +122,6 @@ router.get(
       }
     }
 
-    // Get recent achievements
     const recentAchievements = await Achievement.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
@@ -135,7 +130,6 @@ router.get(
       .limit(10)
       .lean();
 
-    // Get AI synced actions (from chat messages with actions)
     const aiSyncedActions = await ChatMessage.find({
       userId: req.userId,
       role: 'assistant',
@@ -145,7 +139,6 @@ router.get(
       .limit(5)
       .lean();
 
-    // Get supplements
     const supplements = await Supplement.find({
       userId: new Types.ObjectId(req.userId),
       addedToPlan: true,
@@ -154,7 +147,6 @@ router.get(
       .limit(5)
       .lean();
 
-    // Calculate daily totals
     const hydrationToday = logs
       .filter((log) => log.type === 'hydration')
       .reduce((sum, log) => sum + (log.value || 0), 0);
@@ -183,7 +175,6 @@ router.get(
 
     const totalFatToday = nutritionLogs.reduce((sum, meal) => sum + (meal.total?.fat || 0), 0);
 
-    // Get recent activities (last 7 days)
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
@@ -203,7 +194,6 @@ router.get(
       .limit(20)
       .lean();
 
-    // Calculate energy level based on sleep hours
     const calculateEnergyLevel = (sleepHours: number): number => {
       if (sleepHours >= 8) return 90 + Math.min(10, (sleepHours - 8) * 2);
       if (sleepHours >= 7) return 80 + (sleepHours - 7) * 10;
@@ -212,7 +202,6 @@ router.get(
       return Math.max(20, sleepHours * 8);
     };
 
-    // Calculate weekly energy data
     const weeklyEnergyData = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date(today);
@@ -239,7 +228,6 @@ router.get(
       });
     }
 
-    // Calculate nutrition targets and progress
     const nutritionTargets = {
       protein: 100,
       carbs: 150,
@@ -302,7 +290,6 @@ router.get(
   }),
 );
 
-// Get daily wellness data for a specific date
 router.get(
   '/daily/:date',
   requireAuth,
@@ -328,7 +315,6 @@ router.get(
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Fetch all data for the specific day
     const [logs, nutritionLogs, chatMessages] = await Promise.all([
       Log.find({
         userId: new Types.ObjectId(req.userId),
@@ -344,7 +330,6 @@ router.get(
       }).lean(),
     ]);
 
-    // Calculate daily totals
     const hydration = logs
       .filter((log) => log.type === 'hydration')
       .reduce((sum, log) => sum + (log.value || 0), 0);
@@ -365,7 +350,6 @@ router.get(
 
     const totalFat = nutritionLogs.reduce((sum, meal) => sum + (meal.total?.fat || 0), 0);
 
-    // Calculate energy level based on sleep
     const calculateEnergyLevel = (sleepHours: number): number => {
       if (sleepHours >= 8) return 90 + Math.min(10, (sleepHours - 8) * 2);
       if (sleepHours >= 7) return 80 + (sleepHours - 7) * 10;
@@ -374,7 +358,6 @@ router.get(
       return Math.max(20, sleepHours * 8);
     };
 
-    // Group nutrition by meal type
     const mealsByType = {
       breakfast: nutritionLogs.filter((meal) => meal.mealType === 'breakfast'),
       lunch: nutritionLogs.filter((meal) => meal.mealType === 'lunch'),
@@ -382,7 +365,6 @@ router.get(
       snack: nutritionLogs.filter((meal) => meal.mealType === 'snack'),
     };
 
-    // Calculate wellness score (0-100)
     const wellnessScore = Math.round(
       (Math.min(100, hydration * 10) + // Hydration: 10 points per glass, max 100
         Math.min(30, sleepHours * 4) + // Sleep: 4 points per hour, max 30

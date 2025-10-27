@@ -153,7 +153,6 @@ export function WorkoutPlanComponent() {
 
   return (
     <div className="space-y-6">
-      {/* Plan Header */}
       <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
@@ -199,7 +198,6 @@ export function WorkoutPlanComponent() {
         </CardContent>
       </Card>
 
-      {/* Workout Days */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {workoutPlan.days.map((day, index) => (
           <motion.div
@@ -272,7 +270,6 @@ export function WorkoutPlanComponent() {
         ))}
       </div>
 
-      {/* Weekly Summary */}
       <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 border-emerald-200">
         <CardContent className="p-6">
           <div className="flex items-center gap-3 mb-4">

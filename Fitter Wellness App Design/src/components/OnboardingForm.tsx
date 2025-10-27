@@ -579,7 +579,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
       }}
       transition={{ duration: 1.5, ease: "easeInOut" }}
     >
-      {/* Animated background orbs */}
       <motion.div
         className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-30"
         animate={{
@@ -614,7 +613,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
       />
 
       <div className="max-w-2xl mx-auto relative z-10">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8 pt-6">
           <FitterLogo size={32} />
           <div className="flex items-center gap-3">
@@ -633,7 +631,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           </div>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-12">
           <Progress value={progress} className="h-3 bg-white/50 rounded-full overflow-hidden">
             <motion.div
@@ -645,7 +642,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           </Progress>
         </div>
 
-        {/* Question Card */}
         <AnimatePresence mode="wait">
           <motion.div
             key={currentQuestion.id}
@@ -654,7 +650,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
           >
-            {/* Question */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -665,7 +660,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
               <p className="text-slate-500">Choose the option that resonates most with you</p>
             </motion.div>
 
-            {/* Options */}
             <div className="grid gap-4 mb-12">
               {currentQuestion.options.map((option, index) => (
                 <motion.button
@@ -731,7 +725,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
                     )}
                   </div>
 
-                  {/* Glow effect for selected */}
                   {selectedOption === option.value && (
                     <motion.div
                       initial={{ opacity: 0 }}
@@ -750,7 +743,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
         <div className="flex items-center justify-between">
           <Button
             variant="outline"
@@ -774,7 +766,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
           </Button>
         </div>
 
-        {/* Emotional indicator */}
         {emotionalState !== "neutral" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -790,7 +781,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
         )}
       </div>
 
-      {/* AI Targets Modal */}
       {showTargetModal && aiTargets && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6">
           <motion.div
@@ -867,7 +857,6 @@ export function OnboardingForm({ onComplete, onSkip }: OnboardingFormProps) {
         </div>
       )}
 
-      {/* Loading overlay for generating targets */}
       {isGeneratingTargets && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <Card className="p-8 rounded-3xl">

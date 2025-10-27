@@ -6,7 +6,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Get user targets
 router.get(
   '/',
   requireAuth,
@@ -15,7 +14,6 @@ router.get(
       userId: new Types.ObjectId(req.userId),
     }).lean();
 
-    // If no targets exist, create default ones
     if (!userTargets) {
       const newTargets = await UserTargets.create({
         userId: new Types.ObjectId(req.userId),
@@ -30,7 +28,6 @@ router.get(
   }),
 );
 
-// Update user targets
 router.put(
   '/',
   requireAuth,
@@ -55,7 +52,6 @@ router.put(
   }),
 );
 
-// Approve AI suggested targets
 router.post(
   '/approve-ai-targets',
   requireAuth,

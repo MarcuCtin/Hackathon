@@ -8,7 +8,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Get today's reflection
 router.get(
   '/today',
   requireAuth,
@@ -27,7 +26,6 @@ router.get(
   }),
 );
 
-// Create or update today's reflection
 const createBody = z.object({
   mood: z.enum([
     'calm',
@@ -57,14 +55,12 @@ router.post(
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Find existing reflection for today
     const existing = await Reflection.findOne({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: new Date(today.getTime() + 24 * 60 * 60 * 1000) },
     });
 
     if (existing) {
-      // Update existing reflection
       const updated = await Reflection.findByIdAndUpdate(
         existing._id,
         {
@@ -79,7 +75,6 @@ router.post(
 
       void res.json({ success: true, data: updated });
     } else {
-      // Create new reflection
       const reflection = await Reflection.create({
         userId: new Types.ObjectId(req.userId),
         date: today,
@@ -95,7 +90,6 @@ router.post(
   }),
 );
 
-// Get reflection for a specific date
 router.get(
   '/:date',
   requireAuth,
@@ -121,7 +115,6 @@ router.get(
   }),
 );
 
-// Get recent reflections (last 7 days)
 router.get(
   '/recent/last-week',
   requireAuth,

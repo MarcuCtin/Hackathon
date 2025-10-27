@@ -18,7 +18,6 @@ import { Types } from 'mongoose';
 
 const router = Router();
 
-// Helper function to detect liquids and calculate water content
 function calculateLiquidWaterContent(
   liquidDescription: string,
   amount: number,
@@ -26,7 +25,6 @@ function calculateLiquidWaterContent(
 ): number {
   const liquid = liquidDescription.toLowerCase();
 
-  // Convert amount to ml first
   let amountInMl = amount;
   if (unit === 'glass' || unit === 'glasses') {
     amountInMl = amount * 200; // 1 glass = 200ml
@@ -40,7 +38,6 @@ function calculateLiquidWaterContent(
     amountInMl = amount * 1000;
   }
 
-  // Water content percentage for different liquids
   let waterPercentage = 100; // Default to 100% (plain water)
 
   if (liquid.includes('milk') || liquid.includes('lapte')) {
@@ -67,16 +64,13 @@ function calculateLiquidWaterContent(
     waterPercentage = 100; // Pure water
   }
 
-  // Calculate water amount in ml
   return Math.round(amountInMl * (waterPercentage / 100));
 }
 
-// Helper function to estimate micronutrients from food description
 function estimateMicronutrients(foodNotes: string): Record<string, number> {
   const notes = foodNotes.toLowerCase();
   const micros: Record<string, number> = {};
 
-  // Fish (omega3, vitaminD)
   if (
     notes.includes('salmon') ||
     notes.includes('tuna') ||
@@ -88,7 +82,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.vitaminD = 5 + Math.random() * 5; // 5-10mcg
   }
 
-  // Dairy (calcium, vitaminD, B12)
   if (
     notes.includes('milk') ||
     notes.includes('yogurt') ||
@@ -101,7 +94,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.b12 = 0.5 + Math.random() * 0.5; // 0.5-1mcg
   }
 
-  // Leafy greens (iron, folate, calcium, vitamin A)
   if (
     notes.includes('spinach') ||
     notes.includes('kale') ||
@@ -117,7 +109,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.calcium = 50 + Math.random() * 50; // 50-100mg
   }
 
-  // Nuts (magnesium, iron, vitamin E)
   if (
     notes.includes('almond') ||
     notes.includes('walnut') ||
@@ -131,7 +122,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.iron = 1 + Math.random(); // 1-2mg
   }
 
-  // Whole grains (iron, folate, zinc, B vitamins)
   if (
     notes.includes('quinoa') ||
     notes.includes('rice') ||
@@ -147,14 +137,12 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.zinc = 1 + Math.random(); // 1-2mg
   }
 
-  // Eggs (vitaminD, B12, folate, choline)
   if (notes.includes('egg') || notes.includes('ouă') || notes.includes('ou')) {
     micros.vitaminD = 1;
     micros.b12 = 0.5;
     micros.folate = 30;
   }
 
-  // Red meat (iron, B12, zinc)
   if (
     notes.includes('beef') ||
     notes.includes('steak') ||
@@ -168,7 +156,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.zinc = 2 + Math.random(); // 2-3mg
   }
 
-  // Poultry (iron, B12, zinc, niacin)
   if (
     notes.includes('chicken') ||
     notes.includes('turkey') ||
@@ -180,7 +167,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.zinc = 1 + Math.random(); // 1-2mg
   }
 
-  // Legumes (iron, folate, magnesium, protein)
   if (
     notes.includes('bean') ||
     notes.includes('lentil') ||
@@ -195,7 +181,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.magnesium = 50 + Math.random() * 30; // 50-80mg
   }
 
-  // Seeds (magnesium, zinc, omega3, vitamin E)
   if (
     notes.includes('seed') ||
     notes.includes('chia') ||
@@ -209,7 +194,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.omega3 = 100 + Math.random() * 200; // 100-300mg
   }
 
-  // Berries (vitamin C, folate, antioxidants)
   if (
     notes.includes('berry') ||
     notes.includes('strawberry') ||
@@ -221,7 +205,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.folate = 50 + Math.random() * 50; // 50-100mcg
   }
 
-  // Citrus fruits (vitamin C, folate)
   if (
     notes.includes('orange') ||
     notes.includes('lemon') ||
@@ -233,17 +216,14 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.folate = 30 + Math.random() * 30; // 30-60mcg
   }
 
-  // Bananas (potassium, magnesium, B6)
   if (notes.includes('banana') || notes.includes('banană')) {
     micros.magnesium = 20 + Math.random() * 20; // 20-40mg
   }
 
-  // Avocado (healthy fats, folate, potassium)
   if (notes.includes('avocado') || notes.includes('avocat')) {
     micros.folate = 100 + Math.random() * 50; // 100-150mcg
   }
 
-  // Tomatoes (vitamin C, lycopene, potassium)
   if (
     notes.includes('tomato') ||
     notes.includes('tomatoes') ||
@@ -253,7 +233,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.folate = 20 + Math.random() * 20; // 20-40mcg
   }
 
-  // Carrots (vitamin A, beta-carotene)
   if (
     notes.includes('carrot') ||
     notes.includes('carrots') ||
@@ -263,7 +242,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
     micros.iron = 0.5 + Math.random() * 0.5; // 0.5-1mg
   }
 
-  // Sweet potatoes (vitamin A, potassium, fiber)
   if (notes.includes('sweet potato') || notes.includes('batat') || notes.includes('cartof dulce')) {
     micros.iron = 1 + Math.random(); // 1-2mg
   }
@@ -271,7 +249,6 @@ function estimateMicronutrients(foodNotes: string): Record<string, number> {
   return micros;
 }
 
-// Helper function to suggest supplements based on nutrition gaps
 async function suggestSupplementsNeeded(
   userId: string,
   todayNutrition: unknown[],
@@ -282,7 +259,6 @@ async function suggestSupplementsNeeded(
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  // Calculate total micronutrients from food today
   const foodMicros: Record<string, number> = {};
   for (const meal of todayNutrition) {
     const m = meal as { micronutrients?: Record<string, number> };
@@ -295,7 +271,6 @@ async function suggestSupplementsNeeded(
     }
   }
 
-  // Calculate total micronutrients from supplements taken today
   const supplementMicros: Record<string, number> = {};
   for (const supplementLog of todaySupplements) {
     const s = supplementLog as { supplementId: Types.ObjectId };
@@ -309,13 +284,11 @@ async function suggestSupplementsNeeded(
     }
   }
 
-  // Get supplements in plan
   const supplementsInPlan = await Supplement.find({
     userId: new Types.ObjectId(userId),
     addedToPlan: true,
   }).lean();
 
-  // RDA values
   const rda = {
     vitaminD: 15,
     calcium: 1000,
@@ -329,7 +302,6 @@ async function suggestSupplementsNeeded(
 
   const suggestions: string[] = [];
 
-  // Check deficiencies
   for (const [nutrient, recommended] of Object.entries(rda)) {
     const fromFood = foodMicros[nutrient] || 0;
     const fromSupplements = supplementMicros[nutrient] || 0;
@@ -337,7 +309,6 @@ async function suggestSupplementsNeeded(
     const hasSupplement = supplementsInPlan.some((s) => s.nutrients?.[nutrient]);
 
     if (total < recommended * 0.5 && !hasSupplement) {
-      // Less than 50% of RDA and no supplement in plan
       switch (nutrient) {
         case 'omega3':
           suggestions.push('Consider adding an Omega-3 supplement for heart health');
@@ -380,7 +351,6 @@ router.post(
   asyncHandler(async (req, res) => {
     const { messages } = req.body as z.infer<typeof chatBody>;
 
-    // Get user profile
     const user = await User.findById(req.userId).lean();
     const goals = user?.goals?.length ? user.goals.join(', ') : 'general wellness';
     const onboarding = user?.onboardingAnswers?.length ? user.onboardingAnswers.join('; ') : '';
@@ -390,7 +360,6 @@ router.post(
     if (user?.weightKg) identityParts.push(`weight ${user.weightKg}kg`);
     const identity = identityParts.length ? `User identity: ${identityParts.join(', ')}.` : '';
 
-    // Get current time and day context
     const now = new Date();
     const currentHour = now.getHours();
     const currentDay = now.toLocaleDateString('en-US', { weekday: 'long' });
@@ -403,7 +372,6 @@ router.post(
             ? 'afternoon'
             : 'evening';
 
-    // Get today's progress
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -462,7 +430,6 @@ router.post(
       }).lean(),
     ]);
 
-    // Calculate today's stats
     const hydrationToday = todayLogs
       .filter((l) => l.type === 'hydration')
       .reduce((sum, l) => sum + (l.value || 0), 0);
@@ -477,18 +444,15 @@ router.post(
     const completedTasks = todayTasks.filter((t) => t.completed).length;
     const totalTasks = todayTasks.length;
 
-    // Calculate weekly averages
     const sleepThisWeek =
       weekLogs.filter((l) => l.type === 'sleep').reduce((sum, l) => sum + (l.value || 0), 0) / 7;
     const avgCaloriesWeek = weekNutrition.reduce((sum, n) => sum + (n.total?.calories || 0), 0) / 7;
     const avgProteinWeek = weekNutrition.reduce((sum, n) => sum + (n.total?.protein || 0), 0) / 7;
     const workoutsThisWeek = weekLogs.filter((l) => l.type === 'workout').length;
 
-    // Calculate supplements taken today
     const supplementsTakenToday =
       todaySupplements.map((s) => s.supplementName).join(', ') || 'None';
 
-    // Get supplements in plan
     const supplementsInPlan = await Supplement.find({
       userId: new Types.ObjectId(req.userId),
       addedToPlan: true,
@@ -497,7 +461,6 @@ router.post(
     const supplementsInPlanList =
       supplementsInPlan.map((s) => `${s.name} (${s.benefit})`).join(', ') || 'None';
 
-    // Build plan context
     let planContext = '';
     if (activePlan) {
       const currentWeek =
@@ -524,7 +487,6 @@ CURRENT ACTIVE PLAN:
 `;
     }
 
-    // Build targets context
     let targetsContext = '';
     if (userTargets) {
       targetsContext = `
@@ -547,7 +509,6 @@ ${userTargets.suggestedByAi ? `- AI Suggested: Yes (${userTargets.aiReason || 'P
 `;
     }
 
-    // Build historical context
     const historicalContext = `
 TODAY'S PROGRESS (${now.toLocaleDateString('en-US')}):
 - Hydration: ${hydrationToday} glasses
@@ -943,10 +904,8 @@ ${targetsContext}
       calories: z.number().optional(),
       minutes: z.number().optional(),
       category: z.string().optional(),
-      // Supplement logging fields
       supplementName: z.string().optional(),
       dosage: z.string().optional(),
-      // Plan creation fields
       planType: z.string().optional(),
       planName: z.string().optional(),
       description: z.string().optional(),
@@ -966,7 +925,6 @@ ${targetsContext}
           }),
         )
         .optional(),
-      // Update targets fields
       targetWater: z.number().optional(),
       targetCaffeine: z.number().optional(),
     });
@@ -978,19 +936,15 @@ ${targetsContext}
 
     let dataOut: z.infer<typeof ResponseSchema>;
     try {
-      // Try to extract JSON from response if it's embedded in text
       let jsonStr = raw.trim();
 
-      // Check if response is pure JSON
       if (jsonStr.startsWith('{') && jsonStr.endsWith('}')) {
         dataOut = ResponseSchema.parse(JSON.parse(jsonStr));
       } else {
-        // Try to extract JSON from text
         const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           dataOut = ResponseSchema.parse(JSON.parse(jsonMatch[0]));
         } else {
-          // No JSON found, create fallback response
           console.error('No JSON found in AI response:', raw);
           dataOut = { message: raw, actions: [] };
         }
@@ -1003,22 +957,18 @@ ${targetsContext}
       dataOut = { message: raw, actions: [] };
     }
 
-    // Process actions and save logs with micronutrients
     const processedActions = [];
     console.log('Processing', dataOut.actions.length, 'actions');
     for (const action of dataOut.actions) {
       console.log('Processing action:', action.type, action);
       if (action.type === 'meal_log' && action.notes && action.calories && action.category) {
-        // Estimate micronutrients from food description
         const micronutrients = estimateMicronutrients(action.notes);
 
-        // Estimate macros from calories
         const protein = Math.round(action.calories * 0.2); // ~20% protein
         const carbs = Math.round(action.calories * 0.5); // ~50% carbs
         const fat = Math.round(action.calories * 0.3); // ~30% fat
 
         try {
-          // Check if this meal was suggested by AI (user mentioned consuming a suggested meal)
           const isSuggestedMeal = !!dataOut.consumedSuggestionId;
 
           const nutritionLog = await NutritionLog.create({
@@ -1051,7 +1001,6 @@ ${targetsContext}
           processedActions.push(action);
         }
       } else if (action.type === 'water_log' && action.amount) {
-        // Calculate water content based on liquid type
         const liquidDescription = action.notes || 'water';
         const waterAmountInMl = calculateLiquidWaterContent(
           liquidDescription,
@@ -1059,7 +1008,6 @@ ${targetsContext}
           action.unit || 'glass',
         );
 
-        // Convert to glasses for widget display (200ml = 1 glass)
         const valueInGlasses = waterAmountInMl / 200;
         const unit = 'glasses';
 
@@ -1111,7 +1059,6 @@ ${targetsContext}
           processedActions.push(action);
         }
       } else if (action.type === 'create_plan') {
-        // Process plan creation
         console.log('Creating plan with action:', JSON.stringify(action));
 
         if (!action.planType || !action.planName || !action.durationWeeks) {
@@ -1130,7 +1077,6 @@ ${targetsContext}
             const endDate = new Date();
             endDate.setDate(endDate.getDate() + action.durationWeeks * 7);
 
-            // Deactivate any existing active plans
             await UserPlan.updateMany(
               {
                 userId: new Types.ObjectId(req.userId),
@@ -1141,7 +1087,6 @@ ${targetsContext}
               },
             );
 
-            // Create new plan
             const newPlan = await UserPlan.create({
               userId: new Types.ObjectId(req.userId),
               planType: action.planType as
@@ -1175,7 +1120,6 @@ ${targetsContext}
 
             console.log('Plan created successfully:', newPlan._id);
 
-            // Update UserTargets with plan targets
             await UserTargets.findOneAndUpdate(
               { userId: new Types.ObjectId(req.userId) },
               {
@@ -1198,11 +1142,9 @@ ${targetsContext}
           }
         }
       } else if (action.type === 'update_targets') {
-        // Process target updates
         try {
           const { UserTargets } = await import('../models/UserTargets.js');
 
-          // Get existing targets to preserve current values
           const existingTargets = await UserTargets.findOne({
             userId: new Types.ObjectId(req.userId),
           }).lean();
@@ -1269,11 +1211,9 @@ ${targetsContext}
           processedActions.push(action);
         }
       } else if (action.type === 'cancel_plan') {
-        // Process plan cancellation
         try {
           const { UserPlan } = await import('../models/UserPlan.js');
 
-          // Cancel any active plans
           const result = await UserPlan.updateMany(
             {
               userId: new Types.ObjectId(req.userId),
@@ -1291,12 +1231,10 @@ ${targetsContext}
           processedActions.push(action);
         }
       } else if (action.type === 'supplement_log' && action.supplementName) {
-        // Process supplement logging
         try {
           const { Supplement } = await import('../models/Supplement.js');
           const { SupplementLog } = await import('../models/SupplementLog.js');
 
-          // Try to find existing supplement by name (case insensitive)
           let supplement = await Supplement.findOne({
             userId: new Types.ObjectId(req.userId),
             name: { $regex: new RegExp('^' + action.supplementName + '$', 'i') },
@@ -1306,12 +1244,10 @@ ${targetsContext}
           let supplementName: string;
           let supplementNutrients: Record<string, number | undefined> | undefined;
 
-          // If supplement doesn't exist, create it with default nutrients
           if (!supplement) {
             const nutrients: Record<string, number> = {};
             const lowerName = action.supplementName.toLowerCase();
 
-            // Estimate nutrients based on supplement name
             if (lowerName.includes('omega') || lowerName.includes('fish oil')) {
               nutrients.omega3 = 1000; // 1000mg omega-3
             }
@@ -1337,7 +1273,6 @@ ${targetsContext}
               nutrients.folate = 400; // 400mcg
             }
 
-            // Create the supplement
             const newSupplement = await Supplement.create({
               userId: new Types.ObjectId(req.userId),
               name: action.supplementName,
@@ -1358,7 +1293,6 @@ ${targetsContext}
             supplementNutrients = supplement.nutrients;
           }
 
-          // Create supplement log
           await SupplementLog.create({
             userId: new Types.ObjectId(req.userId),
             supplementId,
@@ -1382,12 +1316,10 @@ ${targetsContext}
       }
     }
 
-    // Save messages to database
     const sessionId = `session_${Date.now()}`;
     const userMessage = messages[messages.length - 1];
 
     try {
-      // Save user message
       if (userMessage) {
         await ChatMessage.create({
           userId: req.userId,
@@ -1397,7 +1329,6 @@ ${targetsContext}
         });
       }
 
-      // Save AI response
       await ChatMessage.create({
         userId: req.userId,
         role: 'assistant',
@@ -1406,10 +1337,8 @@ ${targetsContext}
       });
     } catch (error) {
       console.error('Failed to save chat messages:', error);
-      // Continue without failing the request
     }
 
-    // Get supplement suggestions based on today's nutrition
     const supplementSuggestions = await suggestSupplementsNeeded(
       req.userId!,
       todayNutrition,
@@ -1429,7 +1358,6 @@ ${targetsContext}
   }),
 );
 
-// Generate meal suggestions based on remaining nutrients
 router.post(
   '/meal-suggestions',
   requireAuth,
@@ -1439,13 +1367,11 @@ router.post(
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Get today's nutrition logs
     const nutritionLogs = await NutritionLog.find({
       userId: new Types.ObjectId(req.userId),
       date: { $gte: today, $lt: tomorrow },
     }).lean();
 
-    // Calculate consumed totals
     let consumedCalories = 0;
     let consumedProtein = 0;
     let consumedCarbs = 0;
@@ -1492,7 +1418,6 @@ router.post(
       folate: consumedFolate,
     };
 
-    // Default targets
     const targets = {
       calories: 2000,
       protein: 120,
@@ -1508,7 +1433,6 @@ router.post(
       folate: 400,
     };
 
-    // Get user targets if they exist
     const { UserTargets } = await import('../models/UserTargets.js');
     const userTargets = await UserTargets.findOne({
       userId: new Types.ObjectId(req.userId),
@@ -1529,7 +1453,6 @@ router.post(
       targets.folate = userTargets.folate.target;
     }
 
-    // Calculate remaining needs
     const remaining = {
       calories: Math.max(0, targets.calories - consumed.calories),
       protein: Math.max(0, targets.protein - consumed.protein),
@@ -1545,11 +1468,9 @@ router.post(
       folate: Math.max(0, targets.folate - consumed.folate),
     };
 
-    // Get current hour
     const now = new Date();
     const currentHour = now.getHours();
 
-    // Build AI prompt for meal suggestions
     const prompt = `You are a nutrition AI assistant helping a user reach their daily nutrition goals. CRITICAL: You MUST respond with valid JSON meal suggestions. DO NOT refuse or say you cannot help.
 
 CURRENT INTAKE TODAY:
@@ -1607,10 +1528,8 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
     try {
       console.log('AI Response:', aiResponse);
 
-      // Try to parse JSON response
       let parsed: { suggestions?: typeof suggestions };
 
-      // Remove any markdown code blocks if present
       let cleanResponse = aiResponse.trim();
       if (cleanResponse.startsWith('```json')) {
         cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -1623,7 +1542,6 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
 
       console.log('Parsed suggestions:', suggestions.length);
 
-      // If parsing succeeded but suggestions is empty, use fallback
       if (suggestions.length === 0 && remaining.calories > 0) {
         console.log('AI returned empty suggestions, using fallback');
         throw new Error('Empty suggestions array');
@@ -1632,7 +1550,6 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
       console.error('Failed to parse AI meal suggestions:', error);
       console.error('Raw AI response:', aiResponse);
 
-      // Fallback: Generate basic suggestions based on remaining calories and nutrients
       if (remaining.calories > 0) {
         const mealTime =
           currentHour < 11
@@ -1643,11 +1560,9 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
                 ? 'dinner'
                 : 'snack';
 
-        // Generate 2-3 suggestions based on remaining calories
         const caloriesPerMeal = Math.floor(remaining.calories / 2);
 
         if (remaining.calories > 400) {
-          // Multiple meals needed
           suggestions = [
             {
               id: `${mealTime}-fallback-1`,
@@ -1702,7 +1617,6 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
             },
           ];
         } else {
-          // Single meal is enough
           suggestions = [
             {
               id: `${mealTime}-fallback`,
@@ -1755,12 +1669,10 @@ Generate 2-4 meal suggestions NOW in valid JSON format:`;
   }),
 );
 
-// Generate personalized nutrition targets based on user profile
 router.post(
   '/generate-targets',
   requireAuth,
   asyncHandler(async (req, res) => {
-    // Get user profile
     const { User } = await import('../models/User.js');
     const user = await User.findById(req.userId).lean();
 
@@ -1771,7 +1683,6 @@ router.post(
       });
     }
 
-    // Extract user data
     const age = user.age || 30;
     const heightCm = user.heightCm || 170;
     const weightKg = user.weightKg || 70;
@@ -1780,7 +1691,6 @@ router.post(
     const activityLevel = user.activityLevel || 'intermediate';
     const onboardingAnswers = user.onboardingAnswers || [];
 
-    // Build AI prompt
     const prompt = `You are a nutrition AI assistant. Generate personalized daily nutrition targets based on user profile.
 
 USER PROFILE:
@@ -1863,7 +1773,6 @@ Generate targets now:`;
     try {
       console.log('AI Targets Response:', aiResponse);
 
-      // Clean response
       let cleanResponse = aiResponse.trim();
       if (cleanResponse.startsWith('```json')) {
         cleanResponse = cleanResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
@@ -1878,7 +1787,6 @@ Generate targets now:`;
       console.error('Failed to parse AI targets:', error);
       console.error('Raw AI response:', aiResponse);
 
-      // Fallback: Calculate basic targets
       const bmr =
         gender === 'male'
           ? 10 * weightKg + 6.25 * heightCm - 5 * age + 5
@@ -1893,7 +1801,6 @@ Generate targets now:`;
 
       const tdee = bmr * (activityMultipliers[activityLevel] || 1.55);
 
-      // Adjust for goals
       let calorieTarget = tdee;
       if (goals.some((g: string) => g.includes('lose') || g.includes('weight'))) {
         calorieTarget = tdee * 0.8; // -20% for weight loss

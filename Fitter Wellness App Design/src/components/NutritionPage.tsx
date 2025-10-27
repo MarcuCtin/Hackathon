@@ -368,7 +368,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
 
   return (
     <div className="min-h-screen bg-gradient-modern relative pb-24">
-      {/* Header with Next Meal */}
       <header className=" top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between mb-3">
@@ -412,7 +411,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
       </header>
 
       <div className="container mx-auto px-6 py-6 relative z-10">
-        {/* Next Meal Card */}
         {nextMeal && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -444,7 +442,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           </motion.div>
         )}
 
-        {/* Current Plan Card */}
         {activePlan && (() => {
           const currentWeek = Math.floor((new Date().getTime() - new Date(activePlan.startDate).getTime()) / (1000 * 60 * 60 * 24 * 7)) + 1;
           const weeksRemaining = Math.max(0, activePlan.durationWeeks - currentWeek + 1);
@@ -492,7 +489,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                         🎯 {activePlan.primaryGoal}
                       </p>
                     )}
-                    {/* Progress bar */}
                     <div className="relative h-2 bg-[#DFF2D4]/20 rounded-full border border-purple-500/30 mt-2">
                       <motion.div
                         className="absolute top-0 left-0 h-full rounded-full transition-all duration-500"
@@ -508,7 +504,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
                     </div>
                     <p className="text-[#DFF2D4]/50 text-xs mt-1">{weeksRemaining} weeks remaining</p>
                     
-                    {/* Action buttons */}
                     <div className="flex gap-2 mt-3">
                       {activePlan.status === 'active' ? (
                         <Button
@@ -547,7 +542,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
             </motion.div>
           );
         })()}
-        {/* Nutrition Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -598,7 +592,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           </div>
         </motion.div>
 
-        {/* Micronutrients Progress */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -650,7 +643,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           </div>
         </motion.div>
 
-        {/* Meal Log Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -660,7 +652,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           <MealLogForm onAddMeal={handleAddMeal} />
         </motion.div>
 
-        {/* Logged Meals */}
         {loggedMeals.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -738,7 +729,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           </motion.div>
         )}
 
-        {/* Supplement Recommender */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -748,7 +738,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           <NutritionRecommender />
         </motion.div>
 
-        {/* Suggested Meals */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -917,7 +906,6 @@ export function NutritionPage({ onProfileClick }: NutritionPageProps) {
           )}
         </motion.div>
 
-        {/* Nutrition Tip */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

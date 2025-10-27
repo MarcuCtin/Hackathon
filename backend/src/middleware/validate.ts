@@ -11,7 +11,6 @@ export const validate = (schemas: {
   return (req, _res, next) => {
     try {
       if (schemas.body) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         req.body = schemas.body.parse(req.body) as unknown as typeof req.body;
       }
       if (schemas.query) {

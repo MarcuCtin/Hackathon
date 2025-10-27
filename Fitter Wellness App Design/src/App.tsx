@@ -124,7 +124,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gradient-modern">
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 backdrop-blur-3xl shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -148,7 +147,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Hero Section */}
       <section className="container mx-auto px-6 py-20 text-center">
         <Badge className="mb-6 rounded-full px-6 py-2 bg-[#6BF178]/20 border border-[#6BF178]/50 text-[#6BF178] backdrop-blur-sm">
           <Sparkles className="w-4 h-4 mr-2 inline" />
@@ -182,7 +180,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* Features Section */}
       <section className="container mx-auto px-6 py-12">
         <h2 className="text-center mb-16 bg-gradient-to-r from-[#6BF178] to-[#E2F163] bg-clip-text text-transparent text-3xl font-bold">
           Why Choose Fitter?
@@ -221,7 +218,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="container mx-auto px-6 py-12 mb-16">
         <Card className="max-w-3xl mx-auto p-12 rounded-3xl bg-gradient-to-br from-[#6BF178] via-[#E2F163] to-[#6BF178] border-0 text-center shadow-[0_0_50px_rgba(107,241,120,0.4)]">
           <h2 className="mb-4 text-[#04101B] text-3xl font-bold">Ready to Start?</h2>
@@ -247,7 +243,6 @@ export default function App() {
         </Card>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-[#6BF178]/20 bg-[#04101B]/80 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">

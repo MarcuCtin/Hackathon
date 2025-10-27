@@ -9,7 +9,6 @@ import { chatWithAi } from '../services/gemini.js';
 
 const router = Router();
 
-// Get user's suggestions
 router.get(
   '/',
   requireAuth,
@@ -25,7 +24,6 @@ router.get(
   }),
 );
 
-// Mark suggestion as completed
 router.post(
   '/:id/complete',
   requireAuth,
@@ -52,7 +50,6 @@ router.post(
   }),
 );
 
-// Dismiss suggestion
 router.post(
   '/:id/dismiss',
   requireAuth,
@@ -79,12 +76,10 @@ router.post(
   }),
 );
 
-// Generate new suggestions using AI
 router.post(
   '/generate',
   requireAuth,
   asyncHandler(async (req, res) => {
-    // Get user data for context
     const user = await User.findById(req.userId).lean();
     if (!user) {
       return void res.status(404).json({
@@ -93,7 +88,6 @@ router.post(
       });
     }
 
-    // Get recent activity data
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const weekAgo = new Date(today);
@@ -110,7 +104,6 @@ router.post(
       }).lean(),
     ]);
 
-    // Calculate current stats
     const todayLogs = recentLogs.filter((log) => new Date(log.date).getTime() >= today.getTime());
 
     const hydrationToday = todayLogs
@@ -129,7 +122,6 @@ router.post(
       .filter((meal) => new Date(meal.date).getTime() >= today.getTime())
       .reduce((sum, meal) => sum + (meal.total?.calories || 0), 0);
 
-    // Create AI prompt for suggestions
     const systemPrompt = `You are Fitter AI, a wellness coach. Generate 3-5 personalized daily suggestions based on user data.
 
 User Profile:
@@ -169,7 +161,6 @@ Return ONLY a JSON array with this exact format:
         { role: 'user', content: 'Generate personalized wellness suggestions for today.' },
       ]);
 
-      // Parse AI response
       let suggestions: Array<{
         title: string;
         description: string;
@@ -197,7 +188,6 @@ Return ONLY a JSON array with this exact format:
         });
       }
 
-      // Save suggestions to database
       const savedSuggestions = await Promise.all(
         suggestions.map((suggestion) =>
           Suggestion.create({
@@ -232,7 +222,6 @@ Return ONLY a JSON array with this exact format:
   }),
 );
 
-// Get suggestion history
 router.get(
   '/history',
   requireAuth,

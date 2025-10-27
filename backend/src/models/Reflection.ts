@@ -52,7 +52,6 @@ const reflectionSchema = new Schema<ReflectionDoc>(
   },
 );
 
-// Index for quick lookups
 reflectionSchema.index({ userId: 1, date: -1 });
 
 export const Reflection = model<ReflectionDoc>('Reflection', reflectionSchema);

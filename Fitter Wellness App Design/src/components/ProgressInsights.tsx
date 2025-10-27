@@ -287,7 +287,6 @@ export function ProgressInsights() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="mt-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -297,7 +296,6 @@ export function ProgressInsights() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {/* Donut Progress Rings */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
                 {metrics.map((metric, index) => (
                   <motion.div
@@ -344,7 +342,6 @@ export function ProgressInsights() {
                 ))}
               </div>
 
-              {/* Weekly trend */}
               <div className="p-4 rounded-2xl bg-gradient-to-br from-[#6BF178]/20 to-[#E2F163]/20 border border-[#6BF178]/30 backdrop-blur-sm modern-card">
                 <p className="text-[#DFF2D4] mb-2 font-semibold">Weekly Summary</p>
                 <p className="text-[#DFF2D4]/80">
@@ -356,7 +353,6 @@ export function ProgressInsights() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* Sleep Tab */}
         <TabsContent value="sleep" className="mt-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -425,7 +421,6 @@ export function ProgressInsights() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* Energy Tab */}
         <TabsContent value="energy" className="mt-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -493,7 +488,6 @@ export function ProgressInsights() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* Mood Tab */}
         <TabsContent value="mood" className="mt-0">
           <AnimatePresence mode="wait">
             <motion.div

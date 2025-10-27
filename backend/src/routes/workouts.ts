@@ -9,7 +9,6 @@ import { chatWithAi } from '../services/gemini.js';
 
 const router = Router();
 
-// Generate a personalized workout plan
 router.post(
   '/generate',
   requireAuth,
@@ -22,13 +21,11 @@ router.post(
       });
     }
 
-    // Get user's goals and fitness level
     const goals = user.goals?.join(', ') || 'general fitness';
     const level = user.activityLevel || 'intermediate';
     const age = user.age || 30;
     const weight = user.weightKg || 70;
 
-    // Create system prompt for AI
     const systemPrompt = `You are a professional fitness coach. Generate a personalized workout plan based on user information.
 
 User Profile:
@@ -85,7 +82,6 @@ Important:
         { role: 'user', content: 'Generate a personalized workout plan for me.' },
       ]);
 
-      // Parse AI response
       let workoutPlan: {
         planName: string;
         description: string;
@@ -114,7 +110,6 @@ Important:
         });
       }
 
-      // Save workout plan to database
       const savedPlan = await WorkoutPlan.create({
         userId: req.userId,
         planName: workoutPlan.planName,
@@ -136,7 +131,6 @@ Important:
   }),
 );
 
-// Get user's workout plans
 router.get(
   '/plans',
   requireAuth,
@@ -150,7 +144,6 @@ router.get(
   }),
 );
 
-// Get a specific workout plan
 router.get(
   '/plans/:id',
   requireAuth,

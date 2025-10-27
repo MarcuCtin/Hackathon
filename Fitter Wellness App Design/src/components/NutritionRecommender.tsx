@@ -18,7 +18,6 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-// React hooks imported above
 import { api } from "../lib/api";
 import { toast } from "sonner";
 
@@ -229,7 +228,6 @@ export function NutritionRecommender() {
                         : "border-[#6BF178]/20 hover:border-[#6BF178]/40 hover:shadow-[0_0_20px_rgba(107,241,120,0.3)] hover:scale-102"
                     }`}
                   >
-                    {/* Icon and Badge */}
                     <div className="flex items-start justify-between mb-4">
                       <motion.div
                         className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${getCategoryGradient(
@@ -253,13 +251,10 @@ export function NutritionRecommender() {
                       </Badge>
                     </div>
 
-                    {/* Name */}
                     <h4 className="mb-2 text-[#DFF2D4] font-bold">{supplement.name}</h4>
 
-                    {/* Benefit */}
                     <p className="text-[#DFF2D4]/80 mb-4 min-h-[40px]">{supplement.benefit}</p>
 
-                    {/* CTA Button */}
                     <Button
                       onClick={() => handleAddSupplement(supplement.id)}
                       className={`w-full rounded-2xl transition-all duration-300 ${
@@ -283,7 +278,6 @@ export function NutritionRecommender() {
                       )}
                     </Button>
 
-                    {/* Decorative gradient overlay */}
                     {isAdded && (
                       <motion.div
                         initial={{ opacity: 0 }}
@@ -313,11 +307,9 @@ export function NutritionRecommender() {
           </div>
         </ScrollArea>
 
-        {/* Scroll hint gradient */}
         <div className="absolute top-0 right-0 bottom-0 w-16 bg-gradient-to-l from-transparent to-transparent pointer-events-none" />
       </div>
 
-      {/* Summary */}
       {addedSupplements.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

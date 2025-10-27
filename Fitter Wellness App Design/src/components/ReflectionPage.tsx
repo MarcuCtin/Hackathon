@@ -136,7 +136,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
 
   return (
     <div className={`min-h-screen bg-gradient-modern relative ${fromBottomNav ? 'pb-24 md:pb-28' : 'pb-6'}`}>
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b-2 border-[#6BF178]/30 bg-[#04101B]/98 shadow-[0_4px_30px_rgba(107,241,120,0.15)]">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -177,7 +176,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
           transition={{ delay: 0.1 }}
           className="space-y-8"
         >
-          {/* Mood Selection */}
           <Card className="modern-card glass-card-intense p-6 border-2 border-[#6BF178]/30">
             <h2 className="text-xl font-semibold text-[#DFF2D4] mb-4 flex items-center gap-2">
               <Smile className="w-5 h-5 text-[#6BF178]" /> Your Mood
@@ -201,7 +199,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
             </div>
           </Card>
 
-          {/* Energy Level */}
           <Card className="modern-card glass-card-intense p-6 border-2 border-[#6BF178]/30">
             <h2 className="text-xl font-semibold text-[#DFF2D4] mb-4 flex items-center gap-2">
               <Zap className="w-5 h-5 text-[#E2F163]" /> Energy Level
@@ -221,7 +218,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
             <Progress value={energyLevel} className="mt-4 h-2 bg-[#0a1f33]/60 [&>div]:bg-gradient-to-r [&>div]:from-[#E2F163] [&>div]:to-[#6BF178] [&>div]:shadow-[0_0_15px_rgba(226,241,99,0.6)]" />
           </Card>
 
-          {/* Stress Level */}
           <Card className="modern-card glass-card-intense p-6 border-2 border-[#6BF178]/30">
             <h2 className="text-xl font-semibold text-[#DFF2D4] mb-4 flex items-center gap-2">
               <Brain className="w-5 h-5 text-red-400" /> Stress Level
@@ -241,7 +237,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
             <Progress value={stressLevel} className="mt-4 h-2 bg-[#0a1f33]/60 [&>div]:bg-gradient-to-r [&>div]:from-red-500 [&>div]:to-orange-500 [&>div]:shadow-[0_0_15px_rgba(255,99,71,0.6)]" />
           </Card>
 
-          {/* Sleep Quality */}
           <Card className="modern-card glass-card-intense p-6 border-2 border-[#6BF178]/30">
             <h2 className="text-xl font-semibold text-[#DFF2D4] mb-4 flex items-center gap-2">
               <Moon className="w-5 h-5 text-blue-400" /> Sleep Quality
@@ -265,7 +260,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
             </div>
           </Card>
 
-          {/* Notes */}
           <Card className="modern-card glass-card-intense p-6 border-2 border-[#6BF178]/30">
             <h2 className="text-xl font-semibold text-[#DFF2D4] mb-4 flex items-center gap-2">
               <Heart className="w-5 h-5 text-pink-400" /> Notes (Optional)
@@ -278,7 +272,6 @@ export function ReflectionPage({ onBack, onProfileClick, fromBottomNav = false }
             />
           </Card>
 
-          {/* Save Button */}
           <div className="text-center mt-8">
             <Button
               onClick={handleSave}

@@ -2,7 +2,6 @@ import { Log } from '../models/Log.js';
 import { NutritionLog } from '../models/NutritionLog.js';
 
 export async function generateAdaptiveSuggestions(userId: string): Promise<string[]> {
-  // Simple heuristic baseline; later enriched with LLM context
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);

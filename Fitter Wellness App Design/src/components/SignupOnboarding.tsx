@@ -113,7 +113,6 @@ export function SignupOnboarding({ onComplete, onBack }: SignupOnboardingProps) 
 
   return (
     <div className="min-h-screen bg-[#04101B] flex flex-col">
-      {/* Header */}
       <div className="sticky top-0 z-50 bg-[#04101B] border-b border-[#6BF178] px-6 py-4">
         <div className="flex items-center justify-between">
           <button
@@ -127,9 +126,7 @@ export function SignupOnboarding({ onComplete, onBack }: SignupOnboardingProps) 
         </div>
       </div>
 
-      {/* Content */}
       <div className="flex-1 flex flex-col">
-        {/* Progress Bar */}
         <div className="px-6 py-4">
           <div className="flex items-center gap-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -143,7 +140,6 @@ export function SignupOnboarding({ onComplete, onBack }: SignupOnboardingProps) 
           </div>
         </div>
 
-        {/* Step Content */}
         <div className="flex-1 flex flex-col justify-center px-6 pb-6">
           {currentStep === 0 && (
             <div className="max-w-md mx-auto w-full space-y-6">
@@ -313,7 +309,6 @@ export function SignupOnboarding({ onComplete, onBack }: SignupOnboardingProps) 
           )}
         </div>
 
-        {/* Footer */}
         <div className="px-6 py-6 bg-[#04101B] border-t border-[#6BF178]/20">
           <Button
             onClick={handleNext}

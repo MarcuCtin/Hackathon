@@ -40,7 +40,6 @@ router.put(
   }),
 );
 
-// Mark onboarding as completed and save answers
 const onboardingSchema = z.object({
   onboardingAnswers: z.array(z.string()).min(1).max(50),
   identityComplete: z.boolean().optional(),

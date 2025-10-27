@@ -100,7 +100,6 @@ export function StatePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-teal-50 pb-24">
-      {/* Header */}
       <header className="sticky top-0 z-40 border-b border-white/20 bg-white/40 backdrop-blur-xl">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -120,7 +119,6 @@ export function StatePage() {
       </header>
 
       <div className="container mx-auto px-6 py-6">
-        {/* Current Mood */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -153,7 +151,6 @@ export function StatePage() {
           </Card>
         </motion.div>
 
-        {/* Metrics Grid */}
         <div className="grid md:grid-cols-2 gap-4">
           {metrics.map((metric, index) => {
             const Icon = metric.icon;
@@ -221,7 +218,6 @@ export function StatePage() {
                     </Badge>
                   </div>
 
-                  {/* Progress bar for percentage metrics */}
                   {metric.unit === "%" && (
                     <Progress value={metric.value} className="mb-3 h-2" />
                   )}
@@ -244,7 +240,6 @@ export function StatePage() {
           })}
         </div>
 
-        {/* Daily Summary */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
