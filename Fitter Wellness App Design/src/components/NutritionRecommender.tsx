@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -17,7 +18,9 @@ import {
   Plus,
   Check,
 } from "lucide-react";
-import { useState } from "react";
+// React hooks imported above
+import { api } from "../lib/api";
+import { toast } from "sonner";
 
 interface Supplement {
   id: string;
@@ -30,6 +33,33 @@ interface Supplement {
 
 export function NutritionRecommender() {
   const [addedSupplements, setAddedSupplements] = useState<string[]>([]);
+  const [userSupplements, setUserSupplements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch user's supplements from backend
+  useEffect(() => {
+    const fetchSupplements = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getSupplements();
+        
+        if (response.success && response.data) {
+          setUserSupplements(response.data);
+          setAddedSupplements(
+            response.data
+              .filter((s: any) => s.addedToPlan === true)
+              .map((s: any) => s._id)
+          );
+        }
+      } catch (error) {
+        console.error("Failed to fetch supplements:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSupplements();
+  }, []);
 
   const supplements: Supplement[] = [
     {
@@ -144,11 +174,22 @@ export function NutritionRecommender() {
     }
   };
 
-  const handleAddSupplement = (id: string) => {
-    if (addedSupplements.includes(id)) {
-      setAddedSupplements(addedSupplements.filter((s) => s !== id));
-    } else {
-      setAddedSupplements([...addedSupplements, id]);
+  const handleAddSupplement = async (id: string) => {
+    try {
+      if (addedSupplements.includes(id)) {
+        // Remove from plan
+        await api.deleteSupplement(id);
+        setAddedSupplements(addedSupplements.filter((s) => s !== id));
+        toast.success("Removed from plan");
+      } else {
+        // Add to plan
+        await api.addSupplementToPlan(id);
+        setAddedSupplements([...addedSupplements, id]);
+        toast.success("Added to plan");
+      }
+    } catch (error) {
+      console.error("Failed to update supplement:", error);
+      toast.error("Failed to update supplement");
     }
   };
 
@@ -156,11 +197,11 @@ export function NutritionRecommender() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-slate-900 mb-1">Recommended Supplements</h3>
-          <p className="text-slate-600">Personalized for your wellness goals</p>
+          <h3 className="text-gradient-modern text-glow text-lg font-bold mb-1">Recommended Supplements</h3>
+          <p className="text-[#DFF2D4]/70">Personalized for your wellness goals</p>
         </div>
         {addedSupplements.length > 0 && (
-          <Badge className="rounded-full bg-gradient-to-r from-sky-100 to-emerald-100 text-slate-700 border-0">
+          <Badge className="rounded-full bg-gradient-to-r from-[#6BF178] to-[#E2F163] text-[#04101B] border-0 font-semibold shadow-[0_0_15px_rgba(107,241,120,0.4)]">
             {addedSupplements.length} added
           </Badge>
         )}
@@ -168,7 +209,7 @@ export function NutritionRecommender() {
 
       <div className="relative">
         <ScrollArea className="w-full">
-          <div className="flex gap-4 pb-4">
+          <div className="flex gap-4 pb-4" style={{ overflowX: 'auto', width: '400px' }}>
             {supplements.map((supplement, index) => {
               const Icon = supplement.icon;
               const isAdded = addedSupplements.includes(supplement.id);
@@ -182,10 +223,10 @@ export function NutritionRecommender() {
                   className="flex-shrink-0"
                 >
                   <Card
-                    className={`w-64 p-5 rounded-3xl border-white/20 backdrop-blur-xl transition-all duration-300 ${
+                    className={`w-64 p-5 rounded-3xl modern-card transition-all duration-300 ${
                       isAdded
-                        ? "bg-white/90 shadow-2xl scale-105"
-                        : "bg-white/60 shadow-lg hover:shadow-xl hover:scale-102"
+                        ? "glass-card-intense shadow-[0_0_30px_rgba(107,241,120,0.6)] scale-105 border-[#6BF178]/50"
+                        : "border-[#6BF178]/20 hover:border-[#6BF178]/40 hover:shadow-[0_0_20px_rgba(107,241,120,0.3)] hover:scale-102"
                     }`}
                   >
                     {/* Icon and Badge */}
@@ -201,19 +242,22 @@ export function NutritionRecommender() {
                       </motion.div>
 
                       <Badge
-                        className={`rounded-full bg-gradient-to-r ${getCategoryBg(
-                          supplement.category
-                        )} text-slate-700 border-0`}
+                        className="rounded-full border-2 backdrop-blur-md px-3 py-1 text-white font-extrabold"
+                        style={{
+                          background: `linear-gradient(135deg, ${supplement.category === "recovery" ? "#A855F7" : supplement.category === "focus" ? "#6BF178" : supplement.category === "energy" ? "#F7B801" : supplement.category === "immunity" ? "#FF006E" : supplement.category === "heart" ? "#FF006E" : "#00F5FF"}30, ${supplement.category === "recovery" ? "#6BF178" : supplement.category === "focus" ? "#00F5FF" : supplement.category === "energy" ? "#FF6B35" : supplement.category === "immunity" ? "#FF006E" : supplement.category === "heart" ? "#FF006E" : "#A855F7"}30)`,
+                          borderColor: supplement.category === "recovery" ? "#A855F7" : supplement.category === "focus" ? "#6BF178" : supplement.category === "energy" ? "#F7B801" : supplement.category === "immunity" ? "#FF006E" : supplement.category === "heart" ? "#FF006E" : "#00F5FF",
+                          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                        }}
                       >
                         {supplement.reason}
                       </Badge>
                     </div>
 
                     {/* Name */}
-                    <h4 className="mb-2 text-slate-900">{supplement.name}</h4>
+                    <h4 className="mb-2 text-[#DFF2D4] font-bold">{supplement.name}</h4>
 
                     {/* Benefit */}
-                    <p className="text-slate-600 mb-4 min-h-[40px]">{supplement.benefit}</p>
+                    <p className="text-[#DFF2D4]/80 mb-4 min-h-[40px]">{supplement.benefit}</p>
 
                     {/* CTA Button */}
                     <Button

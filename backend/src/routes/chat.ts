@@ -34,6 +34,7 @@ router.post(
 const getMessagesQuery = z.object({
   sessionId: z.string().optional(),
   limit: z.string().transform(Number).optional(),
+  day: z.string().optional(), // ISO date string for filtering by day
 });
 
 router.get(
@@ -41,11 +42,24 @@ router.get(
   requireAuth,
   validate({ query: getMessagesQuery }),
   asyncHandler(async (req, res) => {
-    const { sessionId, limit = 50 } = req.query as z.infer<typeof getMessagesQuery>;
+    const { sessionId, limit = 50, day } = req.query as z.infer<typeof getMessagesQuery>;
 
     const query: Record<string, unknown> = { userId: req.userId };
     if (sessionId) {
       query.sessionId = sessionId;
+    }
+
+    // Filter by day if provided
+    if (day) {
+      const dayDate = new Date(day);
+      const startOfDay = new Date(dayDate.getFullYear(), dayDate.getMonth(), dayDate.getDate());
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+
+      query.timestamp = {
+        $gte: startOfDay,
+        $lt: endOfDay,
+      };
     }
 
     const messages = await ChatMessage.find(query).sort({ timestamp: -1 }).limit(limit).lean();
@@ -72,6 +86,42 @@ router.get(
     ]);
 
     void res.json({ success: true, data: sessions });
+  }),
+);
+
+// Get messages grouped by day
+router.get(
+  '/messages/by-day',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const messages = await ChatMessage.find({ userId: req.userId }).sort({ timestamp: -1 }).lean();
+
+    // Group messages by day
+    const messagesByDay: Record<string, unknown[]> = {};
+
+    for (const message of messages) {
+      const date = new Date(message.timestamp);
+      const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD format
+
+      if (dayKey && !messagesByDay[dayKey]) {
+        messagesByDay[dayKey] = [];
+      }
+
+      if (dayKey) {
+        messagesByDay[dayKey]!.push(message);
+      }
+    }
+
+    // Convert to array format sorted by date (newest first)
+    const result = Object.entries(messagesByDay)
+      .map(([day, msgs]) => ({
+        day,
+        messageCount: msgs.length,
+        messages: msgs.reverse(), // Reverse to show oldest first for each day
+      }))
+      .sort((a, b) => new Date(b.day).getTime() - new Date(a.day).getTime());
+
+    void res.json({ success: true, data: result });
   }),
 );
 

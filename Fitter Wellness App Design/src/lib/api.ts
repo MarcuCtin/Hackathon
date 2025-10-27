@@ -8,7 +8,9 @@ export interface User {
   age?: number;
   heightCm?: number;
   weightKg?: number;
+  gender?: "male" | "female" | "other";
   goals?: string[];
+  activityLevel?: "beginner" | "intermediate" | "advanced";
   completedOnboarding?: boolean;
   identityComplete?: boolean;
   onboardingAnswers?: string[];
@@ -49,6 +51,31 @@ export interface NutritionLog {
   updatedAt: string;
 }
 
+export interface Suggestion {
+  _id: string;
+  userId: string;
+  title: string;
+  description: string;
+  category:
+    | "nutrition"
+    | "exercise"
+    | "sleep"
+    | "hydration"
+    | "wellness"
+    | "recovery";
+  priority: "high" | "medium" | "low";
+  status: "active" | "completed" | "dismissed";
+  emoji: string;
+  actionText?: string;
+  dismissText?: string;
+  generatedAt: string;
+  expiresAt?: string;
+  completedAt?: string;
+  dismissedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ChatMessage {
   _id: string;
   userId: string;
@@ -68,16 +95,38 @@ export interface DashboardData {
     mealCount: number;
     totalCalories: number;
     totalProtein: number;
+    energyLevel: number;
   };
   recent: {
     logs: Log[];
     nutrition: NutritionLog[];
     chatMessages: ChatMessage[];
+    suggestions: Suggestion[];
   };
   stats: {
     totalLogs: number;
     totalNutrition: number;
     totalChatMessages: number;
+    activeSuggestions: number;
+  };
+  analytics: {
+    weeklyEnergy: Array<{
+      day: string;
+      energy: number;
+      sleep: number;
+    }>;
+    nutritionTargets: {
+      protein: number;
+      carbs: number;
+      fats: number;
+      water: number;
+    };
+    nutritionProgress: {
+      protein: number;
+      carbs: number;
+      fats: number;
+      water: number;
+    };
   };
 }
 
@@ -280,7 +329,10 @@ class ApiClient {
           calories?: number;
           minutes?: number;
           category?: string;
+          micronutrients?: Record<string, number>;
         }>;
+        supplementSuggestions?: string[];
+        consumedSuggestionId?: string;
       };
     }>("/ai/chat", {
       method: "POST",
@@ -288,8 +340,201 @@ class ApiClient {
     });
   }
 
-  async getSuggestions() {
-    return this.request<{ success: boolean; data: string[] }>("/suggestions");
+  async getMealSuggestions() {
+    return this.request<{
+      success: boolean;
+      data: {
+        suggestions: Array<{
+          id: string;
+          name: string;
+          time: string;
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          items: string[];
+          emoji: string;
+          mealType: "breakfast" | "lunch" | "dinner" | "snack";
+          why?: string;
+        }>;
+        consumed: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+        remaining: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+        targets: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+        };
+      };
+    }>("/ai/meal-suggestions", {
+      method: "POST",
+    });
+  }
+
+  async generateTargets() {
+    return this.request<{
+      success: boolean;
+      data: {
+        targets: {
+          calories: number;
+          protein: number;
+          carbs: number;
+          fat: number;
+          vitaminD: number;
+          calcium: number;
+          magnesium: number;
+          iron: number;
+          zinc: number;
+          omega3: number;
+          b12: number;
+          folate: number;
+          water: number;
+          caffeine: number;
+          reason: string;
+        };
+        userProfile: {
+          age: number;
+          heightCm: number;
+          weightKg: number;
+          gender: string;
+          goals: string[];
+          activityLevel: string;
+        };
+      };
+    }>("/ai/generate-targets", {
+      method: "POST",
+    });
+  }
+
+  async getUserTargets() {
+    return this.request<{
+      success: boolean;
+      data: {
+        calories: { target: number; current: number };
+        protein: { target: number; current: number };
+        carbs: { target: number; current: number };
+        fat: { target: number; current: number };
+        vitaminD: { target: number; current: number };
+        calcium: { target: number; current: number };
+        magnesium: { target: number; current: number };
+        iron: { target: number; current: number };
+        zinc: { target: number; current: number };
+        omega3: { target: number; current: number };
+        b12: { target: number; current: number };
+        folate: { target: number; current: number };
+        water: { target: number; current: number };
+        caffeine: { target: number; current: number };
+        suggestedByAi: boolean;
+        aiReason?: string;
+      };
+    }>("/user-targets");
+  }
+
+  async approveAiTargets(targets: any) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/user-targets/approve-ai-targets", {
+      method: "POST",
+      body: JSON.stringify({ targets }),
+    });
+  }
+
+  async getActivePlan() {
+    return this.request<{
+      success: boolean;
+      data: {
+        planType: "cutting" | "bulking" | "maintenance" | "healing" | "custom";
+        planName: string;
+        description?: string;
+        durationWeeks: number;
+        startDate: string;
+        endDate: string;
+        status: "active" | "completed" | "paused" | "cancelled";
+        targetCalories: number;
+        targetProtein: number;
+        targetCarbs: number;
+        targetFat: number;
+        primaryGoal: string;
+        secondaryGoals?: string[];
+        focusAreas?: string[];
+      } | null;
+    }>("/user-plans/active");
+  }
+
+  async getAllPlans() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        planType: string;
+        planName: string;
+        description?: string;
+        durationWeeks: number;
+        startDate: string;
+        endDate: string;
+        status: string;
+        targetCalories: number;
+        targetProtein: number;
+        targetCarbs: number;
+        targetFat: number;
+        primaryGoal: string;
+      }>;
+    }>("/user-plans");
+  }
+
+  async createPlan(planData: any) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/user-plans", {
+      method: "POST",
+      body: JSON.stringify(planData),
+    });
+  }
+
+  async updatePlanStatus(planId: string, status: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/user-plans/${planId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    });
   }
 
   async getInsights() {
@@ -343,6 +588,398 @@ class ApiClient {
     return this.request<{ success: boolean; data: DashboardData }>(
       "/dashboard/data"
     );
+  }
+
+  // Suggestions
+  async getSuggestions() {
+    return this.request<{ success: boolean; data: Suggestion[] }>(
+      "/suggestions"
+    );
+  }
+
+  async completeSuggestion(id: string) {
+    return this.request<{ success: boolean; data: Suggestion }>(
+      `/suggestions/${id}/complete`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  async dismissSuggestion(id: string) {
+    return this.request<{ success: boolean; data: Suggestion }>(
+      `/suggestions/${id}/dismiss`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  async generateSuggestions() {
+    return this.request<{ success: boolean; data: Suggestion[] }>(
+      "/suggestions/generate",
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  // Daily wellness data
+  async getDailyWellness(date: string) {
+    return this.request<{
+      success: boolean;
+      data: {
+        date: string;
+        wellness: {
+          score: number;
+          energyLevel: number;
+          hydration: number;
+          sleepHours: number;
+        };
+        movement: {
+          workoutCalories: number;
+          steps: number;
+          activeMinutes: number;
+        };
+        nutrition: {
+          totalCalories: number;
+          totalProtein: number;
+          totalCarbs: number;
+          totalFat: number;
+          mealCount: number;
+          mealsByType: {
+            breakfast: any[];
+            lunch: any[];
+            dinner: any[];
+            snack: any[];
+          };
+        };
+        activities: Array<{
+          id: string;
+          type: string;
+          value: number;
+          unit?: string;
+          note?: string;
+          timestamp: string;
+        }>;
+        chatMessages: Array<{
+          id: string;
+          role: string;
+          content: string;
+          timestamp: string;
+        }>;
+      };
+    }>(`/dashboard/daily/${date}`);
+  }
+
+  // Workout Plans
+  async generateWorkoutPlan() {
+    return this.request<{
+      success: boolean;
+      data: {
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>("/workouts/generate", {
+      method: "POST",
+    });
+  }
+
+  async getWorkoutPlans() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      }>;
+    }>("/workouts/plans");
+  }
+
+  async getWorkoutPlan(id: string) {
+    return this.request<{
+      success: boolean;
+      data: {
+        _id: string;
+        userId: string;
+        planName: string;
+        description: string;
+        days: Array<{
+          day: string;
+          restDay?: boolean;
+          exercises: Array<{
+            name: string;
+            muscleGroup: string;
+            sets: number;
+            reps: string;
+            notes?: string;
+          }>;
+        }>;
+        duration: number;
+        level: "beginner" | "intermediate" | "advanced";
+        generatedAt: string;
+        createdAt: string;
+        updatedAt: string;
+      };
+    }>(`/workouts/plans/${id}`);
+  }
+
+  // Daily Tasks
+  async getDailyTasks(day?: string) {
+    const query = day ? `?day=${day}` : "";
+    return this.request<{ success: boolean; data: any[] }>(
+      `/daily-tasks${query}`
+    );
+  }
+
+  async createDailyTask(task: any) {
+    return this.request<{ success: boolean; data: any }>("/daily-tasks", {
+      method: "POST",
+      body: JSON.stringify(task),
+    });
+  }
+
+  async completeDailyTask(id: string, completed: boolean = true) {
+    return this.request<{ success: boolean; data: any }>(
+      `/daily-tasks/${id}/complete`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ completed }),
+      }
+    );
+  }
+
+  async generateDailyTasksFromPlan() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/daily-tasks/generate-from-plan",
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  // Achievements
+  async getAchievements() {
+    return this.request<{ success: boolean; data: any[] }>("/achievements");
+  }
+
+  async createAchievement(achievement: any) {
+    return this.request<{ success: boolean; data: any }>("/achievements", {
+      method: "POST",
+      body: JSON.stringify(achievement),
+    });
+  }
+
+  // Supplements
+  async getSupplements() {
+    return this.request<{ success: boolean; data: any[] }>("/supplements");
+  }
+
+  async createSupplement(supplement: any) {
+    return this.request<{ success: boolean; data: any }>("/supplements", {
+      method: "POST",
+      body: JSON.stringify(supplement),
+    });
+  }
+
+  async addSupplementToPlan(id: string) {
+    return this.request<{ success: boolean; data: any }>(
+      `/supplements/${id}/add-to-plan`,
+      {
+        method: "PATCH",
+      }
+    );
+  }
+
+  async deleteSupplement(id: string) {
+    return this.request<{ success: boolean; data: any }>(
+      `/supplements/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
+  }
+
+  async logSupplement(log: any) {
+    return this.request<{ success: boolean; data: any }>("/supplements/log", {
+      method: "POST",
+      body: JSON.stringify(log),
+    });
+  }
+
+  async getNutritionAnalysis() {
+    return this.request<{ success: boolean; data: any }>(
+      "/supplements/nutrition-analysis"
+    );
+  }
+
+  // Nutrition Tips
+  async getNutritionTips() {
+    return this.request<{ success: boolean; data: any[] }>("/nutrition-tips");
+  }
+
+  async createNutritionTip(tip: any) {
+    return this.request<{ success: boolean; data: any }>("/nutrition-tips", {
+      method: "POST",
+      body: JSON.stringify(tip),
+    });
+  }
+
+  // History
+  async getWeeklyOverview() {
+    return this.request<{ success: boolean; data: any }>(
+      "/history/weekly-overview"
+    );
+  }
+
+  async getAssistantTimeline() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/history/assistant-timeline"
+    );
+  }
+
+  async getDailyCards(days: number = 7) {
+    return this.request<{ success: boolean; data: any[] }>(
+      `/history/daily-cards?days=${days}`
+    );
+  }
+
+  async getHistoryInsights() {
+    return this.request<{ success: boolean; data: any }>("/history/insights");
+  }
+
+  // Nutrition Page
+  async getNutritionPageToday() {
+    return this.request<{ success: boolean; data: any }>(
+      "/nutrition-page/today"
+    );
+  }
+
+  async getNutritionPageSupplements() {
+    return this.request<{ success: boolean; data: any[] }>(
+      "/nutrition-page/supplements"
+    );
+  }
+
+  async getNutritionPageTips() {
+    return this.request<{ success: boolean; data: any }>(
+      "/nutrition-page/tips"
+    );
+  }
+
+  // Chat Messages by Day
+  async getChatMessagesByDay(day?: string) {
+    const query = day ? `?day=${day}` : "";
+    return this.request<{ success: boolean; data: ChatMessage[] }>(
+      `/chat/messages${query}`
+    );
+  }
+
+  async getChatMessagesGroupedByDay() {
+    return this.request<{
+      success: boolean;
+      data: Array<{
+        day: string;
+        messageCount: number;
+        messages: ChatMessage[];
+      }>;
+    }>("/chat/messages/by-day");
+  }
+
+  // Reflection
+  async getTodayReflection() {
+    return this.request<{
+      success: boolean;
+      data: {
+        mood:
+          | "calm"
+          | "stressed"
+          | "focused"
+          | "energized"
+          | "tired"
+          | "motivated"
+          | "anxious"
+          | "content";
+        energyLevel: number;
+        stressLevel: number;
+        sleepQuality: "excellent" | "good" | "fair" | "poor";
+        notes?: string;
+        date: string;
+      } | null;
+    }>("/reflect/today");
+  }
+
+  async saveReflection(reflection: {
+    mood:
+      | "calm"
+      | "stressed"
+      | "focused"
+      | "energized"
+      | "tired"
+      | "motivated"
+      | "anxious"
+      | "content";
+    energyLevel: number;
+    stressLevel: number;
+    sleepQuality: "excellent" | "good" | "fair" | "poor";
+    notes?: string;
+  }) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>("/reflect", {
+      method: "POST",
+      body: JSON.stringify(reflection),
+    });
+  }
+
+  async getReflectionByDate(date: string) {
+    return this.request<{
+      success: boolean;
+      data: any;
+    }>(`/reflect/${date}`);
+  }
+
+  async getRecentReflections() {
+    return this.request<{
+      success: boolean;
+      data: any[];
+    }>("/reflect/recent/last-week");
   }
 }
 

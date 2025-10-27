@@ -7,7 +7,9 @@ export interface UserDoc extends Document {
   age?: number;
   heightCm?: number;
   weightKg?: number;
+  gender?: 'male' | 'female' | 'other';
   goals?: string[];
+  activityLevel?: 'beginner' | 'intermediate' | 'advanced';
   onboardingAnswers?: string[];
   completedOnboarding?: boolean;
   identityComplete?: boolean;
@@ -23,7 +25,13 @@ const UserSchema = new Schema<UserDoc>(
     age: { type: Number },
     heightCm: { type: Number },
     weightKg: { type: Number },
+    gender: { type: String, enum: ['male', 'female', 'other'] },
     goals: [{ type: String }],
+    activityLevel: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced'],
+      default: 'intermediate',
+    },
     onboardingAnswers: [{ type: String }],
     completedOnboarding: { type: Boolean, default: false },
     identityComplete: { type: Boolean, default: false },

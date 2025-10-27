@@ -1,6 +1,6 @@
 import { Schema, model, type Document, type Types } from 'mongoose';
 
-export type LogType = 'workout' | 'sleep' | 'mood' | 'hydration' | 'steps' | 'custom';
+export type LogType = 'workout' | 'sleep' | 'mood' | 'hydration' | 'steps' | 'caffeine' | 'custom';
 
 export interface LogDoc extends Document {
   userId: Types.ObjectId;
